@@ -16,6 +16,7 @@ import { MAP_ICONS, UI_ICONS } from './build/icons.ts';
 import { coverage } from './coverage.ts';
 import { crossCheckGuide } from './build/steam-guide.ts';
 import { crossCheckWiki2 } from './build/wiki2.ts';
+import { speciesByPlace, upgradeLinks } from './build/context.ts';
 import { localize, writeTodo } from './build/localize.ts';
 import { TM } from './i18n/tm.ts';
 
@@ -142,6 +143,9 @@ for (const d of ctx.drafts.values()) {
   }
 }
 
+// ---------- 6c. Espèces trouvables par lieu ----------
+speciesByPlace(ctx);
+
 // ---------- 7. Obtention dérivée + contrôles ----------
 const lbl = (id: string) => { const x = ctx.drafts.get(id); return x ? `[[${id}|${x.nom_fr ?? x.nom_en}]]` : id; };
 for (const d of ctx.drafts.values()) {
@@ -150,7 +154,13 @@ for (const d of ctx.drafts.values()) {
   if (d.extra.donne === d.id) delete d.extra.donne;
   const plain = d.obtention;
   const o: string[] = [];
-  for (const v of d.extra.vendu_par ?? []) o.push(`Acheté chez ${lbl(v.lieu)}${v.prix != null ? ` (${v.prix} ${v.devise})` : ''}`);
+  // Lignes d'amélioration (coût en matériaux) : une seule mention, le détail est dans « Améliorations »
+  const upShops = new Set<string>();
+  for (const v of d.extra.vendu_par ?? []) {
+    if (v.materiaux) upShops.add(v.lieu);
+    else o.push(`Acheté chez ${lbl(v.lieu)}${v.prix != null ? ` (${v.prix} ${v.devise})` : ''}`);
+  }
+  for (const l of upShops) o.push(`Amélioré ou construit chez ${lbl(l)} (voir Améliorations)`);
   if (d.extra.machine) o.push(`Produit par ${lbl(d.extra.machine)}${d.extra.intrants?.length ? ` à partir de ${d.extra.intrants.map(lbl).join(', ')}` : ''}`);
   const rec = (d.extra.recettes ?? []) as { outil?: string }[];
   if (rec.length && d.domain !== 'pnj') {
@@ -205,6 +215,7 @@ if (templeData) for (const t of templeData.paliers) t.recompenses = t.recompense
 if (museumData) for (const m of museumData.paliers_dons) if (m.autre) m.autre = tm.t(m.autre, 'special');
 if (rankData) for (const r of rankData.rangs) { r.deblocages = tm.t(r.deblocages, 'special'); r.autres = tm.t(r.autres, 'special'); }
 if (minesData) for (const m of minesData.mines) for (const r of m.recompenses) { r.condition = tm.t(r.condition, 'special'); if (r.autre) r.autre = tm.t(r.autre, 'special'); }
+upgradeLinks(ctx);
 const todo = writeTodo(tm);
 console.log('traductions :', loc, 'à traduire :', todo);
 
@@ -357,7 +368,11 @@ write('mines.json', minesData);
       .map((e) => ({ id: e.id, s: mask(e.saisons), g: x(e).croissance, r: x(e).repousse ?? 0, pg: x(e).prix_graine ?? null, v: e.prix!.base, gr: x(e).graine ?? null, o: x(e).culture_oceanique ? 1 : 0, rg: x(e).rang_ville ?? null })),
     boutiques: all
       .filter((e) => domOf.get(e.id) === 'lieux' && Array.isArray(x(e).ouverture) && x(e).ouverture.length)
-      .map((e) => ({ id: e.id, o: x(e).ouverture.map((o: any) => ({ j: o.j, p: o.plages })), f: x(e).ferme_j ?? [], m: e.categorie === 'Magasin' ? 1 : 0 })),
+      .map((e) => {
+          // Tenanciers : habitants cités comme propriétaires (fiche PNJ → « sa boutique est ouverte ? »)
+          const own = all.filter((n) => domOf.get(n.id) === 'pnj' && x(e).proprietaire && new RegExp(`\\b${n.nom_en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(x(e).proprietaire)).map((n) => n.id);
+          return { id: e.id, o: x(e).ouverture.map((o: any) => ({ j: o.j, p: o.plages })), f: x(e).ferme_j ?? [], m: e.categorie === 'Magasin' ? 1 : 0, ...(own.length ? { own } : {}) };
+        }),
   };
   void dom;
   write('aujourdhui.json', today);

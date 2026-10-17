@@ -6,6 +6,7 @@ import { DOMAINS, entry, loadArticle, loadEntity, loadEntries, SEASON_FR, type B
 import { CheckBtn, Empty, GameImg, GIcon, Gold, RichText, TopBar } from '../components.tsx';
 import { entityChecks, heartKeys } from '../trackers.ts';
 import { isUpgrade, QualityUpgrades, UpgradeList } from '../fiche/upgrades.tsx';
+import { NeededFor, NowCard, SpeciesHere, UpgradeSection, Vendors } from '../fiche/context.tsx';
 import { active, isChecked, toggle, toggleFav } from '../store.ts';
 import { Icon } from '../icons.tsx';
 import { Chip, ChipList, Hearts, KV, Prices, Section, SeasonChips, Timeline } from '../fiche/parts.tsx';
@@ -109,7 +110,10 @@ export function FichePage({ id }: { id: string }) {
         <article>
           <Hero e={e} dom={dom} />
           <TrackCard e={e} dom={dom} />
+          <NowCard e={e} dom={dom} />
           <KeyFacts e={e} dom={dom} />
+          <UpgradeSection e={e} />
+          {dom === 'lieux' && <SpeciesHere e={e} />}
           <DomainSections e={e} dom={dom} all={all} />
           <Relations e={e} dom={dom} all={all} />
           {art && art.length > 0 && (
@@ -249,14 +253,14 @@ function DomainSections({ e, dom, all }: { e: Entity; dom: string; all: Entry[] 
           <UpgradeList rows={ups} />
         </Section>,
       );
-    if (sale.length) out.push(<Stock rows={sale} />);
-  }
-  if (x.ameliorations_qualite)
-    out.push(
+    if (x.ameliorations_qualite)
+      out.push(
       <Section title="Amélioration de la qualité des produits">
         <QualityUpgrades data={x.ameliorations_qualite} />
       </Section>,
     );
+    if (sale.length) out.push(<Stock rows={sale} />);
+  }
 
   // PNJ
   if (dom === 'pnj') {
@@ -403,11 +407,13 @@ function DomainSections({ e, dom, all }: { e: Entity; dom: string; all: Entry[] 
 function Relations({ e, dom, all }: { e: Entity; dom: string; all: Entry[] }) {
   const x = e.extra as X;
   const out: ComponentChildren[] = [];
-  if (e.obtention.length)
+  // La ligne « voir Améliorations » est inutile quand la section Améliorer est affichée sur la même fiche
+  const obt = x.ameliorations?.length ? e.obtention.filter((o) => !o.includes('(voir Améliorations)')) : e.obtention;
+  if (obt.length)
     out.push(
       <Section title="Obtention">
         <ul class="plain">
-          {e.obtention.map((o) => (
+          {obt.map((o) => (
             <li key={o}>
               <RichText text={o} />
             </li>
@@ -428,34 +434,16 @@ function Relations({ e, dom, all }: { e: Entity; dom: string; all: Entry[] }) {
         ))}
       </Section>,
     );
-  if (Array.isArray(x.vendu_par) && x.vendu_par.length)
-    out.push(
-      <Section title="Vendu par" count={x.vendu_par.length}>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Boutique</th><th>Prix</th><th>Rang</th><th>Saisons</th></tr></thead>
-            <tbody>
-              {x.vendu_par.map((v: X, i: number) => (
-                <tr key={i}>
-                  <td><Chip id={v.lieu} size={24} /></td>
-                  <td>{v.prix != null ? `${v.prix} ${v.devise}` : '—'}</td>
-                  <td>{v.rang ?? ''}</td>
-                  <td>{v.saisons ? (v.saisons.length === 4 ? 'Toutes' : v.saisons.map((s: Season) => SEASON_FR[s]).join(', ')) : ''}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Section>,
-    );
+  if (Array.isArray(x.vendu_par) && x.vendu_par.length) out.push(<Vendors rows={x.vendu_par} />);
   if (Array.isArray(x.obtenu_de) && x.obtenu_de.length)
-    out.push(<Section title="Obtenu de" count={x.obtenu_de.length}><ChipList ids={x.obtenu_de.map((o: X) => o.source)} notes={Object.fromEntries(x.obtenu_de.filter((o: X) => o.chance).map((o: X) => [o.source, o.chance]))} /></Section>);
+    out.push(<Section title="Obtenu de" count={x.obtenu_de.length} open={x.obtenu_de.length <= 8}><ChipList ids={x.obtenu_de.map((o: X) => o.source)} notes={Object.fromEntries(x.obtenu_de.filter((o: X) => o.chance).map((o: X) => [o.source, o.chance]))} /></Section>);
   if (x.graine) out.push(<Section title="Graine"><Chip id={x.graine} /></Section>);
   if (x.donne) out.push(<Section title="Donne"><Chip id={x.donne} /></Section>);
   if (x.machine) out.push(<Section title="Production"><KV rows={[['Machine', <Chip id={x.machine} />], ['À partir de', x.intrants ? <ChipList ids={x.intrants} /> : undefined]]} /></Section>);
   if (Array.isArray(x.produits) && x.produits.length) out.push(<Section title={dom === 'elevage' ? 'Produits' : 'Produit'} count={x.produits.length}><ChipList ids={x.produits} limit={30} /></Section>);
   if (Array.isArray(x.produit_par) && x.produit_par.length) out.push(<Section title="Produit par"><ChipList ids={x.produit_par} /></Section>);
   if (Array.isArray(x.recettes_associees) && x.recettes_associees.length) out.push(<Section title="Recettes avec cet ustensile" count={x.recettes_associees.length}><ChipList ids={x.recettes_associees} limit={30} /></Section>);
+  if (Array.isArray(x.utilise_pour) && x.utilise_pour.length) out.push(<NeededFor e={e} />);
   if (e.utilise_dans.length) out.push(<Section title="Utilisé dans" count={e.utilise_dans.length}><ChipList ids={e.utilise_dans} limit={24} /></Section>);
   if (Array.isArray(x.offrandes) && x.offrandes.length)
     out.push(

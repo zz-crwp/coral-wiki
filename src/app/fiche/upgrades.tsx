@@ -65,7 +65,7 @@ function Meta({ r }: { r: Row }) {
   );
 }
 
-export function UpgradeList({ rows }: { rows: Row[] }) {
+export function UpgradeList({ rows, compact }: { rows: Row[]; compact?: boolean }) {
   return (
     <div class="upgrades">
       {groups(rows).map((g) => {
@@ -73,13 +73,13 @@ export function UpgradeList({ rows }: { rows: Row[] }) {
         const bag = /bag level (\d)/i.exec(g.rows[0].icone ?? '')?.[1];
         return (
           <article key={g.key} class="up-card">
-            <header>
+            {!compact && <header>
               {e ? <GameImg src={e.img} dom={e.dom} size={40} /> : bag ? <GIcon k={`bag${bag}`} size={40} /> : null}
               <h4>
                 {e ? <a href={`#/fiche/${e.id}`}>{e.fr}</a> : g.rows.length === 1 ? title(g.rows[0]) : g.rows[0].nom}
                 {e && !e.hasFr && e.frAlias && <small class="up-alias">≈ {e.frAlias}</small>}
               </h4>
-            </header>
+            </header>}
             <ol class="up-levels">
               {g.rows.map((r, i) => (
                 <li key={i}>
@@ -87,7 +87,7 @@ export function UpgradeList({ rows }: { rows: Row[] }) {
                   <Meta r={r} />
                   {r.materiaux?.length > 0 && (
                     <div class="xchips up-mats">
-                      {r.materiaux.map((m: Row, j: number) => (m.item ? <Chip key={j} id={m.item} note={`×${m.n}`} size={24} /> : <span key={j} class="xchip muted">{m.nom} <small>×{m.n}</small></span>))}
+                      {r.materiaux.filter((m: Row) => !compact || m.item !== r.item).map((m: Row, j: number) => (m.item ? <Chip key={j} id={m.item} note={`×${m.n}`} size={24} /> : <span key={j} class="xchip muted">{m.nom} <small>×{m.n}</small></span>))}
                     </div>
                   )}
                   {r.description && (

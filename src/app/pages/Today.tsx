@@ -15,7 +15,7 @@ export type TodayData = {
   festivals: { id: string; s: Season; j: number; f: number; h: string }[];
   captures: (Cond & { id: string; d: string; l: string; r?: string; c?: (Cond & { z: string })[] })[];
   cultures: { id: string; s: number; g: number; r: number; pg: number; v: number; gr: string; o: number; rg: string | null }[];
-  boutiques: { id: string; o: { j: number[]; p: Range[] }[]; f: number[]; m: number }[];
+  boutiques: { id: string; o: { j: number[]; p: Range[] }[]; f: number[]; m: number; own?: string[] }[];
 };
 
 let todayP: Promise<TodayData> | null = null;

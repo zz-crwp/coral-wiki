@@ -34,6 +34,13 @@ Relance incrémentale : `fetch.ts` rafraîchit l'inventaire (`lastrevid`) et ne 
 - **Améliorations** (`relations.ts` → `extra.stock[].materiaux`, `extra.ameliorations_qualite`) : or, matériaux, durée, rang, limite ; page `#/ameliorations`.
 - **Icônes officielles** (`scripts/build/icons.ts`) : icônes de carte du jeu pour les lieux sans photo, icônes d'interface (météo, qualité, or, cœurs, sac) via `src/data/icones.json`, chargées depuis le CDN du wiki avec repli SVG.
 
+### Fiches autosuffisantes (`scripts/build/context.ts`, `src/app/fiche/context.tsx`)
+
+- Outil, bâtiment, équipement : « Améliorer / Obtenir » (magasin, or, matériaux, durée, ouvert maintenant ?).
+- Matériau : « Nécessaire pour » (améliorations et constructions qui le consomment, total).
+- Lieu : « À trouver ici » (poissons, insectes, créatures, cueillette, filtre saison).
+- « En ce moment » selon la date, la météo et l'heure du profil : boutique ouverte, espèce disponible, culture encore rentable, où se trouve l'habitant (emploi du temps), anniversaire, festival.
+
 ### Règles
 
 - Valeur inconnue → champ listé dans `a_verifier`, jamais inventée.

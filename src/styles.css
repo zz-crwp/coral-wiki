@@ -2038,3 +2038,104 @@ table.qup + table.qup {
   height: 100%;
   object-fit: contain;
 }
+
+/* ---------- Infos contextuelles des fiches ---------- */
+.now-card {
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-left: 4px solid var(--primary);
+}
+.now-h {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.now-l {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.now-l.inline {
+  display: inline;
+}
+.now-l.inline li {
+  display: inline;
+}
+.up-at + .up-at {
+  margin-top: 14px;
+}
+.up-shopline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.up-card:not(:has(> header)) .up-levels > li:first-child {
+  border-top: 0;
+}
+.need {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.need-h {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.need-p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin-top: 4px;
+}
+.need-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.vendors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.vendors li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.v-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 14px;
+}
+.ko-txt {
+  color: var(--accent);
+}
+.here-list {
+  margin-top: 6px;
+}
+.here-list .row {
+  min-height: 56px;
+}

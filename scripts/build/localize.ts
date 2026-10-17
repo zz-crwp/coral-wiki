@@ -70,6 +70,7 @@ function localizeExtra(d: Draft, tm: TM) {
     } else if (c.zone) c.zone = tm.t(c.zone, 'libelles');
   }
   for (const o of x.ouverture ?? []) o.jours = tm.t(o.jours, 'libelles');
+  for (const e of x.especes_ici ?? []) e.zone = tm.t(e.zone, 'libelles');
   for (const r of x.stock ?? []) {
     if (r.rayon) r.rayon = tm.t(r.rayon, 'libelles');
     if (r.duree) r.duree = frDuration(r.duree);
