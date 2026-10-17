@@ -1,0 +1,607 @@
+// Fiche détaillée : identité, données clés, relations croisées (dans les deux sens), article, sources.
+import { useEffect, useMemo, useState } from 'preact/hooks';
+import type { ComponentChildren } from 'preact';
+import type { Entity } from '../../data/schema.ts';
+import { DOMAINS, entry, loadArticle, loadEntity, loadEntries, SEASON_FR, type Block, type Entry, type Season } from '../data.ts';
+import { CheckBtn, Empty, GameImg, RichText, TopBar } from '../components.tsx';
+import { entityChecks, heartKeys } from '../trackers.ts';
+import { active, isChecked, toggle, toggleFav } from '../store.ts';
+import { Icon } from '../icons.tsx';
+import { Chip, ChipList, Hearts, KV, Prices, Section, SeasonChips, Timeline } from '../fiche/parts.tsx';
+import { EXTRA_FIELDS, GIFT_LEVELS, QUALITY_BY_INDEX, UNIVERSAL_CODE, WEATHER_FR, hours, ranges } from '../fiche/labels.ts';
+
+type X = Record<string, any>;
+
+export function FichePage({ id }: { id: string }) {
+  const [e, setE] = useState<Entity | null | undefined>(undefined);
+  const [art, setArt] = useState<Block[] | undefined>();
+  const [all, setAll] = useState<Entry[]>([]);
+  useEffect(() => {
+    setE(undefined);
+    setArt(undefined);
+    loadEntries().then(setAll);
+    loadEntity(id).then((x) => {
+      setE(x ?? null);
+      if (x) document.title = `${x.nom_fr} — Coral Wiki`;
+      const en = entry(id);
+      if (en) loadArticle(en.dom, id).then(setArt);
+    });
+    return () => (document.title = 'Coral Wiki');
+  }, [id]);
+
+  if (e === undefined) return <TopBar title="" backTo="/encyclo" />;
+  if (e === null)
+    return (
+      <>
+        <TopBar title="Introuvable" backTo="/encyclo" />
+        <main class="page">
+          <Empty icon="search">Cette fiche n'existe pas.</Empty>
+        </main>
+      </>
+    );
+  const dom = entry(id)?.dom ?? 'objets';
+  return (
+    <>
+      <TopBar
+        title={e.nom_fr}
+        backTo={`/encyclo/${dom}`}
+        actions={
+          <button class="icon-btn fav" aria-pressed={!!active.value?.favs.includes(id)} aria-label="Favori" onClick={() => toggleFav(id)}>
+            <Icon name={active.value?.favs.includes(id) ? 'star-on' : 'star'} />
+          </button>
+        }
+      />
+      <main class="page fiche" id="main">
+        <article>
+          <Hero e={e} dom={dom} />
+          <TrackCard e={e} dom={dom} />
+          <KeyFacts e={e} dom={dom} />
+          <DomainSections e={e} dom={dom} all={all} />
+          <Relations e={e} dom={dom} all={all} />
+          {art && art.length > 0 && (
+            <Section title="Article du wiki (anglais)" open={dom === 'guides'}>
+              <Article blocks={art} />
+            </Section>
+          )}
+          <Sources e={e} />
+        </article>
+      </main>
+    </>
+  );
+}
+
+function Hero({ e, dom }: { e: Entity; dom: string }) {
+  const [showEn, setShowEn] = useState(false);
+  return (
+    <div class="card">
+      <div class="hero">
+        <GameImg src={e.image?.url ?? ''} dom={dom} size={96} alt={e.nom_fr} eager />
+        <div style={{ minWidth: 0 }}>
+          <h2>{e.nom_fr}</h2>
+          {e.nom_en !== e.nom_fr && <div class="en" lang="en">{e.nom_en}</div>}
+          {e.nom_fr_alias && (
+            <div class="en">
+              ≈ {e.nom_fr_alias} <span class="note">(nom FR non officiel)</span>
+            </div>
+          )}
+          <div class="badges" style={{ marginTop: 8 }}>
+            <a class="badge" href={`#/encyclo/${dom}`}>{DOMAINS[dom]}</a>
+            <span class="badge">{e.categorie}</span>
+            {e.sous_categorie && <span class="badge">{e.sous_categorie}</span>}
+          </div>
+        </div>
+      </div>
+      {e.description && (
+        <div class="prose">
+          <p lang={showEn ? 'en' : 'fr'} style={{ margin: 0 }}>
+            {showEn ? e.description_en : e.description}
+          </p>
+          {e.description_lang === 'fr-trad' && (
+            <button class="linkbtn" onClick={() => setShowEn(!showEn)}>
+              {showEn ? 'Voir la traduction' : 'Traduction non officielle · voir le texte original'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Cases de suivi de la fiche (même clé que les trackers). */
+function TrackCard({ e, dom }: { e: Entity; dom: string }) {
+  const items = entityChecks(e as any, dom);
+  if (!items.length) return null;
+  return (
+    <div class="card list track-card" aria-label="Suivi">
+      {items.map((it) => (
+        <div key={it.key} class={`row trow${isChecked(it.key) ? ' done' : ''}`}>
+          <CheckBtn on={isChecked(it.key)} label={it.label} onToggle={() => toggle(it.key)} />
+          <a class="trow-link" href={it.href}>
+            <span class="txt">
+              <span class="name">{it.label}</span>
+            </span>
+            <Icon name="chevron" class="chev" />
+          </a>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function KeyFacts({ e, dom }: { e: Entity; dom: string }) {
+  const x = e.extra as X;
+  const rows: [string, ComponentChildren][] = [];
+  if (e.saisons.length) rows.push(['Saisons', <SeasonChips seasons={e.saisons} />]);
+  if (e.meteo.length) rows.push(['Météo', e.meteo.length >= 6 ? 'Toutes' : e.meteo.map((w) => WEATHER_FR[w] ?? w).join(', ')]);
+  if (e.horaires.length && dom !== 'lieux')
+    rows.push([
+      'Horaires',
+      <>
+        {ranges(e.horaires)}
+        <Timeline ranges={e.horaires} />
+      </>,
+    ]);
+  if (e.lieux.length) rows.push(['Lieux', e.lieux.join(' · ')]);
+  if (x.jours_saison?.length) rows.push(['Jours', x.jours_saison.map((j: X) => `${SEASON_FR[j.saison as Season]} ${j.de}–${j.a}`).join(' · ')]);
+  if (x.anniversaire) rows.push(['Anniversaire', `${x.anniversaire.jour} ${SEASON_FR[x.anniversaire.saison as Season]?.toLowerCase()}`]);
+  if (x.mariable) rows.push(['Mariable', 'Oui']);
+  if (x.date) rows.push(['Date', `${x.date.jour}${x.date.fin ? `–${x.date.fin}` : ''} ${SEASON_FR[x.date.saison as Season]?.toLowerCase()}`]);
+  if (e.horaires_texte && dom === 'festivals') rows.push(['Horaires', e.horaires_texte]);
+  for (const [k, label, fmt] of EXTRA_FIELDS) {
+    const v = x[k];
+    if (v === undefined || v === null || v === '' || typeof v === 'object') continue;
+    if (k === 'sante' && x.pv != null) continue; // monstres : « pv » et « santé » sont la même valeur
+    if (k === 'famille' && dom === 'pnj') rows.push(['Famille', String(v).replace(/\s*\n\s*/g, ', ')]);
+    else rows.push([label, typeof v === 'number' && fmt ? fmt(v) : String(v).replace(/\s*\n\s*/g, ', ')]);
+  }
+  if (x.debloque_par) rows.push(['Débloqué par', <Chip id={x.debloque_par.maitrise} note={`niveau ${x.debloque_par.niveau}`} />]);
+  if (x.don_musee) rows.push(['Musée', <a href="#/musee">Peut être donné au musée</a>]);
+  if (x.image_de) rows.push(['Image', <span class="note">portrait du propriétaire (pas de photo du lieu)</span>]);
+  const hasPrice = e.prix && e.prix.base;
+  if (!rows.length && !hasPrice) return null;
+  return (
+    <Section title="En bref">
+      {hasPrice && (
+        <>
+          <p class="note" style={{ margin: '0 0 6px' }}>Prix de vente par qualité (or)</p>
+          <Prices prix={e.prix as any} />
+        </>
+      )}
+      <KV rows={rows} />
+    </Section>
+  );
+}
+
+function DomainSections({ e, dom, all }: { e: Entity; dom: string; all: Entry[] }) {
+  const x = e.extra as X;
+  const out: ComponentChildren[] = [];
+
+  // Poissons : conditions par zone
+  if (Array.isArray(x.conditions) && x.conditions.length > 1)
+    out.push(
+      <Section title="Conditions par zone">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Zone</th><th>Saisons</th><th>Horaires</th><th>Météo</th></tr></thead>
+            <tbody>
+              {x.conditions.map((c: X, i: number) => (
+                <tr key={i}>
+                  <td>{c.zone ?? '—'}</td>
+                  <td>{c.saisons.length === 4 ? 'Toutes' : c.saisons.map((s: Season) => SEASON_FR[s]).join(', ')}</td>
+                  <td>{ranges(c.horaires)}</td>
+                  <td>{c.meteo.length >= 6 ? 'Toutes' : c.meteo.map((w: string) => WEATHER_FR[w]).join(', ')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Section>,
+    );
+
+  // Lieux : horaires d'ouverture + stock
+  if (Array.isArray(x.ouverture) && x.ouverture.length)
+    out.push(
+      <Section title="Ouverture">
+        <KV rows={[...x.ouverture.map((o: X) => [o.jours, ranges(o.plages)] as [string, string]), ...(x.ferme_le ? [['Fermé', x.ferme_le] as [string, string]] : [])]} />
+      </Section>,
+    );
+  if (Array.isArray(x.stock) && x.stock.length) out.push(<Stock rows={x.stock} />);
+
+  // PNJ
+  if (dom === 'pnj') {
+    out.push(<NpcGifts e={e} all={all} />);
+    if (Array.isArray(x.emploi_du_temps)) out.push(<Schedule data={x.emploi_du_temps} />);
+    if (Array.isArray(x.evenements_coeur))
+      out.push(
+        <Section title="Événements de cœur" count={x.evenements_coeur.length}>
+          <ol class="events">
+            {x.evenements_coeur.map((h: X, i: number, arr: X[]) => {
+              const key = heartKeys(e.id, arr.map((v) => v.coeurs))[i];
+              return (
+              <li key={i} class="event">
+                <CheckBtn on={isChecked(key)} label={`Scène ${h.coeurs ? `${h.coeurs} cœurs ` : ''}vue`} onToggle={() => toggle(key)} />
+                <Hearts n={h.coeurs} />
+                <div>
+                  <p>{h.resume ?? h.resume_en ?? <span class="note">Résumé à vérifier</span>}</p>
+                  <p class="note">
+                    {[h.condition && h.condition !== 'Any' ? h.condition : null, ranges(h.horaires ?? []), h.lieu].filter(Boolean).join(' · ')}
+                    {h.lieu_id && <> · <a href={`#/fiche/${h.lieu_id}`}>voir le lieu</a></>}
+                  </p>
+                </div>
+              </li>
+              );
+            })}
+          </ol>
+        </Section>,
+      );
+    if (Array.isArray(x.sorties))
+      out.push(
+        <Section title="Sorties (hangouts)" count={x.sorties.length} open={false}>
+          <ol class="events">
+            {x.sorties.map((h: X, i: number) => (
+              <li key={i} class="event">
+                <Hearts n={h.coeurs} />
+                <div>
+                  <p>{h.resume ?? h.resume_en}</p>
+                  {h.prerequis && h.prerequis !== 'Aucune' && <p class="note">Prérequis : {h.prerequis}</p>}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </Section>,
+      );
+    if (x.mariage || x.romance)
+      out.push(
+        <Section title="Mariage" open={false}>
+          <p class="prose">{x.mariage ?? x.romance}</p>
+        </Section>,
+      );
+    if (Array.isArray(x.lettres))
+      out.push(
+        <Section title="Lettres" count={x.lettres.length} open={false}>
+          <ul class="letters">
+            {x.lettres.map((l: X, i: number) => (
+              <li key={i}>
+                <p>{l.texte ?? l.texte_en}</p>
+                {l.pieces_jointes && <ChipList ids={l.pieces_jointes.map((p: X) => p.id)} notes={Object.fromEntries(l.pieces_jointes.map((p: X) => [p.id, `×${p.n}`]))} />}
+              </li>
+            ))}
+          </ul>
+        </Section>,
+      );
+  }
+
+  // Maîtrises
+  if (dom === 'maitrises') {
+    if (Array.isArray(x.competences) && x.competences.length)
+      out.push(
+        <Section title="Compétences" count={x.competences.length}>
+          <ul class="skills">
+            {x.competences.map((c: X) => (
+              <li key={c.nom_en}>
+                <strong>{c.nom ?? c.nom_en}</strong> <span class="note" lang="en">({c.nom_en})</span>
+                <p>{c.effet ?? c.effet_en}</p>
+              </li>
+            ))}
+          </ul>
+        </Section>,
+      );
+    if (Array.isArray(x.niveaux))
+      out.push(
+        <Section title="Recettes débloquées par niveau">
+          {x.niveaux.map((n: X) => (
+            <div key={n.niveau} class="lvl">
+              <span class="lvl-n">Niv. {n.niveau}</span>
+              {n.recettes.length ? <ChipList ids={n.recettes.filter((r: string) => entry(r))} /> : <span class="note">—</span>}
+            </div>
+          ))}
+        </Section>,
+      );
+    if (Array.isArray(x.experience) && x.experience.length)
+      out.push(
+        <Section title="Expérience" open={false}>
+          <KV rows={x.experience.map((r: X) => [r.action, r.points] as [string, string])} />
+        </Section>,
+      );
+  }
+
+  // Quêtes
+  if (dom === 'quetes') {
+    out.push(
+      <Section title="Quête">
+        <KV
+          rows={[
+            ['Donnée par', x.donneur],
+            ['Objectifs', e.prerequis.length ? <ul class="plain">{e.prerequis.map((p) => <li key={p}><RichText text={p} /></li>)}</ul> : undefined],
+            ['Récompenses', x.recompenses],
+            ['Catégorie', e.sous_categorie],
+          ]}
+        />
+      </Section>,
+    );
+  }
+
+  // Monstres et contenants : butin
+  if (Array.isArray(x.butin) && x.butin.length)
+    out.push(
+      <Section title={dom === 'monstres' ? 'Butin' : 'Contenu possible'} count={x.butin.length}>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Objet</th><th>Chance</th>{x.butin.some((b: X) => b.quantite) && <th>Qté</th>}{x.butin.some((b: X) => b.rang) && <th>Rang</th>}</tr></thead>
+            <tbody>
+              {x.butin.map((b: X, i: number) => (
+                <tr key={i}>
+                  <td>{b.item ? <Chip id={b.item} size={24} /> : b.nom}</td>
+                  <td>{b.chance ?? '—'}</td>
+                  {x.butin.some((bb: X) => bb.quantite) && <td>{b.quantite ?? ''}</td>}
+                  {x.butin.some((bb: X) => bb.rang) && <td>{b.rang ?? ''}</td>}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Section>,
+    );
+
+  // Groupes : membres
+  if (Array.isArray(x.membres) && x.membres.length) out.push(<Section title="Objets du groupe" count={x.membres.length}><ChipList ids={x.membres} limit={60} /></Section>);
+
+  return <>{out}</>;
+}
+
+function Relations({ e, dom, all }: { e: Entity; dom: string; all: Entry[] }) {
+  const x = e.extra as X;
+  const out: ComponentChildren[] = [];
+  if (e.obtention.length)
+    out.push(
+      <Section title="Obtention">
+        <ul class="plain">
+          {e.obtention.map((o) => (
+            <li key={o}>
+              <RichText text={o} />
+            </li>
+          ))}
+        </ul>
+      </Section>,
+    );
+  if (Array.isArray(x.recettes) && x.recettes.length)
+    out.push(
+      <Section title={dom === 'cuisine' ? 'Recette' : 'Fabrication'}>
+        {x.recettes.map((r: X, i: number) => (
+          <div key={i} class="recipe">
+            <ChipList ids={r.ingredients.map((g: X) => g.id)} notes={Object.fromEntries(r.ingredients.map((g: X) => [g.id, `×${g.n}${g.qualite ? ` · ${QUALITY_BY_INDEX[g.qualite]}` : ''}`]))} limit={30} />
+            <p class="note">
+              {[r.outil && (entry(r.outil) ? `Ustensile : ${entry(r.outil)!.fr}` : `Ustensile : ${r.outil}`), r.duree && `Durée : ${r.duree}`, r.rendement && `Rendement : ${r.rendement}`, r.non_resolus && `Aussi : ${r.non_resolus.join(', ')}`].filter(Boolean).join(' · ')}
+            </p>
+          </div>
+        ))}
+      </Section>,
+    );
+  if (Array.isArray(x.vendu_par) && x.vendu_par.length)
+    out.push(
+      <Section title="Vendu par" count={x.vendu_par.length}>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Boutique</th><th>Prix</th><th>Rang</th><th>Saisons</th></tr></thead>
+            <tbody>
+              {x.vendu_par.map((v: X, i: number) => (
+                <tr key={i}>
+                  <td><Chip id={v.lieu} size={24} /></td>
+                  <td>{v.prix != null ? `${v.prix} ${v.devise}` : '—'}</td>
+                  <td>{v.rang ?? ''}</td>
+                  <td>{v.saisons ? (v.saisons.length === 4 ? 'Toutes' : v.saisons.map((s: Season) => SEASON_FR[s]).join(', ')) : ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Section>,
+    );
+  if (Array.isArray(x.obtenu_de) && x.obtenu_de.length)
+    out.push(<Section title="Obtenu de" count={x.obtenu_de.length}><ChipList ids={x.obtenu_de.map((o: X) => o.source)} notes={Object.fromEntries(x.obtenu_de.filter((o: X) => o.chance).map((o: X) => [o.source, o.chance]))} /></Section>);
+  if (x.graine) out.push(<Section title="Graine"><Chip id={x.graine} /></Section>);
+  if (x.donne) out.push(<Section title="Donne"><Chip id={x.donne} /></Section>);
+  if (x.machine) out.push(<Section title="Production"><KV rows={[['Machine', <Chip id={x.machine} />], ['À partir de', x.intrants ? <ChipList ids={x.intrants} /> : undefined]]} /></Section>);
+  if (Array.isArray(x.produits) && x.produits.length) out.push(<Section title={dom === 'elevage' ? 'Produits' : 'Produit'} count={x.produits.length}><ChipList ids={x.produits} limit={30} /></Section>);
+  if (Array.isArray(x.produit_par) && x.produit_par.length) out.push(<Section title="Produit par"><ChipList ids={x.produit_par} /></Section>);
+  if (Array.isArray(x.recettes_associees) && x.recettes_associees.length) out.push(<Section title="Recettes avec cet ustensile" count={x.recettes_associees.length}><ChipList ids={x.recettes_associees} limit={30} /></Section>);
+  if (e.utilise_dans.length) out.push(<Section title="Utilisé dans" count={e.utilise_dans.length}><ChipList ids={e.utilise_dans} limit={24} /></Section>);
+  if (Array.isArray(x.offrandes) && x.offrandes.length)
+    out.push(
+      <Section title="Offrande du temple">
+        <ul class="plain">
+          {x.offrandes.map((o: X, i: number) => (
+            <li key={i}>
+              <a href={`#/temple#${o.offrande}`}>{o.nom ?? o.offrande}</a> <span class="note">({o.autel_nom})</span> — ×{o.n}
+              {o.qualite ? ` (qualité ${QUALITY_BY_INDEX[o.qualite]} minimum)` : ''}
+            </li>
+          ))}
+        </ul>
+      </Section>,
+    );
+  if (Array.isArray(x.requis_pour) && x.requis_pour.length) out.push(<Section title="Requis pour"><ChipList ids={x.requis_pour.map((r: X) => r.id)} /></Section>);
+  if (Array.isArray(x.groupes) && x.groupes.length) out.push(<Section title="Fait partie de"><ChipList ids={x.groupes} /></Section>);
+  if (dom !== 'pnj') out.push(<LikedBy e={e} all={all} />);
+  const seeAlso = e.liens.filter((l) => entry(l) && !['guides'].includes(entry(l)!.dom)).slice(0, 40);
+  if (seeAlso.length) out.push(<Section title="Voir aussi" open={false}><ChipList ids={seeAlso} limit={12} /></Section>);
+  return <>{out}</>;
+}
+
+/** « Aimé par » : niveaux explicites + niveau universel pour les autres personnages. */
+function LikedBy({ e, all }: { e: Entity; all: Entry[] }) {
+  const x = e.extra as X;
+  const levels = GIFT_LEVELS.filter((l) => (e.aime_par as X)[l.key]?.length);
+  if (!levels.length && !x.cadeau_universel) return null;
+  const uni = GIFT_LEVELS.find((l) => l.key === x.cadeau_universel);
+  return (
+    <Section title="Aimé par">
+      {levels.map((l) => (
+        <div key={l.key} class={`gift gift-${l.key}`}>
+          <span class="gift-l">{l.label}</span>
+          <ChipList ids={(e.aime_par as X)[l.key]} limit={12} />
+        </div>
+      ))}
+      {uni && <p class="note">Tous les autres personnages : <strong>{uni.label.toLowerCase()}</strong> (préférence universelle).</p>}
+      {!uni && all.length > 0 && <p class="note">Autres personnages : neutre ou non renseigné.</p>}
+    </Section>
+  );
+}
+
+/** Cadeaux d'un PNJ : préférences explicites + objets universels non contredits. */
+function NpcGifts({ e, all }: { e: Entity; all: Entry[] }) {
+  const x = e.extra as X;
+  const explicit: Record<string, string[]> = x.cadeaux ?? {};
+  const listed = useMemo(() => new Set(Object.values(explicit).flat()), [e.id]);
+  const universal = useMemo(() => {
+    const m: Record<string, string[]> = {};
+    for (const it of all) if (it.universal && !listed.has(it.id)) (m[UNIVERSAL_CODE[it.universal]] ??= []).push(it.id);
+    return m;
+  }, [all, e.id]);
+  if (!Object.keys(explicit).length) return null;
+  return (
+    <Section title="Cadeaux">
+      {GIFT_LEVELS.map((l) =>
+        explicit[l.key]?.length || universal[l.key]?.length ? (
+          <div key={l.key} class={`gift gift-${l.key}`}>
+            <span class="gift-l">{l.label}</span>
+            {explicit[l.key]?.length ? <ChipList ids={explicit[l.key]} limit={l.key === 'love' ? 30 : 12} /> : null}
+            {universal[l.key]?.length ? (
+              <details class="uni">
+                <summary>+ {universal[l.key].length} objets « {l.label.toLowerCase()} » universels</summary>
+                <ChipList ids={universal[l.key]} limit={30} />
+              </details>
+            ) : null}
+          </div>
+        ) : null,
+      )}
+    </Section>
+  );
+}
+
+function Schedule({ data }: { data: X[] }) {
+  const [tab, setTab] = useState(0);
+  const cur = data[tab];
+  return (
+    <Section title="Emploi du temps">
+      {data.length > 1 && (
+        <div class="chips" role="tablist">
+          {data.map((s, i) => (
+            <button key={i} role="tab" class="chip" aria-selected={tab === i} onClick={() => setTab(i)}>
+              {s.condition}
+            </button>
+          ))}
+        </div>
+      )}
+      {cur.groupes.map((g: X, i: number) => (
+        <div key={i} class="sched">
+          <h4>{g.jours}</h4>
+          <ol>
+            {g.etapes.map((st: X, k: number) => (
+              <li key={k}>
+                <time>{hours(st.heure)}</time>
+                <span>{st.texte}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </Section>
+  );
+}
+
+function Stock({ rows }: { rows: X[] }) {
+  const rayons = [...new Set(rows.map((r) => r.rayon ?? ''))];
+  const [season, setSeason] = useState('');
+  const filtered = season ? rows.filter((r) => !r.saisons || r.saisons.includes(season)) : rows;
+  return (
+    <Section title="Articles en vente" count={rows.length}>
+      {rows.some((r) => r.saisons && r.saisons.length < 4) && (
+        <div class="chips" role="group" aria-label="Saison">
+          {(['', 'spring', 'summer', 'fall', 'winter'] as const).map((s) => (
+            <button key={s} class="chip" aria-pressed={season === s} onClick={() => setSeason(s)}>
+              {s ? SEASON_FR[s] : 'Toutes'}
+            </button>
+          ))}
+        </div>
+      )}
+      {rayons.map((ray) => {
+        const list = filtered.filter((r) => (r.rayon ?? '') === ray);
+        if (!list.length) return null;
+        return (
+          <div key={ray}>
+            {rayons.length > 1 && <h4 class="art-h">{ray}</h4>}
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Article</th><th>Prix</th>{list.some((r) => r.rang) && <th>Rang</th>}{list.some((r) => r.saisons) && <th>Saisons</th>}</tr></thead>
+                <tbody>
+                  {list.map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.item ? <Chip id={r.item} size={24} /> : r.nom}</td>
+                      <td>{r.prix != null ? `${r.prix} ${r.devise}` : '—'}</td>
+                      {list.some((rr) => rr.rang) && <td>{r.rang ?? ''}</td>}
+                      {list.some((rr) => rr.saisons) && <td>{r.saisons ? (r.saisons.length === 4 ? 'Toutes' : r.saisons.map((s: Season) => SEASON_FR[s]).join(', ')) : ''}{r.annee_min ? ` (an ${r.annee_min}+)` : ''}</td>}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
+    </Section>
+  );
+}
+
+function Sources({ e }: { e: Entity }) {
+  return (
+    <Section title="Sources et fiabilité" open={false}>
+      {e.sources.map((s) => (
+        <p key={s.url} style={{ margin: '4px 0' }}>
+          <a href={s.url} target="_blank" rel="noopener">
+            {s.name} <Icon name="external" style={{ width: 14, height: 14, display: 'inline', verticalAlign: '-2px' }} />
+          </a>
+          {s.date && <span class="note"> · rév. {s.date}</span>}
+        </p>
+      ))}
+      <p class="note">
+        Confiance : <strong>{e.confiance}</strong>
+        {e.a_verifier.length ? ` · à vérifier : ${e.a_verifier.join(', ')}` : ''}. Contenu sous licence CC BY-SA ; images © Stairway Games.
+      </p>
+    </Section>
+  );
+}
+
+/** Rendu des blocs d'article (titres, paragraphes, listes, tableaux défilants). */
+export function Article({ blocks }: { blocks: Block[] }) {
+  return (
+    <section class="article" aria-label="Article du wiki" lang="en">
+      {blocks.map((b, i) => {
+        if (b.t === 'h') return b.l <= 2 ? <h3 key={i} class="section-title">{b.x}</h3> : <h4 key={i} class="art-h">{b.x}</h4>;
+        if (b.t === 'p') return <p key={i} class="art-p"><RichText text={b.x} /></p>;
+        if (b.t === 'ul')
+          return (
+            <ul key={i} class="art-ul">
+              {b.i.map((x, k) => <li key={k}><RichText text={x} /></li>)}
+            </ul>
+          );
+        return (
+          <div key={i} class="table-wrap" tabIndex={0} role="region" aria-label={b.c ?? 'Tableau'}>
+            <table>
+              {b.c && b.c !== 'shop' && b.c !== 'offering' && <caption>{b.c}</caption>}
+              {b.h.length > 0 && (
+                <thead>
+                  <tr>{b.h.map((h, k) => <th key={k} scope="col"><RichText text={h} /></th>)}</tr>
+                </thead>
+              )}
+              <tbody>
+                {b.r.map((r, k) => (
+                  <tr key={k}>{r.map((c, j) => <td key={j}><RichText text={c} /></td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
+    </section>
+  );
+}

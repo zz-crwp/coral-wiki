@@ -1,0 +1,2548 @@
+{
+ "genere": "2026-10-17T12:54:35.566Z",
+ "totaux": {
+  "pages_fandom": 3168,
+  "entites": 2999,
+  "exclues": 310
+ },
+ "qualite": {
+  "sans_image": 194,
+  "sans_obtention": 26,
+  "sans_description": 39,
+  "nom_fr": 394,
+  "desc_fr": 221,
+  "desc_trad": 2739,
+  "alias_fr": 2457,
+  "haute": 242,
+  "moyenne": 2677,
+  "basse": 80
+ },
+ "domaines": [
+  {
+   "domaine": "artisanat",
+   "libelle": "Artisanat",
+   "entites": 508,
+   "sans_image": 0,
+   "sans_obtention": 1,
+   "nom_fr": 34,
+   "desc_fr": 23,
+   "haute": 25,
+   "moyenne": 476,
+   "basse": 7,
+   "article": 508
+  },
+  {
+   "domaine": "mobilier",
+   "libelle": "Mobilier & décoration",
+   "entites": 451,
+   "sans_image": 0,
+   "sans_obtention": 1,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 447,
+   "basse": 4,
+   "article": 451
+  },
+  {
+   "domaine": "vetements",
+   "libelle": "Vêtements",
+   "entites": 439,
+   "sans_image": 1,
+   "sans_obtention": 1,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 439,
+   "basse": 0,
+   "article": 439
+  },
+  {
+   "domaine": "mineraux",
+   "libelle": "Minerais, gemmes, fossiles & artefacts",
+   "entites": 199,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 199,
+   "basse": 0,
+   "article": 199
+  },
+  {
+   "domaine": "cultures",
+   "libelle": "Cultures & graines",
+   "entites": 166,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 66,
+   "desc_fr": 58,
+   "haute": 59,
+   "moyenne": 105,
+   "basse": 2,
+   "article": 166
+  },
+  {
+   "domaine": "pnj",
+   "libelle": "Personnages",
+   "entites": 137,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 54,
+   "desc_fr": 0,
+   "haute": 14,
+   "moyenne": 105,
+   "basse": 18,
+   "article": 135
+  },
+  {
+   "domaine": "cuisine",
+   "libelle": "Cuisine",
+   "entites": 132,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 102,
+   "desc_fr": 80,
+   "haute": 86,
+   "moyenne": 43,
+   "basse": 3,
+   "article": 132
+  },
+  {
+   "domaine": "guides",
+   "libelle": "Guides & mécaniques",
+   "entites": 116,
+   "sans_image": 77,
+   "sans_obtention": 0,
+   "nom_fr": 4,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 112,
+   "basse": 4,
+   "article": 107
+  },
+  {
+   "domaine": "lieux",
+   "libelle": "Lieux & magasins",
+   "entites": 83,
+   "sans_image": 27,
+   "sans_obtention": 0,
+   "nom_fr": 32,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 69,
+   "basse": 14,
+   "article": 83
+  },
+  {
+   "domaine": "cueillette",
+   "libelle": "Cueillette",
+   "entites": 82,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 10,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 82,
+   "basse": 0,
+   "article": 82
+  },
+  {
+   "domaine": "quetes",
+   "libelle": "Quêtes",
+   "entites": 81,
+   "sans_image": 81,
+   "sans_obtention": 0,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 81,
+   "basse": 0,
+   "article": 0
+  },
+  {
+   "domaine": "objets",
+   "libelle": "Objets divers",
+   "entites": 78,
+   "sans_image": 1,
+   "sans_obtention": 14,
+   "nom_fr": 2,
+   "desc_fr": 2,
+   "haute": 2,
+   "moyenne": 73,
+   "basse": 3,
+   "article": 78
+  },
+  {
+   "domaine": "poissons",
+   "libelle": "Poissons",
+   "entites": 69,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 1,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 69,
+   "basse": 0,
+   "article": 69
+  },
+  {
+   "domaine": "elevage",
+   "libelle": "Élevage",
+   "entites": 64,
+   "sans_image": 0,
+   "sans_obtention": 4,
+   "nom_fr": 3,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 59,
+   "basse": 5,
+   "article": 64
+  },
+  {
+   "domaine": "armes",
+   "libelle": "Armes & anneaux",
+   "entites": 62,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 62,
+   "basse": 0,
+   "article": 62
+  },
+  {
+   "domaine": "groupes",
+   "libelle": "Groupes d'objets",
+   "entites": 53,
+   "sans_image": 5,
+   "sans_obtention": 0,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 52,
+   "basse": 1,
+   "article": 53
+  },
+  {
+   "domaine": "insectes",
+   "libelle": "Insectes",
+   "entites": 53,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 53,
+   "basse": 0,
+   "article": 53
+  },
+  {
+   "domaine": "succes",
+   "libelle": "Succès",
+   "entites": 51,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 51,
+   "desc_fr": 51,
+   "haute": 51,
+   "moyenne": 0,
+   "basse": 0,
+   "article": 0
+  },
+  {
+   "domaine": "ressources",
+   "libelle": "Ressources",
+   "entites": 45,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 17,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 45,
+   "basse": 0,
+   "article": 45
+  },
+  {
+   "domaine": "creatures-marines",
+   "libelle": "Créatures marines",
+   "entites": 45,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 45,
+   "basse": 0,
+   "article": 45
+  },
+  {
+   "domaine": "monstres",
+   "libelle": "Monstres",
+   "entites": 25,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 13,
+   "basse": 12,
+   "article": 25
+  },
+  {
+   "domaine": "arbres",
+   "libelle": "Arbres",
+   "entites": 22,
+   "sans_image": 0,
+   "sans_obtention": 5,
+   "nom_fr": 7,
+   "desc_fr": 6,
+   "haute": 5,
+   "moyenne": 12,
+   "basse": 5,
+   "article": 22
+  },
+  {
+   "domaine": "outils",
+   "libelle": "Outils",
+   "entites": 11,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 2,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 11,
+   "basse": 0,
+   "article": 11
+  },
+  {
+   "domaine": "batiments",
+   "libelle": "Bâtiments",
+   "entites": 10,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 1,
+   "desc_fr": 1,
+   "haute": 0,
+   "moyenne": 10,
+   "basse": 0,
+   "article": 10
+  },
+  {
+   "domaine": "festivals",
+   "libelle": "Festivals",
+   "entites": 9,
+   "sans_image": 2,
+   "sans_obtention": 0,
+   "nom_fr": 0,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 7,
+   "basse": 2,
+   "article": 8
+  },
+  {
+   "domaine": "maitrises",
+   "libelle": "Maîtrises & compétences",
+   "entites": 8,
+   "sans_image": 0,
+   "sans_obtention": 0,
+   "nom_fr": 8,
+   "desc_fr": 0,
+   "haute": 0,
+   "moyenne": 8,
+   "basse": 0,
+   "article": 8
+  }
+ ],
+ "categories": [
+  {
+   "categorie": "Characters",
+   "pages": 138,
+   "importees": 138,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "pnj": 137,
+    "guides": 1
+   }
+  },
+  {
+   "categorie": "Marriage candidates",
+   "pages": 30,
+   "importees": 30,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "pnj": 30
+   }
+  },
+  {
+   "categorie": "Merfolk",
+   "pages": 19,
+   "importees": 19,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "pnj": 19
+   }
+  },
+  {
+   "categorie": "Adoptable pet characters",
+   "pages": 20,
+   "importees": 20,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "pnj": 20
+   }
+  },
+  {
+   "categorie": "Crops",
+   "pages": 93,
+   "importees": 92,
+   "exclues": 1,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 1
+   },
+   "domaines": {
+    "cultures": 82,
+    "guides": 3,
+    "arbres": 7
+   }
+  },
+  {
+   "categorie": "Fruits",
+   "pages": 45,
+   "importees": 45,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "cultures": 27,
+    "cueillette": 11,
+    "arbres": 7
+   }
+  },
+  {
+   "categorie": "Vegetables",
+   "pages": 37,
+   "importees": 37,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "cultures": 30,
+    "cueillette": 7
+   }
+  },
+  {
+   "categorie": "Flowers",
+   "pages": 30,
+   "importees": 30,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "cultures": 17,
+    "cueillette": 13
+   }
+  },
+  {
+   "categorie": "Grains",
+   "pages": 6,
+   "importees": 6,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "cultures": 6
+   }
+  },
+  {
+   "categorie": "Scavengeables",
+   "pages": 84,
+   "importees": 82,
+   "exclues": 2,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 2
+   },
+   "domaines": {
+    "cueillette": 82
+   }
+  },
+  {
+   "categorie": "Fish",
+   "pages": 70,
+   "importees": 70,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "poissons": 69,
+    "guides": 1
+   }
+  },
+  {
+   "categorie": "Insects",
+   "pages": 53,
+   "importees": 53,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "insectes": 53
+   }
+  },
+  {
+   "categorie": "Critters",
+   "pages": 45,
+   "importees": 45,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "creatures-marines": 45
+   }
+  },
+  {
+   "categorie": "Farm animals",
+   "pages": 12,
+   "importees": 12,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "elevage": 12
+   }
+  },
+  {
+   "categorie": "Animal products",
+   "pages": 42,
+   "importees": 42,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "elevage": 42
+   }
+  },
+  {
+   "categorie": "Artifacts",
+   "pages": 78,
+   "importees": 78,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "mineraux": 78
+   }
+  },
+  {
+   "categorie": "Fossils",
+   "pages": 61,
+   "importees": 61,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "groupes": 1,
+    "mineraux": 60
+   }
+  },
+  {
+   "categorie": "Gems",
+   "pages": 35,
+   "importees": 35,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "mineraux": 35
+   }
+  },
+  {
+   "categorie": "Geodes",
+   "pages": 5,
+   "importees": 5,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "mineraux": 5
+   }
+  },
+  {
+   "categorie": "Resources",
+   "pages": 40,
+   "importees": 39,
+   "exclues": 1,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 1
+   },
+   "domaines": {
+    "ressources": 30,
+    "arbres": 8,
+    "cultures": 1
+   }
+  },
+  {
+   "categorie": "Loot",
+   "pages": 16,
+   "importees": 15,
+   "exclues": 1,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 1
+   },
+   "domaines": {
+    "ressources": 15
+   }
+  },
+  {
+   "categorie": "Kelp",
+   "pages": 4,
+   "importees": 4,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "ressources": 4
+   }
+  },
+  {
+   "categorie": "Metal bars",
+   "pages": 4,
+   "importees": 4,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "ressources": 4
+   }
+  },
+  {
+   "categorie": "Artisan products",
+   "pages": 429,
+   "importees": 429,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "artisanat": 428,
+    "cuisine": 1
+   }
+  },
+  {
+   "categorie": "Artisan equipments",
+   "pages": 13,
+   "importees": 11,
+   "exclues": 2,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 2
+   },
+   "domaines": {
+    "artisanat": 10,
+    "batiments": 1
+   }
+  },
+  {
+   "categorie": "Crafted items",
+   "pages": 918,
+   "importees": 917,
+   "exclues": 1,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 1
+   },
+   "domaines": {
+    "artisanat": 505,
+    "objets": 36,
+    "ressources": 29,
+    "cultures": 15,
+    "mineraux": 183,
+    "cuisine": 107,
+    "cueillette": 4,
+    "mobilier": 30,
+    "batiments": 2,
+    "groupes": 2,
+    "elevage": 4
+   }
+  },
+  {
+   "categorie": "Cooked dishes",
+   "pages": 107,
+   "importees": 107,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "cuisine": 107
+   }
+  },
+  {
+   "categorie": "Cooking utensils",
+   "pages": 10,
+   "importees": 9,
+   "exclues": 1,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 1
+   },
+   "domaines": {
+    "cuisine": 9
+   }
+  },
+  {
+   "categorie": "Consumables",
+   "pages": 636,
+   "importees": 634,
+   "exclues": 2,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 2
+   },
+   "domaines": {
+    "cultures": 81,
+    "objets": 15,
+    "cueillette": 75,
+    "elevage": 26,
+    "artisanat": 309,
+    "cuisine": 123,
+    "arbres": 5
+   }
+  },
+  {
+   "categorie": "Tools",
+   "pages": 15,
+   "importees": 15,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "outils": 11,
+    "guides": 4
+   }
+  },
+  {
+   "categorie": "Weapons",
+   "pages": 43,
+   "importees": 43,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "armes": 37,
+    "objets": 6
+   }
+  },
+  {
+   "categorie": "Clothing",
+   "pages": 439,
+   "importees": 439,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "vetements": 439
+   }
+  },
+  {
+   "categorie": "Decorations",
+   "pages": 86,
+   "importees": 86,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "mobilier": 86
+   }
+  },
+  {
+   "categorie": "Decor",
+   "pages": 44,
+   "importees": 44,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "mobilier": 44
+   }
+  },
+  {
+   "categorie": "Scarecrows",
+   "pages": 24,
+   "importees": 24,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "artisanat": 24
+   }
+  },
+  {
+   "categorie": "Fertilizer",
+   "pages": 9,
+   "importees": 9,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "artisanat": 9
+   }
+  },
+  {
+   "categorie": "Locations",
+   "pages": 93,
+   "importees": 89,
+   "exclues": 4,
+   "ecart": 0,
+   "raisons": {
+    "ébauche vide (moins de 400 caractères, sans données)": 3,
+    "page d’accueil / méta du wiki": 1
+   },
+   "domaines": {
+    "lieux": 83,
+    "guides": 6
+   }
+  },
+  {
+   "categorie": "Buildings",
+   "pages": 12,
+   "importees": 12,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "batiments": 10,
+    "guides": 2
+   }
+  },
+  {
+   "categorie": "Shops and services",
+   "pages": 31,
+   "importees": 31,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "lieux": 30,
+    "artisanat": 1
+   }
+  },
+  {
+   "categorie": "Monsters",
+   "pages": 24,
+   "importees": 23,
+   "exclues": 1,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 1
+   },
+   "domaines": {
+    "monstres": 23
+   }
+  },
+  {
+   "categorie": "Festivals",
+   "pages": 8,
+   "importees": 8,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "festivals": 8
+   }
+  },
+  {
+   "categorie": "Item groups",
+   "pages": 53,
+   "importees": 53,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "groupes": 53
+   }
+  },
+  {
+   "categorie": "Game mechanics",
+   "pages": 27,
+   "importees": 26,
+   "exclues": 1,
+   "ecart": 0,
+   "raisons": {
+    "contenu retiré du jeu ou page à supprimer": 1
+   },
+   "domaines": {
+    "guides": 17,
+    "maitrises": 8,
+    "quetes": 1
+   }
+  },
+  {
+   "categorie": "Coffers",
+   "pages": 6,
+   "importees": 6,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "mineraux": 6
+   }
+  },
+  {
+   "categorie": "Fossil nodes",
+   "pages": 5,
+   "importees": 5,
+   "exclues": 0,
+   "ecart": 0,
+   "raisons": {},
+   "domaines": {
+    "mineraux": 5
+   }
+  }
+ ],
+ "exclusions": {
+  "page d’accueil / méta du wiki": {
+   "n": 3,
+   "pages": [
+    "Coral Island Wiki",
+    "Coral Island",
+    "Stairway Games"
+   ]
+  },
+  "sous-page fusionnée dans la fiche du personnage": {
+   "n": 275,
+   "pages": [
+    "Mark/Letters",
+    "Millie/Letters",
+    "Olan/Dialogue",
+    "Zarah/Letters",
+    "Semeru/Events",
+    "Denali/Dialogue",
+    "Agung/Dialogue",
+    "Agung/Events",
+    "Denali/Events",
+    "Miranjani/Events",
+    "Cho Oyu/Events",
+    "Nanda Devi/Events",
+    "Olan/Events",
+    "Krakatoa/Events",
+    "Gort/Events",
+    "Chieftain/Events",
+    "Grog/Events",
+    "Grog/Letters",
+    "Surya/Letters",
+    "Pablo/Letters",
+    "Miranjani/Letters",
+    "Semeru/Letters",
+    "Wakuu/Letters",
+    "Sam/Letters",
+    "Hangout Events/Scott",
+    "Hangout Events/Surya",
+    "Hangout Events/Noah",
+    "Hangout Events/Theo",
+    "Hangout Events/Chaem",
+    "Hangout Events/Leah",
+    "Hangout Events/Wakuu",
+    "Hangout Events/Charles",
+    "Hangout Events/Luke",
+    "Hangout Events/Kenny",
+    "Hangout Events/Pablo",
+    "Hangout Events/Alice",
+    "Giu/Gallery",
+    "Goddess of Flowers/Gallery",
+    "Gong/Gallery",
+    "Gort/Gallery",
+    "Grog/Gallery",
+    "Groo/Gallery",
+    "Jeff Smith/Gallery",
+    "Judge Ross/Gallery",
+    "Lady Lavanna/Gallery",
+    "Master Slime/Gallery",
+    "Miranjani/Dialogue",
+    "Wataru/Letters",
+    "Yuri/Letters",
+    "Agung/Letters",
+    "Leah/Letters",
+    "Rafael/Dialogue",
+    "Ben/Dialogue",
+    "Charles/Dialogue",
+    "Kenny/Dialogue",
+    "Luke/Dialogue",
+    "Mark/Dialogue",
+    "Noah/Dialogue",
+    "Pablo/Dialogue",
+    "Raj/Dialogue",
+    "Scott/Dialogue",
+    "Surya/Dialogue",
+    "Theo/Dialogue",
+    "Wakuu/Dialogue",
+    "Aaliyah/Dialogue",
+    "Alice/Dialogue",
+    "Chaem/Dialogue",
+    "Eva/Dialogue",
+    "Leah/Dialogue",
+    "Lily/Dialogue",
+    "Macy/Dialogue",
+    "Rysy/Dialogue",
+    "Etna/Dialogue",
+    "Tahat/Dialogue",
+    "Krakatoa/Dialogue",
+    "Millie/Dialogue",
+    "Nanda Devi/Dialogue",
+    "Slamet/Dialogue",
+    "Cho Oyu/Dialogue",
+    "Nina/Dialogue",
+    "Suki/Dialogue",
+    "Yuri/Dialogue",
+    "Zarah/Dialogue",
+    "Anne/Dialogue",
+    "Antonio/Dialogue",
+    "Archie/Dialogue",
+    "Nanda Devi/Gallery",
+    "Betty/Dialogue",
+    "Olan/Gallery",
+    "Bree/Dialogue",
+    "Slamet/Gallery",
+    "Tahat/Gallery",
+    "Connor/Dialogue",
+    "Etna/Gallery",
+    "Rysy/Gallery",
+    "Dinda/Dialogue",
+    "Lanin/Gallery",
+    "Galoong/Gallery",
+    "Vihren/Gallery",
+    "Dippa/Dialogue",
+    "Lawu/Gallery",
+    "Todi/Gallery",
+    "Eleanor/Dialogue",
+    "Jannu/Gallery",
+    "Emily/Dialogue",
+    "Emma/Dialogue",
+    "Erika/Dialogue",
+    "Frank/Dialogue",
+    "Jack/Dialogue",
+    "Jim/Dialogue",
+    "Joko/Dialogue",
+    "Kira/Dialogue",
+    "Ling/Dialogue",
+    "Oliver/Dialogue",
+    "Paul/Dialogue",
+    "Raina/Dialogue",
+    "Raina/Events",
+    "Randy/Dialogue",
+    "Sam/Dialogue",
+    "Sunny/Dialogue",
+    "Takeba/Dialogue",
+    "Valentina/Dialogue",
+    "Walter/Dialogue",
+    "Wataru/Dialogue",
+    "Zoe/Dialogue",
+    "Pablo/Events",
+    "Kenny/Events",
+    "Ben/Events",
+    "Charles/Events",
+    "Luke/Events",
+    "Archie/Events",
+    "Sam/Events",
+    "Valentina/Events",
+    "Emma/Events",
+    "Eva/Events",
+    "Anne/Events",
+    "Yuri/Events",
+    "Theo/Events",
+    "Rafael/Events",
+    "Scott/Events",
+    "Millie/Events",
+    "Zoe/Events",
+    "Betty/Events",
+    "Aaliyah/Letters",
+    "Scott/Letters",
+    "Noah/Events",
+    "Bree/Events",
+    "Alice/Gallery",
+    "Aaliyah/Gallery",
+    "Anne/Gallery",
+    "Antonio/Gallery",
+    "Archie/Gallery",
+    "Ben/Gallery",
+    "Betty/Gallery",
+    "Bree/Gallery",
+    "Chaem/Gallery",
+    "Charles/Gallery",
+    "Mark/Gallery",
+    "Connor/Gallery",
+    "Dinda/Gallery",
+    "Dippa/Gallery",
+    "Eleanor/Gallery",
+    "Emily/Gallery",
+    "Emma/Gallery",
+    "Erika/Gallery",
+    "Eva/Gallery",
+    "Frank/Gallery",
+    "Jack/Gallery",
+    "Jim/Gallery",
+    "Joko/Gallery",
+    "Kenny/Gallery",
+    "Kira/Gallery",
+    "Leah/Gallery",
+    "Lily/Gallery",
+    "Ling/Gallery",
+    "Luke/Gallery",
+    "Macy/Gallery",
+    "Millie/Gallery",
+    "Nina/Gallery",
+    "Noah/Gallery",
+    "Oliver/Gallery",
+    "Pablo/Gallery",
+    "Paul/Gallery",
+    "Raj/Gallery",
+    "Randy/Gallery",
+    "Sam/Gallery",
+    "Scott/Gallery",
+    "Suki/Gallery",
+    "Sunny/Gallery",
+    "Surya/Gallery",
+    "Takeba/Gallery",
+    "Theo/Gallery",
+    "Valentina/Gallery",
+    "Wakuu/Gallery",
+    "Walter/Gallery",
+    "Wataru/Gallery",
+    "Yuri/Gallery",
+    "Zarah/Gallery",
+    "Zoe/Gallery",
+    "Jim/Events",
+    "Joko/Events",
+    "Alice/Events",
+    "Suki/Events",
+    "Dinda/Letters",
+    "Paul/Events",
+    "Aaliyah/Events",
+    "Chaem/Events",
+    "Leah/Events",
+    "Lily/Events",
+    "Macy/Events",
+    "Mark/Events",
+    "Raj/Events",
+    "Surya/Events",
+    "Wakuu/Events",
+    "Antonio/Events",
+    "Connor/Events",
+    "Dinda/Events",
+    "Dippa/Events",
+    "Emily/Events",
+    "Erika/Events",
+    "Frank/Events",
+    "Jack/Events",
+    "Kira/Events",
+    "Ling/Events",
+    "Sunny/Events",
+    "Walter/Events",
+    "Alice/Letters",
+    "Anne/Letters",
+    "Antonio/Letters",
+    "Archie/Letters",
+    "Axel/Gallery",
+    "Axel/Dialogue",
+    "Ben/Letters",
+    "Betty/Letters",
+    "Bonbon/Gallery",
+    "Bonbon/Dialogue",
+    "Bree/Letters",
+    "Butter (character)/Gallery",
+    "Butter (character)/Dialogue",
+    "Chaem/Letters",
+    "Charles/Letters",
+    "Chieftain/Dialogue",
+    "Chieftain/Letters",
+    "Chieftain/Gallery",
+    "Agung/Gallery",
+    "Miranjani/Gallery",
+    "Concerned Monkey/Letters",
+    "Connor/Letters",
+    "Nina/Events",
+    "Zarah/Events",
+    "Oliver/Events",
+    "Randy/Events",
+    "Wataru/Events",
+    "Concerned Monkey/Gallery",
+    "Denali/Gallery",
+    "Derek/Gallery",
+    "Cho Oyu/Gallery",
+    "Deno/Gallery",
+    "Krakatoa/Gallery",
+    "Lily/Letters",
+    "Ratih/Gallery",
+    "Semeru/Gallery",
+    "Eleanor/Events",
+    "Luke/Letters",
+    "Semeru/Dialogue",
+    "Bobby/Gallery",
+    "Bobby/Dialogue",
+    "Dippa/Letters",
+    "Eddy/Gallery",
+    "Karen/Gallery",
+    "Raina/Gallery",
+    "Eleanor/Letters",
+    "Emily/Letters",
+    "Emma/Letters",
+    "Rafael/Gallery"
+   ]
+  },
+  "contenu retiré du jeu ou page à supprimer": {
+   "n": 25,
+   "pages": [
+    "Wakame weed",
+    "Ocean Seed MIxing",
+    "Artisan product.",
+    "Land decor",
+    "Yuri's letters",
+    "Damaged book",
+    "Dye-making machine",
+    "Yogurt machine",
+    "Puree machine",
+    "Seed maker",
+    "Changelist",
+    "Cleanliness",
+    "Kimchi (cooked dish)",
+    "Iron Skewer",
+    "Sandstone",
+    "Spider fur",
+    "Beta",
+    "Coral Island (game)",
+    "Fruit juice",
+    "Carrier Bird",
+    "Multiplayer",
+    "Alpha",
+    "Auto S&F",
+    "Giant clam",
+    "Spider"
+   ]
+  },
+  "page de liste générée (DPL), remplacée par les listes de l’app": {
+   "n": 1,
+   "pages": [
+    "Shop"
+   ]
+  },
+  "ébauche vide (moins de 400 caractères, sans données)": {
+   "n": 4,
+   "pages": [
+    "Decoration",
+    "The Floating Boat",
+    "The Red Boat",
+    "Beach"
+   ]
+  },
+  "pack DLC (page commerciale, objets importés séparément)": {
+   "n": 2,
+   "pages": [
+    "Ocean Guardian Charity DLC Pack",
+    "Ocean Explorer Charity DLC Pack"
+   ]
+  }
+ },
+ "fr": {
+  "pages_wiki_fr": 415,
+  "apparies": 336,
+  "methodes": {
+   "titre identique": 98,
+   "alignement manuel des titres": 73,
+   "empreinte plat (prix, santé, énergie)": 54,
+   "empreinte culture (prix, prix graine)": 48,
+   "empreinte culture (prix, saisons)": 8,
+   "empreinte produit artisanal (prix par qualité)": 6,
+   "empreinte équipement (prix, taille, emplacements)": 14,
+   "anniversaire identique": 2,
+   "recette alignée": 33
+  },
+  "non_apparies": [
+   "Arbres fruitiers",
+   "Carte",
+   "Cabane de la chasseuse",
+   "Chef",
+   "Boue gluante",
+   "Boule gluante",
+   "Boisson à base de noix de coco entière",
+   "Burger d'été",
+   "Choucroute épicée",
+   "Cultures",
+   "Farine",
+   "Graines de chêne",
+   "Graines d'érable",
+   "Fourrure d'araignée",
+   "Huile de colza",
+   "Huile",
+   "Magasin d'électronique \"Prise électronique\"",
+   "Maison du maire",
+   "Olivier",
+   "Plantes fruitières",
+   "Poutine aux patates douces",
+   "Wiki Coral Island",
+   "Taverne Locale",
+   "Tarte au jacquier haché",
+   "Tempura d'araignée",
+   "Épis de maïs",
+   "Œufs sur le plat",
+   "Œuf dur"
+  ],
+  "controles_croises": {
+   "checked": 455,
+   "agree": 444
+  }
+ },
+ "guide_steam": {
+  "pnj": 61,
+  "anniversaires_ok": 60,
+  "anniversaires_ko": 1,
+  "cadeaux_ok": 254,
+  "cadeaux_ko": 18,
+  "cadeaux_non_resolus": 63
+ },
+ "refs_cassees": [],
+ "erreurs_schema": [],
+ "noms_non_resolus": [
+  [
+   "L-shaped hanging rack",
+   3
+  ],
+  [
+   "Classic bookcase",
+   3
+  ],
+  [
+   "Regal painting sand decor",
+   3
+  ],
+  [
+   "Pufferfish barrels",
+   2
+  ],
+  [
+   "Pufferfish gas cans",
+   2
+  ],
+  [
+   "Pufferfish valves",
+   2
+  ],
+  [
+   "Pufferfish oil tank",
+   2
+  ],
+  [
+   "Pufferfish ATM machine",
+   2
+  ],
+  [
+   "Pufferfish vending machine",
+   2
+  ],
+  [
+   "Pufferfish gas station",
+   2
+  ],
+  [
+   "Pufferfish garden pot",
+   2
+  ],
+  [
+   "Pufferfish garden statue",
+   2
+  ],
+  [
+   "Pufferfish garden table",
+   2
+  ],
+  [
+   "Pufferfish arch",
+   2
+  ],
+  [
+   "Pufferfish garden lamp",
+   2
+  ],
+  [
+   "Pufferfish concrete bench",
+   2
+  ],
+  [
+   "Pufferfish balloon",
+   2
+  ],
+  [
+   "Pufferfish garden bench",
+   2
+  ],
+  [
+   "Pufferfish street light",
+   2
+  ],
+  [
+   "Pufferfish oil rig",
+   2
+  ],
+  [
+   "Pufferfish vertical garden",
+   2
+  ],
+  [
+   "Pufferfish mini podium",
+   2
+  ],
+  [
+   "Mermaid nightstand",
+   2
+  ],
+  [
+   "Mermaid aquarium",
+   2
+  ],
+  [
+   "Coral bookcase",
+   2
+  ],
+  [
+   "Seashell path",
+   2
+  ],
+  [
+   "Starfish path",
+   2
+  ],
+  [
+   "Farming tools treasure chest",
+   2
+  ],
+  [
+   "Coral arch",
+   2
+  ],
+  [
+   "Coral chair",
+   2
+  ],
+  [
+   "Sea snail standing pot",
+   2
+  ],
+  [
+   "Seashells flower pot",
+   2
+  ],
+  [
+   "Big seashell pot",
+   2
+  ],
+  [
+   "Standing jellyfish lamp",
+   2
+  ],
+  [
+   "Seahorse statue",
+   2
+  ],
+  [
+   "Coral decor",
+   2
+  ],
+  [
+   "Seashell lamp",
+   2
+  ],
+  [
+   "Coral table",
+   2
+  ],
+  [
+   "Coral sofa",
+   2
+  ],
+  [
+   "Big coral decor",
+   2
+  ],
+  [
+   "Coral lamp",
+   2
+  ],
+  [
+   "Seashell fountain",
+   2
+  ],
+  [
+   "Mermaid fountain",
+   2
+  ],
+  [
+   "Outdoor aquarium",
+   2
+  ],
+  [
+   "Seashell gazebo",
+   2
+  ],
+  [
+   "Plastic shoe rack",
+   2
+  ],
+  [
+   "3-level rack",
+   2
+  ],
+  [
+   "Spooky flooring",
+   2
+  ],
+  [
+   "Spooky cobblestone flooring",
+   2
+  ],
+  [
+   "Spooky green wall",
+   2
+  ],
+  [
+   "Purple distressed wall",
+   2
+  ],
+  [
+   "Baroque cow bush",
+   2
+  ],
+  [
+   "Lord mawjestic bush",
+   2
+  ],
+  [
+   "Sir barks a lot bush",
+   2
+  ],
+  [
+   "Baroque swan bush",
+   2
+  ],
+  [
+   "Baroque bear bush",
+   2
+  ],
+  [
+   "Baroque horse bush",
+   2
+  ],
+  [
+   "Kerosene lamp",
+   2
+  ],
+  [
+   "Iron fence",
+   2
+  ],
+  [
+   "Butter//Large butter",
+   2
+  ],
+  [
+   "Storm clamclad garments",
+   1
+  ],
+  [
+   "Moonlit clamclad garments",
+   1
+  ],
+  [
+   "Scarlet clamclad garments",
+   1
+  ],
+  [
+   "Dusk clamclad garments",
+   1
+  ],
+  [
+   "Lagoon naganian garments",
+   1
+  ],
+  [
+   "Coastal naganian garments",
+   1
+  ],
+  [
+   "Tide naganian garments",
+   1
+  ],
+  [
+   "Shore naganian garments",
+   1
+  ],
+  [
+   "Imperial tenun regalia",
+   1
+  ],
+  [
+   "Bronze tenun regalia",
+   1
+  ],
+  [
+   "Silver tenun regalia",
+   1
+  ],
+  [
+   "Azure plate armor",
+   1
+  ],
+  [
+   "Ironclad plate armor",
+   1
+  ],
+  [
+   "Bronze plate armor",
+   1
+  ],
+  [
+   "Obsidian plate armor",
+   1
+  ],
+  [
+   "Royal silk garments",
+   1
+  ],
+  [
+   "Kelp silk garments",
+   1
+  ],
+  [
+   "Bronze silk garments",
+   1
+  ],
+  [
+   "Moonless silk garments",
+   1
+  ],
+  [
+   "Pirate chikin painting",
+   1
+  ],
+  [
+   "Glove lamp",
+   1
+  ],
+  [
+   "Shell college chair",
+   1
+  ],
+  [
+   "Sand dresser",
+   1
+  ],
+  [
+   "Flowers rug",
+   1
+  ],
+  [
+   "Sand sofa",
+   1
+  ],
+  [
+   "Handsome merfolk statue",
+   1
+  ],
+  [
+   "Ship's helm table",
+   1
+  ],
+  [
+   "Boat arm chair",
+   1
+  ],
+  [
+   "Sand bed",
+   1
+  ],
+  [
+   "Sand shelf",
+   1
+  ],
+  [
+   "Secret recipe",
+   1
+  ],
+  [
+   "Coral fence",
+   1
+  ],
+  [
+   "Kelp fence",
+   1
+  ],
+  [
+   "Reef fence",
+   1
+  ],
+  [
+   "Coral gate",
+   1
+  ],
+  [
+   "Kelp arch",
+   1
+  ],
+  [
+   "Reef arch",
+   1
+  ],
+  [
+   "Bamboo stick fence",
+   1
+  ],
+  [
+   "Asphalt path",
+   1
+  ],
+  [
+   "Black stone path",
+   1
+  ],
+  [
+   "Green stone path",
+   1
+  ],
+  [
+   "Wooden arrow sign",
+   1
+  ],
+  [
+   "Floatie sign",
+   1
+  ],
+  [
+   "C-A-M-P-F-I-R-E",
+   1
+  ],
+  [
+   "Jellyfish chair",
+   1
+  ],
+  [
+   "Small blue LED flower",
+   1
+  ],
+  [
+   "Small yellow LED flower",
+   1
+  ],
+  [
+   "Small pink LED flower",
+   1
+  ],
+  [
+   "Polkadot anemone",
+   1
+  ],
+  [
+   "Polkadot coral",
+   1
+  ],
+  [
+   "Polkadot sea sponge",
+   1
+  ],
+  [
+   "Polkadot sea decor",
+   1
+  ],
+  [
+   "Blue LED flower",
+   1
+  ],
+  [
+   "Yellow LED flower",
+   1
+  ],
+  [
+   "Pink LED flower",
+   1
+  ],
+  [
+   "Small reef decor",
+   1
+  ],
+  [
+   "Reef decor",
+   1
+  ],
+  [
+   "Jellyfish table",
+   1
+  ],
+  [
+   "Large blue LED flower",
+   1
+  ],
+  [
+   "Large yellow LED flower",
+   1
+  ],
+  [
+   "Large pink LED flower",
+   1
+  ],
+  [
+   "Large reef decor",
+   1
+  ],
+  [
+   "Shell street lamp",
+   1
+  ],
+  [
+   "Boat bench",
+   1
+  ],
+  [
+   "Can houses",
+   1
+  ],
+  [
+   "Crab trap",
+   1
+  ],
+  [
+   "Bucket pot",
+   1
+  ],
+  [
+   "Monolith pot",
+   1
+  ],
+  [
+   "Rock tent",
+   1
+  ],
+  [
+   "Pineapple gazebo",
+   1
+  ],
+  [
+   "Clown seal pet house",
+   1
+  ],
+  [
+   "Anchor",
+   1
+  ],
+  [
+   "Ghost pirate ship",
+   1
+  ],
+  [
+   "King statue",
+   1
+  ],
+  [
+   "Shell bar stand",
+   1
+  ],
+  [
+   "Giant terrarium",
+   1
+  ],
+  [
+   "Jellyfish gazebo",
+   1
+  ],
+  [
+   "Piggy bank",
+   1
+  ],
+  [
+   "Steel safe",
+   1
+  ],
+  [
+   "Tiny-Rex",
+   1
+  ],
+  [
+   "Golden trophy",
+   1
+  ],
+  [
+   "Prosperity fountain",
+   1
+  ],
+  [
+   "Any scallop",
+   1
+  ],
+  [
+   "Art deco hanging lamp",
+   1
+  ],
+  [
+   "Top-load washing machine",
+   1
+  ],
+  [
+   "Baroque candle",
+   1
+  ],
+  [
+   "Baroque short shelves",
+   1
+  ],
+  [
+   "Modern wall decor",
+   1
+  ],
+  [
+   "Gamer small bookcase",
+   1
+  ],
+  [
+   "Gamer big bookcase",
+   1
+  ],
+  [
+   "Electric keyboard",
+   1
+  ],
+  [
+   "DJ turntable",
+   1
+  ],
+  [
+   "Gamer TV table",
+   1
+  ],
+  [
+   "Arcade cabinet",
+   1
+  ],
+  [
+   "Classic TV table",
+   1
+  ],
+  [
+   "Spooky spiderweb wall",
+   1
+  ],
+  [
+   "Winter bookcase",
+   1
+  ],
+  [
+   "Disco nightstand",
+   1
+  ],
+  [
+   "Disco antique TV table",
+   1
+  ],
+  [
+   "Party cupcake table",
+   1
+  ],
+  [
+   "Party cookies table",
+   1
+  ],
+  [
+   "Party square cake table",
+   1
+  ],
+  [
+   "Stone pebble floor tile",
+   1
+  ],
+  [
+   "Stone hedge fence",
+   1
+  ],
+  [
+   "Wooden flower arch gate",
+   1
+  ],
+  [
+   "Camp grill",
+   1
+  ],
+  [
+   "Square stone flower pot",
+   1
+  ],
+  [
+   "Flower rock arch",
+   1
+  ],
+  [
+   "Log chair",
+   1
+  ],
+  [
+   "Camp bonfire",
+   1
+  ],
+  [
+   "Lamppost",
+   1
+  ],
+  [
+   "White flowering bush",
+   1
+  ],
+  [
+   "Pink flowering bush",
+   1
+  ],
+  [
+   "Round stone flower pot",
+   1
+  ],
+  [
+   "Log flower pot",
+   1
+  ],
+  [
+   "Log desk",
+   1
+  ],
+  [
+   "Stone desk",
+   1
+  ],
+  [
+   "Log bench",
+   1
+  ],
+  [
+   "Stone bench",
+   1
+  ],
+  [
+   "Stone waterfall",
+   1
+  ],
+  [
+   "Wooden swing",
+   1
+  ],
+  [
+   "Tribal hut",
+   1
+  ],
+  [
+   "Brick floor tile",
+   1
+  ],
+  [
+   "Javanese fence",
+   1
+  ],
+  [
+   "Javanese gate",
+   1
+  ],
+  [
+   "Wooden bird cage",
+   1
+  ],
+  [
+   "Lisung",
+   1
+  ],
+  [
+   "Umbul-umbul",
+   1
+  ],
+  [
+   "Javanese ceramic pot",
+   1
+  ],
+  [
+   "Bakulan",
+   1
+  ],
+  [
+   "Clinging orchid",
+   1
+  ],
+  [
+   "Javanese flower pillar",
+   1
+  ],
+  [
+   "Javanese arch",
+   1
+  ],
+  [
+   "Javanese lady statue",
+   1
+  ],
+  [
+   "Javanese outdoor table",
+   1
+  ],
+  [
+   "Javanese outdoor bench",
+   1
+  ],
+  [
+   "Javanese garden lamp",
+   1
+  ],
+  [
+   "Batik hanging",
+   1
+  ],
+  [
+   "Javanese stone fountain",
+   1
+  ],
+  [
+   "Wayang stage",
+   1
+  ],
+  [
+   "Delman",
+   1
+  ],
+  [
+   "Pendopo",
+   1
+  ],
+  [
+   "Regal stone path",
+   1
+  ],
+  [
+   "Regal stone fence",
+   1
+  ],
+  [
+   "Regal gate",
+   1
+  ],
+  [
+   "Regal wide gate",
+   1
+  ],
+  [
+   "Farmer garden cart",
+   1
+  ],
+  [
+   "Regal bonsai",
+   1
+  ],
+  [
+   "Regal garden lamp",
+   1
+  ],
+  [
+   "Regal arch",
+   1
+  ],
+  [
+   "Regal dragon garden statue",
+   1
+  ],
+  [
+   "Regal stone lion statue",
+   1
+  ],
+  [
+   "Regal wooden table",
+   1
+  ],
+  [
+   "Regal wooden bench",
+   1
+  ],
+  [
+   "Regal bamboo fountain",
+   1
+  ],
+  [
+   "Regal bridge",
+   1
+  ],
+  [
+   "Pagoda gazebo",
+   1
+  ],
+  [
+   "Baroque fence",
+   1
+  ],
+  [
+   "Baroque grass floor tile",
+   1
+  ],
+  [
+   "Baroque marble floor tile",
+   1
+  ],
+  [
+   "Baroque iron gate",
+   1
+  ],
+  [
+   "Baroque golden gate",
+   1
+  ],
+  [
+   "Baroque flower pot",
+   1
+  ],
+  [
+   "Baroque arch bush",
+   1
+  ],
+  [
+   "Baroque red flower bush",
+   1
+  ],
+  [
+   "Baroque yellow flower bush",
+   1
+  ],
+  [
+   "Baroque stone table",
+   1
+  ],
+  [
+   "Baroque marble table",
+   1
+  ],
+  [
+   "Baroque stone arch",
+   1
+  ],
+  [
+   "Baroque stone bench",
+   1
+  ],
+  [
+   "Baroque marble bench",
+   1
+  ],
+  [
+   "Baroque iron lamp",
+   1
+  ],
+  [
+   "Baroque stone waterfall",
+   1
+  ],
+  [
+   "Baroque water fountain",
+   1
+  ],
+  [
+   "Baroque venus statue",
+   1
+  ],
+  [
+   "Baroque rotunda",
+   1
+  ],
+  [
+   "Baroque gold lamp",
+   1
+  ],
+  [
+   "Spooky fence",
+   1
+  ],
+  [
+   "Spiderweb gate",
+   1
+  ],
+  [
+   "Spooky candle fence",
+   1
+  ],
+  [
+   "Tombstone",
+   1
+  ],
+  [
+   "Spooky stone",
+   1
+  ],
+  [
+   "Spooky flower pillar",
+   1
+  ],
+  [
+   "Spooky chair",
+   1
+  ],
+  [
+   "Spooky bonfire",
+   1
+  ],
+  [
+   "Spooky medium arch",
+   1
+  ],
+  [
+   "Spooky coffin",
+   1
+  ],
+  [
+   "Spooky red flower bush",
+   1
+  ],
+  [
+   "Spooky candy bush",
+   1
+  ],
+  [
+   "Spooky small arch",
+   1
+  ],
+  [
+   "Spooky table",
+   1
+  ],
+  [
+   "Spooky bench",
+   1
+  ],
+  [
+   "Spooky big arch",
+   1
+  ],
+  [
+   "Spooky lamp",
+   1
+  ],
+  [
+   "Spooky sofa",
+   1
+  ],
+  [
+   "Spooky waterfall",
+   1
+  ],
+  [
+   "Spooky tree trunk",
+   1
+  ],
+  [
+   "Spooky tree",
+   1
+  ],
+  [
+   "Spooky well",
+   1
+  ],
+  [
+   "Rickety fence",
+   1
+  ],
+  [
+   "Rickety gate",
+   1
+  ],
+  [
+   "Rickety arch",
+   1
+  ],
+  [
+   "Sand castle",
+   1
+  ],
+  [
+   "Beach picnic set",
+   1
+  ],
+  [
+   "Beach flamingo",
+   1
+  ],
+  [
+   "Blue beach umbrella",
+   1
+  ],
+  [
+   "Pink beach umbrella",
+   1
+  ],
+  [
+   "Blue surfboard",
+   1
+  ],
+  [
+   "Beach bonfire",
+   1
+  ],
+  [
+   "Beach garden torch",
+   1
+  ],
+  [
+   "Boat chair",
+   1
+  ],
+  [
+   "Mini palm pot",
+   1
+  ],
+  [
+   "Blue folding beach chair",
+   1
+  ],
+  [
+   "Pink folding beach chair",
+   1
+  ],
+  [
+   "Colorful boat flowerpot",
+   1
+  ],
+  [
+   "White and purple boat flowerpot",
+   1
+  ],
+  [
+   "Beach outdoor table",
+   1
+  ],
+  [
+   "Beach outdoor round table",
+   1
+  ],
+  [
+   "Boat couch",
+   1
+  ],
+  [
+   "Blue beach lounge chair",
+   1
+  ],
+  [
+   "Yellow beach lounge chair",
+   1
+  ],
+  [
+   "Beach outdoor lamp",
+   1
+  ],
+  [
+   "Beach swing",
+   1
+  ],
+  [
+   "Beach pool with white floaties",
+   1
+  ],
+  [
+   "Art nouveau fence",
+   1
+  ],
+  [
+   "Art nouveau stone path",
+   1
+  ],
+  [
+   "Art nouveau colorful path",
+   1
+  ],
+  [
+   "Art nouveau gate",
+   1
+  ],
+  [
+   "Art nouveau arch",
+   1
+  ],
+  [
+   "Art nouveau garden chair",
+   1
+  ],
+  [
+   "Art nouveau hanging flowers",
+   1
+  ],
+  [
+   "Grande love bush",
+   1
+  ],
+  [
+   "Maiden of flowers",
+   1
+  ],
+  [
+   "Art nouveau garden table",
+   1
+  ],
+  [
+   "Art nouveau garden bench",
+   1
+  ],
+  [
+   "Art nouveau garden lamp",
+   1
+  ],
+  [
+   "Art nouveau swing",
+   1
+  ],
+  [
+   "Art nouveau fountain",
+   1
+  ],
+  [
+   "Lonely pine tree",
+   1
+  ],
+  [
+   "Art nouveau small pond",
+   1
+  ]
+ ],
+ "conflits": 31,
+ "avertissements": [
+  "Alignement FR sans fiche EN : Taverne Locale → Local Tavern",
+  "Alignement FR sans fiche EN : Œuf dur → Boiled egg"
+ ],
+ "temple": {
+  "autels": 4,
+  "offrandes": 24
+ },
+ "musee": [
+  {
+   "poissons": 69
+  },
+  {
+   "insectes": 53
+  },
+  {
+   "creatures-marines": 45
+  },
+  {
+   "artefacts": 78
+  },
+  {
+   "fossiles": 70
+  },
+  {
+   "gemmes": 35
+  }
+ ]
+}

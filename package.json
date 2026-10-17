@@ -1,0 +1,36 @@
+{
+  "name": "coral-wiki",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "data:fetch": "node scripts/fetch.ts && node scripts/fetch-fr.ts && node scripts/fetch-steam.ts",
+    "data:build": "node scripts/build-data.ts",
+    "data": "npm run data:fetch && npm run data:build",
+    "qa:offline": "node scripts/qa/offline.ts",
+    "icons": "pwa-assets-generator",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "qa:progress": "node scripts/qa/progress.ts"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.11.3",
+    "idb": "^8.0.4",
+    "minisearch": "^7.2.0",
+    "preact": "^11.0.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^26.6.5",
+    "@vite-pwa/assets-generator": "^2.0.0",
+    "puppeteer-core": "^25.14.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vite-plugin-pwa": "^2.0.0",
+    "workbox-window": "^7.4.1"
+  }
+}

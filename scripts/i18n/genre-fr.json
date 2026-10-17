@@ -1,0 +1,9 @@
+{
+  "_doc": "Libellés accordés au genre, quand le même texte anglais sert à plusieurs habitants (la mémoire de traduction est indexée sur l'anglais).",
+  "emploi": {
+    "paul": "Photographe animalier",
+    "denali": "Gardienne",
+    "dinda": "Charpentière",
+    "surya": "Biologiste marin au Labo"
+  }
+}

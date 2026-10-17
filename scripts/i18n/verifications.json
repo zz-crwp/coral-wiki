@@ -1,0 +1,10 @@
+{
+  "_doc": "Vérifications manuelles par source tierce pour trancher les conflits EN/FR. valeur = valeur retenue (format du champ comparé).",
+  "verifications": [
+    { "id": "scott", "champ": "anniversaire", "valeur": "spring 12", "sources": ["https://screenrant.com/yearly-events-festival-birthdays-coral-island/"], "note": "Printemps 12 (partagé avec Oliver) selon Screen Rant ; le wiki FR indique Été." },
+    { "id": "kenny", "champ": "anniversaire", "valeur": "spring 9", "sources": ["https://gamerant.com/coral-island-all-yearly-events-and-celebrations/", "https://screenrant.com/yearly-events-festival-birthdays-coral-island/"], "note": "Printemps 9 selon Gamerant et Screen Rant." },
+    { "id": "walter", "champ": "anniversaire", "valeur": "spring 20", "sources": ["https://gamerant.com/coral-island-all-yearly-events-and-celebrations/"], "note": "Printemps 20 selon Gamerant." },
+    { "id": "pablo", "champ": "anniversaire", "valeur": "spring 27", "sources": ["https://progameguides.com/coral-island/coral-island-calendar-location-how-to-get-one/"], "note": "Printemps 27 selon ProGameGuides." },
+    { "id": "lily", "champ": "anniversaire", "valeur": "winter 19", "sources": ["https://gamerant.com/coral-island-all-yearly-events-and-celebrations/"], "note": "Sources divergentes : Hiver 19 (wiki EN, Gamerant), Automne 19 (Screen Rant, ProGameGuides), Hiver 17 (wiki FR). Hiver 19 retenu (wiki EN le plus récent + 1 guide) ; à confirmer en jeu.", "confiance": "basse" }
+  ]
+}
