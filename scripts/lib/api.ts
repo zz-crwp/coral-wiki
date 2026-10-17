@@ -9,7 +9,7 @@ export const API = `${WIKI}/api.php`;
 export const WIKI_FR = 'https://coral-island.fandom.com/fr';
 export const API_FR = `${WIKI_FR}/api.php`;
 export const UA =
-  'CoralWikiBot/0.1 (offline PWA companion for Coral Island; non-commercial; contact: github.com/huguesrob)';
+  'CoralWikiBot/0.1 (offline PWA companion for Coral Island; non-commercial; contact: github.com/zz-crwp/coral-wiki)';
 export const CACHE_DIR = join(import.meta.dirname, '..', '..', '.cache');
 
 const MIN_INTERVAL_MS = 1050;
