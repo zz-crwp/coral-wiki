@@ -13,7 +13,7 @@ export const route = signal<Route>(parse());
 export const tab = computed(() => {
   const s = route.value.path[0] ?? '';
   if (s === 'recherche') return 'recherche';
-  if (['encyclo', 'fiche', 'temple', 'musee', 'rang', 'mines'].includes(s)) return 'encyclo';
+  if (['encyclo', 'fiche', 'temple', 'musee', 'rang', 'mines', 'ameliorations'].includes(s)) return 'encyclo';
   if (s === 'trackers') return 'trackers';
   if (['plus', 'credits', 'outils', 'favoris'].includes(s)) return 'plus';
   return 'aujourdhui';

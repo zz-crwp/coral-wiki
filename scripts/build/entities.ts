@@ -3,7 +3,8 @@ import type { Page } from '../lib/load.ts';
 import { files, findTemplates, links, plain, sections, type Template } from '../lib/wikitext.ts';
 import type { Domain } from './classify.ts';
 import { Ctx, fandomSource, type Draft } from './ctx.ts';
-import { clean, list, num, qualityPrices, rank, scoped, seasons, times, weather, merge, ALL_SEASONS } from './norm.ts';
+import { clean, list, num, qualityPrices, rank, scoped, seasons, times, weather, merge, ALL_SEASONS, WEATHER_ALL } from './norm.ts';
+import { spawnConditions } from './spawn.ts';
 
 function firstImage(ctx: Ctx, p: Page, ib: Template | null) {
   const cands: string[] = [];
@@ -146,24 +147,11 @@ export function fillFromInfobox(ctx: Ctx, d: Draft) {
       d.lieux = locations(ctx, d, P.location);
       break;
     case 'poissons': {
-      // Conditions par zone (« Surface: … / Mine: … »)
-      const S = scoped(P.season);
-      const T = scoped(P.time);
-      const W = scoped(P.weather);
-      const named = [...new Set([...S, ...T, ...W].map((x) => x.scope).filter(Boolean))];
-      const scopes = named.length ? named : [''];
-      const pick = (arr: { scope: string; value: string }[], sc: string) => arr.find((x) => x.scope === sc)?.value ?? arr.find((x) => !x.scope)?.value ?? arr[0]?.value;
-      const conditions = scopes.map((sc) => ({
-        zone: sc || null,
-        saisons: seasons(pick(S, sc)),
-        horaires: times(pick(T, sc)),
-        meteo: weather(pick(W, sc)),
-      }));
-      // Colonnes ✓ par saison (Spring/Summer/…) en complément
-      const flags = ALL_SEASONS.filter((s) => /✓|yes/i.test(P[s] ?? ''));
-      d.saisons = [...new Set([...conditions.flatMap((c) => c.saisons), ...flags])].sort((a, b) => ALL_SEASONS.indexOf(a as any) - ALL_SEASONS.indexOf(b as any));
+      // Conditions par zone (saisons, jours, heures, météo) : voir spawn.ts
+      const conditions = spawnConditions(P);
+      d.saisons = ALL_SEASONS.filter((s) => conditions.some((c) => c.saisons.includes(s)));
       d.horaires = merge(conditions.flatMap((c) => c.horaires));
-      d.meteo = [...new Set(conditions.flatMap((c) => c.meteo))];
+      d.meteo = WEATHER_ALL.filter((w) => conditions.some((c) => c.meteo.includes(w)));
       d.horaires_texte = clean(P.time);
       d.lieux = locations(ctx, d, P.location);
       d.extra.conditions = conditions;
@@ -172,19 +160,18 @@ export function fillFromInfobox(ctx: Ctx, d: Draft) {
       d.extra.difficulte = clean(P.difficulty);
       d.extra.taille_ombre = clean(P.size);
       d.extra.motif = clean(P.pattern);
-      if (/\d+\s*-\s*\d+/.test(P.season ?? '')) {
-        // « Summer 1-14 • Fall 8-21 » : fenêtre de jours dans la saison (poissons légendaires)
-        const SEAS: Record<string, string> = { spring: 'spring', summer: 'summer', fall: 'fall', autumn: 'fall', winter: 'winter' };
-        d.extra.jours_saison = [...clean(P.season).matchAll(/(spring|summer|fall|autumn|winter)\s*(\d+)\s*-\s*(\d+)/gi)].map((m) => ({ saison: SEAS[m[1].toLowerCase()], de: +m[2], a: +m[3] }));
-      }
+      const jw = conditions.flatMap((c) => c.jours ?? []);
+      if (jw.length) d.extra.jours_saison = jw;
       break;
     }
     case 'insectes':
     case 'creatures-marines': {
-      d.saisons = seasons(P.season);
-      d.horaires = times(P.time);
+      const conditions = spawnConditions(P);
+      d.saisons = ALL_SEASONS.filter((s) => conditions.some((c) => c.saisons.includes(s)));
+      d.horaires = merge(conditions.flatMap((c) => c.horaires));
       d.horaires_texte = clean(P.time);
-      d.meteo = P.weather ? weather(P.weather) : [];
+      d.meteo = WEATHER_ALL.filter((w) => conditions.some((c) => c.meteo.includes(w)));
+      if (conditions.length > 1) d.extra.conditions = conditions;
       if (!P.weather && d.domain === 'insectes') d.a_verifier.add('meteo');
       d.lieux = locations(ctx, d, P.location);
       d.extra.rarete = clean(P.rarity);

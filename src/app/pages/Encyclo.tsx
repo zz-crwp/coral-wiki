@@ -21,6 +21,7 @@ const SPECIAL = [
   { href: '#/musee', icon: 'mineraux', titre: 'Musée', sous: 'Collections et paliers' },
   { href: '#/rang', icon: 'succes', titre: 'Rang de la ville', sous: 'F → S, déblocages' },
   { href: '#/mines', icon: 'monstres', titre: 'Mines', sous: '4 mines, 160 étages' },
+  { href: '#/ameliorations', icon: 'outils', titre: 'Améliorations', sous: 'Forge, labo, charpentier…' },
 ];
 
 export function EncycloPage() {

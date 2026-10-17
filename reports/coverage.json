@@ -1,12 +1,12 @@
 {
- "genere": "2026-10-17T12:54:35.566Z",
+ "genere": "2026-10-17T15:18:07.782Z",
  "totaux": {
   "pages_fandom": 3168,
   "entites": 2999,
   "exclues": 310
  },
  "qualite": {
-  "sans_image": 194,
+  "sans_image": 147,
   "sans_obtention": 26,
   "sans_description": 39,
   "nom_fr": 394,
@@ -14,8 +14,8 @@
   "desc_trad": 2739,
   "alias_fr": 2457,
   "haute": 242,
-  "moyenne": 2677,
-  "basse": 80
+  "moyenne": 2685,
+  "basse": 72
  },
  "domaines": [
   {
@@ -113,7 +113,7 @@
    "domaine": "guides",
    "libelle": "Guides & mécaniques",
    "entites": 116,
-   "sans_image": 77,
+   "sans_image": 64,
    "sans_obtention": 0,
    "nom_fr": 4,
    "desc_fr": 0,
@@ -126,13 +126,13 @@
    "domaine": "lieux",
    "libelle": "Lieux & magasins",
    "entites": 83,
-   "sans_image": 27,
+   "sans_image": 0,
    "sans_obtention": 0,
    "nom_fr": 32,
    "desc_fr": 0,
    "haute": 0,
-   "moyenne": 69,
-   "basse": 14,
+   "moyenne": 76,
+   "basse": 7,
    "article": 83
   },
   {
@@ -217,7 +217,7 @@
    "domaine": "groupes",
    "libelle": "Groupes d'objets",
    "entites": 53,
-   "sans_image": 5,
+   "sans_image": 0,
    "sans_obtention": 0,
    "nom_fr": 0,
    "desc_fr": 0,
@@ -334,13 +334,13 @@
    "domaine": "festivals",
    "libelle": "Festivals",
    "entites": 9,
-   "sans_image": 2,
+   "sans_image": 0,
    "sans_obtention": 0,
    "nom_fr": 0,
    "desc_fr": 0,
    "haute": 0,
-   "moyenne": 7,
-   "basse": 2,
+   "moyenne": 8,
+   "basse": 1,
    "article": 8
   },
   {

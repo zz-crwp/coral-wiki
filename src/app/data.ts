@@ -55,7 +55,7 @@ export function entry(id: string): Entry | undefined {
 }
 
 // Un chunk JSON par domaine, généré par Vite (import dynamique).
-const domainFiles = import.meta.glob<{ default: Entity[] }>(['../data/*.json', '!../data/{search,meta,domaines,conflits,temple,musee,rang,mines,aujourdhui,suivi,cadeaux}.json']);
+const domainFiles = import.meta.glob<{ default: Entity[] }>(['../data/*.json', '!../data/{search,meta,domaines,conflits,temple,musee,rang,mines,aujourdhui,suivi,cadeaux,icones}.json']);
 const articleFiles = import.meta.glob<{ default: Record<string, Block[]> }>('../data/articles/*.json');
 const cache = new Map<string, Promise<Map<string, Entity>>>();
 

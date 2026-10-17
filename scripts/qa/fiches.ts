@@ -27,7 +27,7 @@ for (const id of [...ids, 'scott', 'sams-general-store', 'mason-jar', 'maitrise-
   if (t && secs > 0) ok++;
   else errors.push(`fiche ${id} : rendu incomplet (titre ${t}, sections ${secs})`);
 }
-for (const p of ['temple', 'musee', 'rang', 'mines', 'encyclo', 'recherche?q=graines%20de%20myrtille', 'recherche?q=thon']) {
+for (const p of ['temple', 'musee', 'rang', 'mines', 'ameliorations', 'ameliorations?magasin=laboratory', 'trackers/poissons', 'trackers/musee', 'outils/cultures', 'outils/cadeaux/scott', 'calendrier', 'encyclo', 'recherche?q=graines%20de%20myrtille', 'recherche?q=thon']) {
   await page.goto(`${BASE}#/${p}`, { waitUntil: 'domcontentloaded' });
   await new Promise((r) => setTimeout(r, 800));
   const txt = await page.$eval('main', (m) => m.textContent?.slice(0, 120) ?? '').catch(() => '');

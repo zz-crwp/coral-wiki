@@ -41,6 +41,10 @@ function localizeTail(o: string, tm: TM) {
 
 const EXTRA_LABELS = ['rarete', 'rarete_mine', 'difficulte', 'taille_ombre', 'motif', 'genre', 'situation', 'espece', 'effet', 'effet_negatif', 'duree', 'frequence', 'logement', 'variante', 'duree_construction', 'duree_effet', 'source_recette', 'deblocage', 'ferme_le', 'horaires_ouverture', 'entrees_texte', 'produits_texte', 'type', 'famille_monstre', 'situe', 'adresse'];
 const EXTRA_SKILL = ['competence_prix'];
+const POUR: Record<string, string> = { Seeds: 'Graines', Seedling: 'Plants', Sapling: 'Jeunes arbres', Hay: 'Foin', Seaweed: 'Algues' };
+/** « 2 days » / « 1 Day » / « 6 hours » → français. */
+const frDuration = (v: string) =>
+  v.replace(/(\d+)\s*days?/gi, (_, n) => `${n} jour${+n > 1 ? 's' : ''}`).replace(/(\d+)\s*hours?/gi, (_, n) => `${n} heure${+n > 1 ? 's' : ''}`).replace(/\binstant(ly)?\b/i, 'immédiat');
 const EXTRA_PNJ = ['emploi', 'famille', 'loisirs'];
 const GENRE: { emploi: Record<string, string> } = JSON.parse(readFileSync(new URL('../i18n/genre-fr.json', import.meta.url), 'utf8'));
 
@@ -59,9 +63,26 @@ function localizeExtra(d: Draft, tm: TM) {
   }
   if (d.domain === 'monstres' && typeof x.famille === 'string') x.famille = tm.t(x.famille, 'libelles');
   if (d.domain === 'insectes' || d.domain === 'creatures-marines') if (typeof x.famille === 'string') x.famille = tm.t(x.famille, 'libelles');
-  for (const c of x.conditions ?? []) if (c.zone) c.zone = tm.t(c.zone, 'libelles');
+  for (const c of x.conditions ?? []) {
+    if (c.zones?.length) {
+      c.zones = c.zones.map((z: string) => tm.t(z, 'libelles'));
+      c.zone = c.zones.join(', ');
+    } else if (c.zone) c.zone = tm.t(c.zone, 'libelles');
+  }
   for (const o of x.ouverture ?? []) o.jours = tm.t(o.jours, 'libelles');
-  for (const r of x.stock ?? []) if (r.rayon) r.rayon = tm.t(r.rayon, 'libelles');
+  for (const r of x.stock ?? []) {
+    if (r.rayon) r.rayon = tm.t(r.rayon, 'libelles');
+    if (r.duree) r.duree = frDuration(r.duree);
+    for (const k of ['description', 'autre', 'mode']) if (typeof r[k] === 'string' && r[k]) r[k] = tm.t(r[k], 'magasins');
+    // Les noms d'objets restent en anglais (règle du projet) ; seuls les libellés génériques sont traduits.
+    if (!r.item && /^Upgrade\s+[IVX]+$/.test(r.nom ?? '')) r.nom = r.nom.replace('Upgrade', 'Amélioration');
+  }
+  if (x.ameliorations_qualite)
+    for (const n of x.ameliorations_qualite.niveaux)
+      for (const c of n.couts) {
+        c.pour = POUR[c.pour] ?? tm.t(c.pour, 'magasins');
+        if (c.texte) c.texte = tm.t(c.texte, 'magasins');
+      }
   for (const e of x.evenements_coeur ?? []) {
     if (e.condition) e.condition = tm.t(e.condition, 'pnj');
     if (e.lieu) e.lieu = tm.t(e.lieu, 'pnj');

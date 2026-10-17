@@ -52,11 +52,11 @@ async function device(browser: Browser) {
   await mockGitHub(page);
   return page;
 }
-const pressed = (p: Page) => p.$$eval('button.check[aria-pressed="true"]', (e) => e.length);
+const pressed = (p: Page) => p.$$eval('button.check[aria-pressed="true"], button.jtile-btn[aria-pressed="true"]', (e) => e.length);
 async function openTemple(p: Page) {
   await p.goto(`${BASE}#/trackers/temple`, { waitUntil: 'domcontentloaded' });
   await p.reload({ waitUntil: 'domcontentloaded' });
-  await p.waitForSelector('button.check', { timeout: 10000 });
+  await p.waitForSelector('button.check, button.jtile-btn', { timeout: 10000 });
   await wait(p, 400);
 }
 async function clickText(p: Page, sel: string, text: string) {
@@ -70,7 +70,7 @@ const A = await device(browser);
 
 // 1. Coches + profils
 await openTemple(A);
-const btns = await A.$$('button.check');
+const btns = await A.$$('button.check, button.jtile-btn');
 for (const b of btns.slice(0, 3)) await b.evaluate((e) => (e as HTMLElement).click());
 await wait(A, 500);
 ok((await pressed(A)) === 3, 'profil 1 : 3 coches');
@@ -83,7 +83,7 @@ await A.click('form.setting button[type=submit]');
 await wait(A, 300);
 await openTemple(A);
 ok((await pressed(A)) === 0, 'profil 2 créé et actif : 0 coche');
-await A.$$eval('button.check', (b, i) => (b[i] as HTMLElement).click(), 5);
+await A.$$eval('button.check, button.jtile-btn', (b, i) => (b[i] as HTMLElement).click(), 5);
 await wait(A, 500);
 
 await A.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
@@ -105,7 +105,7 @@ const exported = file ? JSON.parse(readFileSync(join(dir, file), 'utf8')) : null
 ok(!!exported && exported.profiles.length === 2, `export : ${file} (${exported?.profiles.length} profils)`);
 
 await openTemple(A);
-await A.$$eval('button.check', (b, i) => (b[i] as HTMLElement).click(), 0); // décoche
+await A.$$eval('button.check, button.jtile-btn', (b, i) => (b[i] as HTMLElement).click(), 0); // décoche
 await wait(A, 500);
 ok((await pressed(A)) === 2, 'modification après export : 2 coches');
 await A.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
@@ -140,7 +140,7 @@ ok(gists.size === 1, 'appareil B réutilise le même Gist');
 // Modification sur B, synchro, puis A récupère
 await clickText(B, '.radio', 'Ma ferme');
 await openTemple(B);
-await B.$$eval('button.check', (b, i) => (b[i] as HTMLElement).click(), 10);
+await B.$$eval('button.check, button.jtile-btn', (b, i) => (b[i] as HTMLElement).click(), 10);
 await wait(B, 500);
 await B.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
 await clickText(B, '.btn', 'Synchroniser');

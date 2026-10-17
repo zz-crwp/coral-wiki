@@ -12,6 +12,7 @@ import { crossCheck, matchFr } from './build/fr.ts';
 import { schedule, subpages } from './build/npc.ts';
 import { drops, gifts, groups, linksFromText, production, recipes, shops } from './build/relations.ts';
 import { achievements, masteries, mines, museum, quests, temple, townRank } from './build/special.ts';
+import { MAP_ICONS, UI_ICONS } from './build/icons.ts';
 import { coverage } from './coverage.ts';
 import { crossCheckGuide } from './build/steam-guide.ts';
 import { localize, writeTodo } from './build/localize.ts';
@@ -26,6 +27,11 @@ const pages = loadNs(0);
 const templatesNs = loadNs(828);
 const redirects = loadJson<Record<string, string>>('redirects.json', {});
 const images = loadJson<Record<string, any>>('images.json', {});
+// Inventaire complet des fichiers du wiki : icônes de carte et d'interface
+for (const im of loadJson<{ name: string; url: string; width: number; height: number }[]>('allimages.json', [])) {
+  const k = im.name.replace(/_/g, ' ');
+  images[k] ??= { url: im.url, width: im.width, height: im.height };
+}
 const fetchedAt = loadJson<{ at: string }>('fetched-at.json', { at: new Date().toISOString() }).at;
 const giftCharacters = [...(templatesNs.get('Module:Gifted item/data')?.content ?? '').matchAll(/^\s*'([^']+)',/gm)].map((m) => m[1]);
 console.log(`pages: ${pages.size}, images: ${Object.keys(images).length}, personnages cadeaux: ${giftCharacters.length}`);
@@ -119,6 +125,20 @@ for (const m of fr.matches.values()) {
   d.extra.nom_fr_methode = m.how;
 }
 
+// ---------- 6b. Groupes sans image : image du premier membre ----------
+for (const d of ctx.drafts.values()) {
+  if (d.domain !== 'groupes' || d.image) continue;
+  // Membres déclarés, sinon premier objet lié depuis la page du groupe
+  const ids = [...(d.extra.membres ?? []), ...d.liens];
+  const ok = (x: any) => x?.image && !['guides', 'lieux', 'pnj', 'groupes', 'quetes'].includes(x.domain);
+  const cands = ids.map((id) => ctx.drafts.get(id)).filter(ok);
+  const m = cands.find((x) => x!.liens.has(d.id)) ?? cands[0]; // un membre renvoie vers son groupe
+  if (m) {
+    d.image = m.image;
+    d.extra.image_de = m.id;
+  }
+}
+
 // ---------- 7. Obtention dérivée + contrôles ----------
 const lbl = (id: string) => { const x = ctx.drafts.get(id); return x ? `[[${id}|${x.nom_fr ?? x.nom_en}]]` : id; };
 for (const d of ctx.drafts.values()) {
@@ -154,6 +174,11 @@ for (const d of ctx.drafts.values()) {
     return !(id && linked.has(id));
   });
   d.obtention = [...new Set([...kept, ...o])];
+  // Pas de photo du lieu : icône de la carte du jeu (signalée comme telle)
+  if (!d.image && MAP_ICONS[d.id]) {
+    d.image = ctx.image(MAP_ICONS[d.id]);
+    if (d.image) d.extra.image_de = 'icone-carte';
+  }
   if (!d.image && !['guides', 'quetes'].includes(d.domain)) d.a_verifier.add('image');
   const needsObtain = !['pnj', 'lieux', 'festivals', 'guides', 'quetes', 'maitrises', 'succes', 'groupes', 'monstres'].includes(d.domain);
   if (needsObtain && !d.obtention.length) d.a_verifier.add('obtention');
@@ -317,9 +342,12 @@ write('mines.json', minesData);
         w: wmask(e.meteo),
         h: e.horaires,
         l: e.lieux.join(', '),
-        ...(Array.isArray(x(e).conditions) && x(e).conditions.length > 1 ? { c: x(e).conditions.map((c: any) => ({ z: c.zone, s: mask(c.saisons), w: wmask(c.meteo), h: c.horaires })) } : {}),
+        ...(Array.isArray(x(e).conditions) && x(e).conditions.length > 1
+          ? { c: x(e).conditions.map((c: any) => ({ z: c.zone, s: mask(c.saisons), w: wmask(c.meteo), h: c.horaires, ...(c.jours ? { dj: c.jours.map((j: any) => [SB[j.saison], j.de, j.a]) } : {}) })) }
+          : x(e).jours_saison
+            ? { dj: x(e).jours_saison.map((j: any) => [SB[j.saison], j.de, j.a]) }
+            : {}),
         ...(x(e).rarete ? { r: x(e).rarete } : {}),
-        ...(x(e).jours_saison ? { dj: x(e).jours_saison.map((j: any) => [SB[j.saison], j.de, j.a]) } : {}),
       })),
     cultures: all
       .filter((e) => ['cultures', 'arbres'].includes(domOf.get(e.id)!) && x(e).croissance && e.prix?.base && !/Graines|Plant|Jeune arbre/.test(e.categorie))
@@ -355,6 +383,14 @@ write('mines.json', minesData);
   );
   write('cadeaux.json', cadeaux);
 }
+write(
+  'icones.json',
+  Object.fromEntries(
+    Object.entries(UI_ICONS)
+      .map(([k, f]) => [k, images[f]?.url?.replace('https://static.wikia.nocookie.net/coralisland/images/', '').replace(/\/revision\/.*$/, '')])
+      .filter(([, u]) => u),
+  ),
+);
 write('domaines.json', Object.fromEntries(Object.entries(DOMAIN_LABELS).filter(([k]) => counts[k])));
 write('conflits.json', ctx.conflicts);
 const meta = {

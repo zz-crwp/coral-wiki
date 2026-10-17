@@ -3,14 +3,68 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import type { Entity } from '../../data/schema.ts';
 import { DOMAINS, entry, loadArticle, loadEntity, loadEntries, SEASON_FR, type Block, type Entry, type Season } from '../data.ts';
-import { CheckBtn, Empty, GameImg, RichText, TopBar } from '../components.tsx';
+import { CheckBtn, Empty, GameImg, GIcon, Gold, RichText, TopBar } from '../components.tsx';
 import { entityChecks, heartKeys } from '../trackers.ts';
+import { isUpgrade, QualityUpgrades, UpgradeList } from '../fiche/upgrades.tsx';
 import { active, isChecked, toggle, toggleFav } from '../store.ts';
 import { Icon } from '../icons.tsx';
 import { Chip, ChipList, Hearts, KV, Prices, Section, SeasonChips, Timeline } from '../fiche/parts.tsx';
 import { EXTRA_FIELDS, GIFT_LEVELS, QUALITY_BY_INDEX, UNIVERSAL_CODE, WEATHER_FR, hours, ranges } from '../fiche/labels.ts';
 
 type X = Record<string, any>;
+const CATCH = ['poissons', 'insectes', 'creatures-marines'];
+const WEATHERS = ['sunny', 'rain', 'storm', 'snow', 'windy', 'blizzard'];
+
+/** Météo : les 6 temps du jeu, actifs en couleur, inactifs estompés (comme le journal du jeu). */
+export function WeatherRow({ meteo }: { meteo: string[] }) {
+  if (!meteo.length) return <span class="note">à vérifier</span>;
+  return (
+    <span class="wrow" role="img" aria-label={meteo.length >= 6 ? 'Tous les temps' : meteo.map((w) => WEATHER_FR[w]).join(', ')}>
+      {WEATHERS.map((w) => (
+        <span key={w} class={`wcell${meteo.includes(w) ? ' on' : ''}`} title={WEATHER_FR[w]}>
+          <GIcon k={w === 'blizzard' ? 'snow' : w} size={20} />
+          {w === 'blizzard' && <span class="wplus" aria-hidden="true">+</span>}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function Spawn({ e }: { e: Entity }) {
+  const x = e.extra as X;
+  const conds: X[] = Array.isArray(x.conditions) && x.conditions.length ? x.conditions : [{ zone: null, saisons: e.saisons, horaires: e.horaires, meteo: e.meteo, jours: x.jours_saison }];
+  return (
+    <Section title="Où et quand" count={conds.length > 1 ? conds.length : undefined}>
+      {x.profondeur && <p class="note" style={{ margin: '0 0 8px' }}>Profondeur : {x.profondeur}</p>}
+      <div class="spawn">
+        {conds.map((c, i) => (
+          <div key={i} class="spawn-card">
+            <h4>{c.zone ?? (e.lieux.length ? e.lieux.join(', ') : 'Lieu à vérifier')}</h4>
+            <div class="spawn-row">
+              <span class="spawn-k">Saisons</span>
+              <SeasonChips seasons={c.saisons} />
+              {c.jours?.length > 0 && <span class="badge days">jours {[...new Set(c.jours.map((j: X) => `${j.de}–${j.a}`))].join(', ')}</span>}
+            </div>
+            <div class="spawn-row">
+              <span class="spawn-k">Heures</span>
+              <span class="spawn-v">
+                {c.horaires.length ? ranges(c.horaires) : <span class="note">à vérifier</span>}
+                <Timeline ranges={c.horaires} />
+              </span>
+            </div>
+            {e.meteo.length > 0 || c.meteo?.length > 0 ? (
+              <div class="spawn-row">
+                <span class="spawn-k">Météo</span>
+                <WeatherRow meteo={c.meteo ?? []} />
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      <p class="note fine">Heures dérivées des créneaux du wiki (matin, après-midi, soir, nuit) : fiabilité moyenne.</p>
+    </Section>
+  );
+}
 
 export function FichePage({ id }: { id: string }) {
   const [e, setE] = useState<Entity | null | undefined>(undefined);
@@ -131,9 +185,10 @@ function TrackCard({ e, dom }: { e: Entity; dom: string }) {
 function KeyFacts({ e, dom }: { e: Entity; dom: string }) {
   const x = e.extra as X;
   const rows: [string, ComponentChildren][] = [];
-  if (e.saisons.length) rows.push(['Saisons', <SeasonChips seasons={e.saisons} />]);
-  if (e.meteo.length) rows.push(['Météo', e.meteo.length >= 6 ? 'Toutes' : e.meteo.map((w) => WEATHER_FR[w] ?? w).join(', ')]);
-  if (e.horaires.length && dom !== 'lieux')
+  const catchDom = CATCH.includes(dom);
+  if (e.saisons.length && !catchDom) rows.push(['Saisons', <SeasonChips seasons={e.saisons} />]);
+  if (e.meteo.length && !catchDom) rows.push(['Météo', e.meteo.length >= 6 ? 'Toutes' : e.meteo.map((w) => WEATHER_FR[w] ?? w).join(', ')]);
+  if (e.horaires.length && dom !== 'lieux' && !catchDom)
     rows.push([
       'Horaires',
       <>
@@ -141,8 +196,7 @@ function KeyFacts({ e, dom }: { e: Entity; dom: string }) {
         <Timeline ranges={e.horaires} />
       </>,
     ]);
-  if (e.lieux.length) rows.push(['Lieux', e.lieux.join(' · ')]);
-  if (x.jours_saison?.length) rows.push(['Jours', x.jours_saison.map((j: X) => `${SEASON_FR[j.saison as Season]} ${j.de}–${j.a}`).join(' · ')]);
+  if (e.lieux.length && !catchDom) rows.push(['Lieux', e.lieux.join(' · ')]);
   if (x.anniversaire) rows.push(['Anniversaire', `${x.anniversaire.jour} ${SEASON_FR[x.anniversaire.saison as Season]?.toLowerCase()}`]);
   if (x.mariable) rows.push(['Mariable', 'Oui']);
   if (x.date) rows.push(['Date', `${x.date.jour}${x.date.fin ? `–${x.date.fin}` : ''} ${SEASON_FR[x.date.saison as Season]?.toLowerCase()}`]);
@@ -176,27 +230,8 @@ function DomainSections({ e, dom, all }: { e: Entity; dom: string; all: Entry[] 
   const x = e.extra as X;
   const out: ComponentChildren[] = [];
 
-  // Poissons : conditions par zone
-  if (Array.isArray(x.conditions) && x.conditions.length > 1)
-    out.push(
-      <Section title="Conditions par zone">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Zone</th><th>Saisons</th><th>Horaires</th><th>Météo</th></tr></thead>
-            <tbody>
-              {x.conditions.map((c: X, i: number) => (
-                <tr key={i}>
-                  <td>{c.zone ?? '—'}</td>
-                  <td>{c.saisons.length === 4 ? 'Toutes' : c.saisons.map((s: Season) => SEASON_FR[s]).join(', ')}</td>
-                  <td>{ranges(c.horaires)}</td>
-                  <td>{c.meteo.length >= 6 ? 'Toutes' : c.meteo.map((w: string) => WEATHER_FR[w]).join(', ')}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Section>,
-    );
+  // Poissons, insectes, créatures : où et quand (une carte par zone)
+  if (CATCH.includes(dom)) out.push(<Spawn e={e} />);
 
   // Lieux : horaires d'ouverture + stock
   if (Array.isArray(x.ouverture) && x.ouverture.length)
@@ -205,7 +240,23 @@ function DomainSections({ e, dom, all }: { e: Entity; dom: string; all: Entry[] 
         <KV rows={[...x.ouverture.map((o: X) => [o.jours, ranges(o.plages)] as [string, string]), ...(x.ferme_le ? [['Fermé', x.ferme_le] as [string, string]] : [])]} />
       </Section>,
     );
-  if (Array.isArray(x.stock) && x.stock.length) out.push(<Stock rows={x.stock} />);
+  if (Array.isArray(x.stock) && x.stock.length) {
+    const ups = x.stock.filter(isUpgrade);
+    const sale = x.stock.filter((r: X) => !isUpgrade(r));
+    if (ups.length)
+      out.push(
+        <Section title="Améliorations" count={ups.length}>
+          <UpgradeList rows={ups} />
+        </Section>,
+      );
+    if (sale.length) out.push(<Stock rows={sale} />);
+  }
+  if (x.ameliorations_qualite)
+    out.push(
+      <Section title="Amélioration de la qualité des produits">
+        <QualityUpgrades data={x.ameliorations_qualite} />
+      </Section>,
+    );
 
   // PNJ
   if (dom === 'pnj') {
@@ -537,7 +588,7 @@ function Stock({ rows }: { rows: X[] }) {
                   {list.map((r, i) => (
                     <tr key={i}>
                       <td>{r.item ? <Chip id={r.item} size={24} /> : r.nom}</td>
-                      <td>{r.prix != null ? `${r.prix} ${r.devise}` : '—'}</td>
+                      <td>{r.prix == null ? '—' : r.devise === 'or' ? <Gold n={r.prix} /> : `${r.prix} ${r.devise}`}</td>
                       {list.some((rr) => rr.rang) && <td>{r.rang ?? ''}</td>}
                       {list.some((rr) => rr.saisons) && <td>{r.saisons ? (r.saisons.length === 4 ? 'Toutes' : r.saisons.map((s: Season) => SEASON_FR[s]).join(', ')) : ''}{r.annee_min ? ` (an ${r.annee_min}+)` : ''}</td>}
                     </tr>

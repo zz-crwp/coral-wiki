@@ -5,3 +5,4 @@ dist
 reports/lighthouse
 .claude
 scripts/i18n/todo
+imports

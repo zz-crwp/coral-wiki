@@ -2,18 +2,18 @@
 // captures possibles maintenant, cultures encore rentables, boutiques ouvertes.
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { entry, loadEntries, SEASONS, SEASON_FR, type Season } from '../data.ts';
-import { CheckBtn, Empty, GameImg, TopBar } from '../components.tsx';
+import { CheckBtn, Empty, GameImg, GIcon, TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
 import { active, isChecked, setDate, setHour, setWeather, toggle, weekday, WEEKDAYS, type GameDate } from '../store.ts';
 import { hours, ranges, WEATHER_FR } from '../fiche/labels.ts';
 import { Chip } from '../fiche/parts.tsx';
 
 type Range = { from: number; to: number };
-type Cond = { s: number; w: number; h: Range[] };
+type Cond = { s: number; w: number; h: Range[]; dj?: [number, number, number][] };
 export type TodayData = {
   anniversaires: { id: string; s: Season; j: number }[];
   festivals: { id: string; s: Season; j: number; f: number; h: string }[];
-  captures: (Cond & { id: string; d: string; l: string; r?: string; c?: (Cond & { z: string })[]; dj?: [number, number, number][] })[];
+  captures: (Cond & { id: string; d: string; l: string; r?: string; c?: (Cond & { z: string })[] })[];
   cultures: { id: string; s: number; g: number; r: number; pg: number; v: number; gr: string; o: number; rg: string | null }[];
   boutiques: { id: string; o: { j: number[]; p: Range[] }[]; f: number[]; m: number }[];
 };
@@ -41,13 +41,19 @@ const daysUntil = (d: GameDate, s: Season, j: number) => (SEASONS.indexOf(s) * D
 
 const inRanges = (h: Range[], hr: number) => !h.length || h.some((r) => r.from <= hr && hr < r.to);
 
+/** « jours 15–28 · » quand une fenêtre de jours s'applique cette saison. */
+function daysNote(c: TodayData['captures'][number], bit: number) {
+  const dj = [...(c.dj ?? []), ...(c.c ?? []).flatMap((x) => x.dj ?? [])].filter(([b]) => b & bit);
+  return dj.length ? `jours ${[...new Set(dj.map(([, a, z]) => `${a}–${z}`))].join(', ')} · ` : '';
+}
+
 const uniqRanges = (h: Range[]) => [...new Map(h.map((r) => [`${r.from}-${r.to}`, r])).values()].sort((a, b) => a.from - b.from);
 
 /** Zones où la capture est possible (vide = indisponible). `hr` null = n'importe quand dans la journée. */
 export function catchZones(c: TodayData['captures'][number], bit: number, w: number, hr: number | null, day?: number): { zones: string[]; h: Range[] } {
-  // Fenêtre de jours (poissons légendaires : « Été 1–14 »)
-  if (c.dj && day != null && !c.dj.some(([b, a, z]) => b & bit && a <= day && day <= z)) return { zones: [], h: [] };
-  const ok = (x: Cond) => !!(x.s & bit) && !!(x.w & (1 << w)) && (hr == null || inRanges(x.h, hr));
+  // Fenêtre de jours (poissons légendaires : « Été 1–14 »), propre à chaque zone
+  const inDays = (x: Cond) => !x.dj || day == null || x.dj.some(([b, a, z]) => b & bit && a <= day && day <= z);
+  const ok = (x: Cond) => !!(x.s & bit) && !!(x.w & (1 << w)) && (hr == null || inRanges(x.h, hr)) && inDays(x);
   if (c.c) {
     const m = c.c.filter(ok);
     return { zones: m.map((x) => x.z), h: uniqRanges(m.flatMap((x) => x.h)) };
@@ -173,7 +179,7 @@ function DateCard() {
       <div class="weather" role="group" aria-label="Météo">
         {WEATHERS.map((k, i) => (
           <button key={k} aria-pressed={w === i} aria-label={WEATHER_FR[k]} title={WEATHER_FR[k]} onClick={() => setWeather(k)}>
-            <Icon name={k} />
+            {k === 'blizzard' ? <Icon name="blizzard" /> : <GIcon k={k} size={26} />}
           </button>
         ))}
       </div>
@@ -292,7 +298,7 @@ function Catchables({ data }: { data: TodayData }) {
                 <span class="txt">
                   <span class="name">{e?.fr ?? c.id}</span>
                   <span class="sub">
-                    {c.dj ? `jours ${c.dj.filter(([b]) => b & bit).map(([, a, z]) => `${a}–${z}`).join(', ')} · ` : ''}
+                    {daysNote(c, bit)}
                     {ranges(h)} · {zones.join(', ')}
                     {c.r ? ` · ${c.r}` : ''}
                   </span>

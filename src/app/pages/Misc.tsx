@@ -46,6 +46,7 @@ export function MorePage() {
         <div class="card">
           <Link href="#/outils/cultures" icon="cultures" label="Rentabilité des cultures" sub="Bénéfice selon le jour de plantation" />
           <Link href="#/outils/cadeaux" icon="cake" label="Planificateur de cadeaux" sub="Anniversaires, cadeaux de la semaine, préférences" />
+          <Link href="#/ameliorations" icon="outils" label="Améliorations par magasin" sub="Forge, labo, charpentier, sac… : or et matériaux" />
           <Link href="#/calendrier" icon="festivals" label="Calendrier" sub="Festivals et anniversaires" />
           <Link href="#/favoris" icon="star" label="Favoris" sub={`${p?.favs.length ?? 0} fiche${(p?.favs.length ?? 0) > 1 ? 's' : ''}`} />
         </div>

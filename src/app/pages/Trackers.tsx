@@ -52,8 +52,25 @@ export function TrackersPage() {
   );
 }
 
+const GRID = ['poissons', 'insectes', 'creatures', 'musee', 'cuisine', 'temple'];
+const viewKey = (id: string) => `cw-vue-${id}`;
+function readView(id: string) {
+  try {
+    return localStorage.getItem(viewKey(id)) ?? 'grille';
+  } catch {
+    return 'grille';
+  }
+}
+
 export function TrackerPage({ id }: { id: string }) {
   const [t, setT] = useState<Tracker | null>(null);
+  const [view, setViewState] = useState(readView(id));
+  const setView = (v: string) => {
+    setViewState(v);
+    try {
+      localStorage.setItem(viewKey(id), v);
+    } catch {}
+  };
   useEffect(() => {
     loadTracker(id).then(setT);
   }, [id]);
@@ -95,9 +112,21 @@ export function TrackerPage({ id }: { id: string }) {
 
   if (!TRACKERS.some((x) => x.id === id)) return <Empty>Tracker inconnu.</Empty>;
   const titre = TRACKERS.find((x) => x.id === id)!.titre;
+  const canGrid = GRID.includes(id);
+  const grid = canGrid && view === 'grille';
   return (
     <>
-      <TopBar title={titre} backTo="/trackers" />
+      <TopBar
+        title={titre}
+        backTo="/trackers"
+        actions={
+          canGrid ? (
+            <button class="icon-btn" aria-label={grid ? 'Afficher en liste' : 'Afficher en grille (journal)'} onClick={() => setView(grid ? 'liste' : 'grille')}>
+              <Icon name={grid ? 'list' : 'grid'} />
+            </button>
+          ) : undefined
+        }
+      />
       <main class="page" id="main">
         {!t ? (
           <Empty>Chargement…</Empty>
@@ -188,11 +217,19 @@ export function TrackerPage({ id }: { id: string }) {
                       </button>
                     )}
                   </div>
-                  <div class="card list">
-                    {s.items.map((it) => (
-                      <TrackRow key={it.key} it={it} />
-                    ))}
-                  </div>
+                  {grid ? (
+                    <div class="jgrid" role="list">
+                      {s.items.map((it) => (
+                        <JournalTile key={it.key} it={it} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div class="card list">
+                      {s.items.map((it) => (
+                        <TrackRow key={it.key} it={it} />
+                      ))}
+                    </div>
+                  )}
                 </section>
               );
             })}
@@ -223,6 +260,30 @@ export function TrackRow({ it }: { it: TItem }) {
           {(it.sub || it.lieux.length > 0) && <span class="sub">{it.sub ?? it.lieux.slice(0, 3).join(', ')}</span>}
         </span>
       </a>
+    </div>
+  );
+}
+
+/** Vignette du journal : toucher coche / décoche ; le nom mène à la fiche. Non coché = estompé. */
+function JournalTile({ it }: { it: TItem }) {
+  const e = entry(it.id);
+  const label = name(it);
+  const on = isChecked(it.key);
+  return (
+    <div class={`jtile${on ? ' done' : ''}`} role="listitem">
+      <button class="jtile-btn" aria-pressed={on} aria-label={`${label}${it.sub ? ` (${it.sub})` : ''} : ${on ? 'fait' : 'à faire'}`} onClick={() => toggle(it.key)}>
+        <GameImg src={e?.img ?? ''} dom={e?.dom ?? 'objets'} size={52} />
+        {on && (
+          <svg class="jtile-ok" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="11" />
+            <path d="m7 12.5 3.2 3.2L17 9" />
+          </svg>
+        )}
+      </button>
+      <a class="jtile-name" href={`#/fiche/${it.id}`}>
+        {label}
+      </a>
+      {it.sub && <span class="jtile-sub">{it.sub}</span>}
     </div>
   );
 }

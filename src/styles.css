@@ -1744,3 +1744,297 @@ code {
   font: inherit;
   font-size: 16px;
 }
+
+/* ---------- Icônes officielles du jeu ---------- */
+.gicon {
+  display: inline-block;
+  vertical-align: middle;
+  object-fit: contain;
+  flex: none;
+}
+.gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.qp .gicon {
+  width: 20px;
+  height: 20px;
+}
+/* Pictos météo blancs du jeu : posés sur une pastille sombre */
+.wrow {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.wcell {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #0d5a60;
+  opacity: 0.22;
+}
+.wcell.on {
+  opacity: 1;
+}
+.wcell svg {
+  color: #fff;
+}
+.wplus {
+  position: absolute;
+  right: 1px;
+  bottom: -2px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 11px;
+}
+.weather button {
+  background: rgb(0 0 0 / 22%);
+}
+.weather button[aria-pressed='true'] {
+  background: rgb(255 255 255 / 30%);
+  color: #fff;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+.weather button svg {
+  color: #fff;
+}
+
+/* ---------- Où et quand (journal) ---------- */
+.spawn {
+  display: grid;
+  gap: 10px;
+}
+.spawn-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+}
+.spawn-card h4 {
+  margin: 0 0 8px;
+  font: 700 15px/1.25 var(--font-display);
+}
+.spawn-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  min-height: 32px;
+}
+.spawn-row + .spawn-row {
+  margin-top: 4px;
+}
+.spawn-k {
+  width: 64px;
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.spawn-v {
+  flex: 1;
+  min-width: 0;
+}
+.spawn-v .tl {
+  margin-top: 4px;
+}
+.badge.days {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ---------- Améliorations ---------- */
+.upgrades {
+  display: grid;
+  gap: 12px;
+}
+.up-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.up-card > header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--primary-soft);
+}
+.up-card > header h4 {
+  margin: 0;
+  font: 700 16px/1.2 var(--font-display);
+}
+.up-card > header a {
+  color: inherit;
+  text-decoration: none;
+}
+.up-levels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.up-levels > li {
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+.up-levels > li:first-child {
+  border-top: 0;
+}
+.up-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.up-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+.up-mats {
+  margin-top: 8px;
+}
+.up-desc {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.up-shop {
+  margin-bottom: 18px;
+}
+.up-shop-h {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 4px 8px;
+}
+.up-shop-h h2 {
+  margin: 0;
+  font: 800 20px/1.2 var(--font-display);
+}
+.up-shop-h h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+.up-shop-h .note {
+  margin: 2px 0 0;
+}
+table.qup th,
+table.qup td {
+  text-align: center;
+  vertical-align: middle;
+}
+table.qup tbody th {
+  text-align: left;
+  white-space: nowrap;
+}
+.qup-l {
+  display: block;
+  font-size: 11px;
+}
+table.qup + table.qup {
+  margin-top: 12px;
+}
+
+/* ---------- Journal en grille ---------- */
+.jgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 8px;
+}
+.jtile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+}
+.jtile-btn {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  border: 2px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  padding: 0;
+}
+.jtile:not(.done) .jtile-btn .thumb {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+.jtile.done .jtile-btn {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.jtile-btn .thumb {
+  background: none;
+}
+.jtile-ok {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  width: 24px;
+  height: 24px;
+}
+.jtile-ok circle {
+  fill: var(--primary);
+}
+.jtile-ok path {
+  fill: none;
+  stroke: var(--primary-ink);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.jtile-name {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 30px;
+  padding-top: 2px;
+}
+.jtile-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+.up-alias {
+  display: block;
+  font: 500 12px/1.2 var(--font);
+  color: var(--muted);
+}
+.gwrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.gwrap > img,
+.gwrap > svg {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

@@ -46,14 +46,14 @@ ok((await page.$$('.row')).length > 5, 'liste hors ligne (poissons)');
 
 // Progression : coche hors ligne, rechargement, l'état doit survivre.
 await page.goto(`${BASE}#/trackers/temple`, { waitUntil: 'domcontentloaded' });
-await page.waitForSelector('button.check', { timeout: 10000 });
-const before = await page.$$eval('button.check[aria-pressed="true"]', (e) => e.length);
-await page.click('button.check[aria-pressed="false"]');
+await page.waitForSelector('button.check, button.jtile-btn', { timeout: 10000 });
+const before = await page.$$eval('button.check[aria-pressed="true"], button.jtile-btn[aria-pressed="true"]', (e) => e.length);
+await page.click('button.check[aria-pressed="false"], button.jtile-btn[aria-pressed="false"]');
 await page.evaluate(() => new Promise((r) => setTimeout(r, 600))); // écriture différée 300 ms
 await page.reload({ waitUntil: 'domcontentloaded' });
-await page.waitForSelector('button.check', { timeout: 10000 });
+await page.waitForSelector('button.check, button.jtile-btn', { timeout: 10000 });
 await page.evaluate(() => new Promise((r) => setTimeout(r, 500)));
-const after = await page.$$eval('button.check[aria-pressed="true"]', (e) => e.length);
+const after = await page.$$eval('button.check[aria-pressed="true"], button.jtile-btn[aria-pressed="true"]', (e) => e.length);
 ok(after === before + 1, `coche conservée après rechargement hors ligne (${before} → ${after})`);
 
 for (const [h, sel, label] of [['#/', '.date-main', "Aujourd'hui"], ['#/trackers', '.tracker-row', 'trackers'], ['#/calendrier', '.cal-d', 'calendrier']] as const) {

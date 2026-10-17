@@ -2,7 +2,7 @@
 import { useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { entry, SEASON_FR, type Season } from '../data.ts';
-import { GameImg, RichText } from '../components.tsx';
+import { GameImg, GIcon, RichText } from '../components.tsx';
 import { Icon } from '../icons.tsx';
 import { QUALITY } from './labels.ts';
 
@@ -75,9 +75,12 @@ export function Prices({ prix }: { prix: Record<string, number | null | undefine
       {QUALITY.map((q) =>
         prix[q.key] != null ? (
           <div key={q.key} class="qp" role="row">
-            <span class="qdot" style={{ background: q.color }} aria-hidden="true" />
+            {q.key === 'base' ? <span class="qdot" style={{ background: q.color }} aria-hidden="true" /> : <GIcon k={q.key} size={20} />}
             <span class="qlab" role="cell">{q.label}</span>
-            <strong role="cell">{prix[q.key]}</strong>
+            <strong role="cell" class="gold">
+              <GIcon k="coin" size={14} />
+              {prix[q.key]}
+            </strong>
           </div>
         ) : null,
       )}

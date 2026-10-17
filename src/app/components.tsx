@@ -3,6 +3,7 @@ import type { ComponentChildren } from 'preact';
 import { Icon } from './icons.tsx';
 import { back, canGoBack, tab } from './router.ts';
 import { entry, thumb, seasonsOf, SEASON_FR, type Entry } from './data.ts';
+import ICONS from '../data/icones.json';
 
 /** Image du jeu : CDN d'origine, dimensions fixes, lazy, repli pictogramme si échec. */
 export function GameImg({ src, dom, size, alt = '', eager = false }: { src: string; dom: string; size: number; alt?: string; eager?: boolean }) {
@@ -198,5 +199,49 @@ export function Progress({ done, total, label }: { done: number; total: number; 
     <div class="progress" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={total} aria-valuenow={done} aria-valuetext={`${done} sur ${total} (${pct} %)`}>
       <span style={{ width: `${pct}%` }} />
     </div>
+  );
+}
+
+const ICON_BASE = 'https://static.wikia.nocookie.net/coralisland/images/';
+const ICON_FALLBACK: Record<string, string> = { sunny: 'sunny', rain: 'rain', storm: 'storm', snow: 'snow', windy: 'windy', blizzard: 'blizzard', coin: 'coin', calendar: 'festivals', journal: 'book' };
+
+/**
+ * Icône officielle du jeu (hébergée sur le wiki, mise en cache par le service worker).
+ * Hors ligne avant toute visite, repli sur le pictogramme SVG équivalent.
+ */
+export function GIcon({ k, size = 20, label, class: cls }: { k: string; size?: number; label?: string; class?: string }) {
+  const file = (ICONS as Record<string, string>)[k];
+  const [state, setState] = useState<'loading' | 'ok' | 'failed'>(file ? 'loading' : 'failed');
+  const f = ICON_FALLBACK[k];
+  // Pictogramme SVG affiché tant que l'icône du jeu n'est pas chargée (ou si elle échoue hors ligne)
+  const svg = f ? <Icon name={f} style={{ width: size, height: size }} /> : null;
+  if (state === 'failed') return svg ? <span class={`gicon ${cls ?? ''}`} {...(label ? { role: 'img', 'aria-label': label, title: label } : { 'aria-hidden': true })}>{svg}</span> : null;
+  return (
+    <span class={`gicon gwrap ${cls ?? ''}`} style={{ width: size, height: size }} {...(label ? { role: 'img', 'aria-label': label, title: label } : { 'aria-hidden': true })}>
+      {state === 'loading' && svg}
+      <img
+        src={`${ICON_BASE}${file}/revision/latest/scale-to-width-down/${size <= 24 ? 48 : 96}`}
+        width={size}
+        height={size}
+        alt=""
+        decoding="async"
+        referrerpolicy="no-referrer"
+        crossOrigin="anonymous"
+        style={{ opacity: state === 'ok' ? 1 : 0 }}
+        onLoad={() => setState('ok')}
+        onError={() => setState('failed')}
+      />
+    </span>
+  );
+}
+
+/** Montant en or avec la pièce du jeu. */
+export function Gold({ n }: { n: number | null | undefined }) {
+  if (n == null) return <>—</>;
+  return (
+    <span class="gold">
+      <GIcon k="coin" size={16} />
+      {n.toLocaleString('fr-FR')}
+    </span>
   );
 }

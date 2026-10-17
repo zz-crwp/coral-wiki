@@ -24,6 +24,7 @@ const FavoritesPage = lazy(() => import('./app/pages/Misc.tsx').then((m) => m.Fa
 const CropCalcPage = lazy(() => import('./app/pages/Tools.tsx').then((m) => m.CropCalcPage));
 const GiftPlannerPage = lazy(() => import('./app/pages/Tools.tsx').then((m) => m.GiftPlannerPage));
 const GiftNpcPage = lazy(() => import('./app/pages/Tools.tsx').then((m) => m.GiftNpcPage));
+const UpgradesPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.UpgradesPage));
 const MinesPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.MinesPage));
 
 function Page() {
@@ -42,6 +43,8 @@ function Page() {
       return <MuseumPage />;
     case 'rang':
       return <RankPage />;
+    case 'ameliorations':
+      return <UpgradesPage />;
     case 'mines':
       return <MinesPage />;
     case 'trackers':

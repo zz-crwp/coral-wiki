@@ -1,6 +1,6 @@
 // Relations entre entités : recettes, cadeaux, magasins, butins, artisanat, graines.
 import type { Page } from '../lib/load.ts';
-import { findTemplates, links, plain, sections, subsections, templates, type Template } from '../lib/wikitext.ts';
+import { findTemplates, links, plain, sections, subsections, tables, templates, type Template } from '../lib/wikitext.ts';
 import { Ctx, type Draft } from './ctx.ts';
 import { clean, list, num, rank, seasons } from './norm.ts';
 
@@ -98,44 +98,116 @@ export function gifts(ctx: Ctx, d: Draft, characters: string[]) {
  * {{Shop|cols=Town rank;Season|Item; prix; rang; saison}} sur une page de lieu.
  * Ajoute au lieu `extra.stock` et à l'objet `extra.vendu_par`.
  */
+/** « Coin*1500, Axe*1, Bronze bar*5 » → prix en or + matériaux (tolère « Gold bar*5Coin*15000 »). */
+function costs(ctx: Ctx, cell: string) {
+  let coin: number | null = null;
+  const mats: { item: string | null; nom?: string; n: number }[] = [];
+  for (const m of plain(cell).matchAll(/([A-Za-z][A-Za-z' ()-]*?)\s*\*\s*(\d[\d,]*)/g)) {
+    const name = m[1].trim();
+    const n = Number(m[2].replace(/,/g, ''));
+    if (/^(coin|gold|g)$/i.test(name)) coin = n;
+    else {
+      const id = ctx.ref(name, false);
+      mats.push(id ? { item: id, n } : { item: null, nom: name, n });
+    }
+  }
+  return { coin, mats };
+}
+
+const COLS: [RegExp, string][] = [
+  [/^(build )?time$/, 'duree'],
+  [/purchase limit/, 'limite'],
+  [/^description$/, 'description'],
+  [/dimensions/, 'dimensions'],
+  [/max animals/, 'max_animaux'],
+  [/bag capacity/, 'capacite'],
+  [/^other$/, 'autre'],
+  [/^mode$/, 'mode'],
+];
+
 export function shops(ctx: Ctx, d: Draft) {
   const secs = sections(d.page.content);
   const out: any[] = [];
   for (const [secTitle, body] of Object.entries(secs)) {
     for (const [subTitle, sub] of Object.entries(subsections(body))) {
       for (const t of findTemplates(sub, 'Shop')) {
-        const cols = ['item', 'prix', ...(t.params.cols ? t.params.cols.split(/\s*;\s*/).map((c) => c.toLowerCase()) : [])];
+        const cols = ['item', 'prix', ...(t.params.cols ? t.params.cols.split(/\s*;\s*/).filter(Boolean).map((c) => c.toLowerCase()) : [])];
         const currency = clean(t.params.currency) || 'Coin';
         for (const [k, raw] of Object.entries(t.params)) {
           if (!/^\d+$/.test(k)) continue;
           const cells = raw.split(/\s*;\s*/);
-          const name = plain(cells[0].replace(/\{.*?\}/g, '')).replace(/\*\s*\d+$/, '').trim();
+          // Icône éventuelle en tête de cellule : {{Icon|Bag_level_1|notext=1}} Upgrade I
+          const icon = /\{\{\s*Icon\s*\|\s*([^|}]+)/i.exec(cells[0])?.[1]?.trim();
+          const name = plain(cells[0].replace(/\{\{[^{}]*\}\}/g, '')).replace(/\*\s*\d+$/, '').trim();
           if (!name) continue;
           const id = ctx.ref(name);
-          const row: any = { item: id ?? null, nom: id ? undefined : name, prix: num(cells[1]), devise: currency === 'Coin' ? 'or' : currency, rayon: subTitle || secTitle || undefined };
+          const cost = /\*\s*\d/.test(cells[1] ?? '') ? costs(ctx, cells[1]) : null;
+          const row: any = {
+            item: id ?? null,
+            nom: name,
+            prix: cost ? cost.coin : num(cells[1]),
+            devise: currency === 'Coin' ? 'or' : currency,
+            rayon: subTitle || secTitle || undefined,
+            ...(cost?.mats.length ? { materiaux: cost.mats } : {}),
+            ...(icon && !id ? { icone: icon.replace(/_/g, ' ') } : {}),
+          };
           cols.slice(2).forEach((c, i) => {
             const v = cells[i + 2];
-            if (!v) return;
-            if (/town rank|rank/.test(c)) row.rang = rank(v);
+            if (!v || !clean(v)) return;
+            if (/town rank|ocean rank|rank/.test(c)) row.rang = rank(v);
             else if (/season/.test(c)) {
               row.saisons = seasons(v);
               const y = /year\s*(\d+)/i.exec(v);
               if (y) row.annee_min = Number(y[1]);
-            } else (row.conditions ??= []).push(`${c}: ${clean(v)}`);
+            } else {
+              const f = COLS.find(([re]) => re.test(c))?.[1];
+              if (f) row[f] = f === 'limite' || f === 'max_animaux' || f === 'capacite' ? (num(v) ?? clean(v)) : clean(v).replace(/\s*\n\s*/g, ' ');
+              else (row.conditions ??= []).push(`${c}: ${clean(v)}`);
+            }
           });
           out.push(row);
           if (id) {
             const it = ctx.drafts.get(id);
             if (it) {
-              (it.extra.vendu_par ??= []).push({ lieu: d.id, prix: row.prix, devise: row.devise, rang: row.rang, saisons: row.saisons });
+              (it.extra.vendu_par ??= []).push({ lieu: d.id, prix: row.prix, devise: row.devise, rang: row.rang, saisons: row.saisons, ...(row.materiaux ? { nom: name, materiaux: row.materiaux } : {}) });
               d.liens.add(id);
             }
           }
+          for (const m of row.materiaux ?? []) if (m.item) d.liens.add(m.item);
         }
       }
     }
   }
   if (out.length) d.extra.stock = out;
+  qualityUpgrades(ctx, d);
+}
+
+/** Tableau « Upgrade Produce Quality » (Labo, Chambre de l'Oracle) : niveaux, jours, prix, coûts, probabilités. */
+function qualityUpgrades(ctx: Ctx, d: Draft) {
+  const body = Object.entries(sections(d.page.content)).find(([t]) => /upgrade produce quality/i.test(t))?.[1];
+  if (!body) return;
+  const [main, chances] = tables(body);
+  if (!main) return;
+  const LV = ['bronze', 'silver', 'gold', 'osmium'];
+  const row = (re: RegExp) => main.find((r) => re.test(plain(r[0])));
+  const days = row(/^days/i);
+  const price = row(/^price/i);
+  const coutRows = main.filter((r) => /cost/i.test(plain(r[0])));
+  const niveaux = LV.map((lv, i) => ({
+    niveau: lv,
+    jours: num(days?.[i + 1]),
+    prix: num(price?.[i + 1]?.replace(/,/g, '')),
+    couts: coutRows.map((r) => {
+      const pour = plain(r[0].replace(/\{\{\s*icon\s*\|\s*([^|}]+)[^}]*\}\}/gi, '$1')).replace(/\s*(essence\s*)?cost$/i, '').trim();
+      const texte = plain(r[i + 1].replace(/\{\{\s*Icon\s*\|\s*([^|}]+)[^}]*\}\}/gi, '$1')).replace(/\s+/g, ' ').trim();
+      const m = /^(.+?)\s*x\s*(\d+)$/i.exec(texte);
+      const id = m && !/^any\b/i.test(m[1]) ? ctx.ref(m[1], false) : null;
+      if (id) d.liens.add(id);
+      return id ? { pour, item: id, n: Number(m![2]) } : { pour, texte };
+    }),
+  }));
+  const chance = chances?.filter((r) => /chance/i.test(plain(r[0]))).map((r) => ({ produit: plain(r[0]).replace(/chance to get\s*/i, '').replace(/\s*product$/i, '').trim(), valeurs: r.slice(1, 6).map((v) => plain(v)) }));
+  d.extra.ameliorations_qualite = { niveaux, ...(chance?.length ? { chances: chance } : {}) };
 }
 
 /** {{Loot|Item;20%}} (monstres) et {{Chest|Item;9.68%;10}} (géodes, coffres, poubelles). */

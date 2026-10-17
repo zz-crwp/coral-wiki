@@ -1,6 +1,6 @@
 # Rapport de couverture — Coral Wiki
 
-Généré le 2026-10-17 12:54 UTC. Version du jeu ciblée : **1.3** (18/06/2026).
+Généré le 2026-10-17 15:18 UTC. Version du jeu ciblée : **1.3** (18/06/2026).
 
 ## Totaux
 
@@ -9,13 +9,13 @@ Généré le 2026-10-17 12:54 UTC. Version du jeu ciblée : **1.3** (18/06/2026)
 | Pages de contenu Fandom (ns 0, hors redirections) | 3168 |
 | Entités importées | 2999 |
 | Pages exclues (justifiées ci-dessous) | 310 |
-| Entités sans image | 194 (6 %) |
+| Entités sans image | 147 (5 %) |
 | Entités sans méthode d'obtention (marquées « à vérifier ») | 26 |
 | Noms FR issus du wiki FR / Steam | 394 (13 %) |
 | Descriptions FR (texte du jeu) | 221 |
 | Descriptions FR traduites (non officielles) | 2739 |
 | Noms FR non officiels (alias de recherche) | 2457 |
-| Confiance haute / moyenne / basse | 242 / 2677 / 80 |
+| Confiance haute / moyenne / basse | 242 / 2685 / 72 |
 | Conflits consignés (conflits.json) | 31 |
 | Références d'id cassées | 0 |
 | Erreurs de schéma zod | 0 |
@@ -31,15 +31,15 @@ Généré le 2026-10-17 12:54 UTC. Version du jeu ciblée : **1.3** (18/06/2026)
 | Cultures & graines | 166 | 0 | 0 | 66 | 58 | 59/105/2 | 166 |
 | Personnages | 137 | 0 | 0 | 54 | 0 | 14/105/18 | 135 |
 | Cuisine | 132 | 0 | 0 | 102 | 80 | 86/43/3 | 132 |
-| Guides & mécaniques | 116 | 77 | 0 | 4 | 0 | 0/112/4 | 107 |
-| Lieux & magasins | 83 | 27 | 0 | 32 | 0 | 0/69/14 | 83 |
+| Guides & mécaniques | 116 | 64 | 0 | 4 | 0 | 0/112/4 | 107 |
+| Lieux & magasins | 83 | 0 | 0 | 32 | 0 | 0/76/7 | 83 |
 | Cueillette | 82 | 0 | 0 | 10 | 0 | 0/82/0 | 82 |
 | Quêtes | 81 | 81 | 0 | 0 | 0 | 0/81/0 | 0 |
 | Objets divers | 78 | 1 | 14 | 2 | 2 | 2/73/3 | 78 |
 | Poissons | 69 | 0 | 0 | 1 | 0 | 0/69/0 | 69 |
 | Élevage | 64 | 0 | 4 | 3 | 0 | 0/59/5 | 64 |
 | Armes & anneaux | 62 | 0 | 0 | 0 | 0 | 0/62/0 | 62 |
-| Groupes d'objets | 53 | 5 | 0 | 0 | 0 | 0/52/1 | 53 |
+| Groupes d'objets | 53 | 0 | 0 | 0 | 0 | 0/52/1 | 53 |
 | Insectes | 53 | 0 | 0 | 0 | 0 | 0/53/0 | 53 |
 | Succès | 51 | 0 | 0 | 51 | 51 | 51/0/0 | 0 |
 | Ressources | 45 | 0 | 0 | 17 | 0 | 0/45/0 | 45 |
@@ -48,7 +48,7 @@ Généré le 2026-10-17 12:54 UTC. Version du jeu ciblée : **1.3** (18/06/2026)
 | Arbres | 22 | 0 | 5 | 7 | 6 | 5/12/5 | 22 |
 | Outils | 11 | 0 | 0 | 2 | 0 | 0/11/0 | 11 |
 | Bâtiments | 10 | 0 | 0 | 1 | 1 | 0/10/0 | 10 |
-| Festivals | 9 | 2 | 0 | 0 | 0 | 0/7/2 | 8 |
+| Festivals | 9 | 0 | 0 | 0 | 0 | 0/8/1 | 8 |
 | Maîtrises & compétences | 8 | 0 | 0 | 8 | 0 | 0/8/0 | 8 |
 
 ## Par catégorie Fandom

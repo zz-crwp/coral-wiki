@@ -27,6 +27,12 @@ Relance incrémentale : `fetch.ts` rafraîchit l'inventaire (`lastrevid`) et ne 
 - `search.json` (recherche/listes), `aujourdhui.json` (écran Aujourd'hui : anniversaires, festivals, conditions de capture, cultures, horaires des boutiques), `suivi.json` (événements de cœur, lieux des objets suivis), `temple.json`, `musee.json`, `rang.json`, `mines.json`, `meta.json` (version du jeu), `conflits.json` (divergences entre sources, valeur retenue, raison).
 - Liens inverses générés : `utilise_dans`, `aime_par`, `extra.vendu_par`, `extra.obtenu_de`, `extra.produit_par`, `extra.offrandes`, `extra.don_musee`, `extra.requis_pour`, `extra.debloque_par`.
 
+### Apparitions, améliorations, icônes
+
+- **Apparitions** (`scripts/build/spawn.ts`) : une condition par zone (saisons, fenêtres de jours, heures, météo), lue dans les différentes écritures de l'infobox (portées par saison dans « location », par zone dans « season/time/weather », colonnes « ✓ (Mine only) »).
+- **Améliorations** (`relations.ts` → `extra.stock[].materiaux`, `extra.ameliorations_qualite`) : or, matériaux, durée, rang, limite ; page `#/ameliorations`.
+- **Icônes officielles** (`scripts/build/icons.ts`) : icônes de carte du jeu pour les lieux sans photo, icônes d'interface (météo, qualité, or, cœurs, sac) via `src/data/icones.json`, chargées depuis le CDN du wiki avec repli SVG.
+
 ### Règles
 
 - Valeur inconnue → champ listé dans `a_verifier`, jamais inventée.
