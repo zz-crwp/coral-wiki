@@ -16,7 +16,7 @@ const CONTENT_CATEGORIES = [
 ];
 
 export function coverage(o: any) {
-  const { pages, excluded, final, articles, ctx, fr, xcheck, guideCheck, broken, errors, templeData, museumData, unresolved } = o;
+  const { pages, excluded, final, articles, ctx, fr, xcheck, guideCheck, wiki2, broken, errors, templeData, museumData, unresolved } = o;
   const exclByTitle = new Map<string, string>(excluded.map((e: any) => [e.title, e.reason]));
   const entityByTitle = new Map<string, any>();
   for (const [dom, list] of final as Map<string, any[]>) for (const e of list) { const d = ctx.drafts.get(e.id); if (d?.page?.title) entityByTitle.set(d.page.title, { dom, id: e.id }); }
@@ -56,7 +56,7 @@ export function coverage(o: any) {
   byDomain.sort((a, b) => b.entites - a.entites);
   const unres = [...(unresolved as Map<string, number>)].sort((a, b) => b[1] - a[1]);
 
-  const report = { genere: new Date().toISOString(), totaux: totals, qualite: quality, domaines: byDomain, categories: catRows, exclusions: Object.fromEntries([...exclReasons].map(([k, v]) => [k, { n: v.length, pages: v }])), fr: { pages_wiki_fr: fr.frPages, apparies: fr.matches.size, methodes: fr.stats, non_apparies: fr.unmatched, controles_croises: xcheck }, guide_steam: guideCheck, refs_cassees: broken, erreurs_schema: errors, noms_non_resolus: unres.slice(0, 300), conflits: ctx.conflicts.length, avertissements: ctx.warnings, temple: { autels: templeData?.autels.length, offrandes: templeData?.autels.reduce((a: number, x: any) => a + x.offrandes.length, 0) }, musee: museumData?.collections.map((c: any) => ({ [c.id]: c.objets.length })) };
+  const report = { genere: new Date().toISOString(), totaux: totals, qualite: quality, domaines: byDomain, categories: catRows, exclusions: Object.fromEntries([...exclReasons].map(([k, v]) => [k, { n: v.length, pages: v }])), fr: { pages_wiki_fr: fr.frPages, apparies: fr.matches.size, methodes: fr.stats, non_apparies: fr.unmatched, controles_croises: xcheck }, guide_steam: guideCheck, coralisland_wiki: wiki2, refs_cassees: broken, erreurs_schema: errors, noms_non_resolus: unres.slice(0, 300), conflits: ctx.conflicts.length, avertissements: ctx.warnings, temple: { autels: templeData?.autels.length, offrandes: templeData?.autels.reduce((a: number, x: any) => a + x.offrandes.length, 0) }, musee: museumData?.collections.map((c: any) => ({ [c.id]: c.objets.length })) };
   mkdirSync(join(ROOT, 'reports'), { recursive: true });
   writeFileSync(join(ROOT, 'reports', 'coverage.json'), JSON.stringify(report, null, 1));
 
@@ -73,7 +73,13 @@ export function coverage(o: any) {
   md.push('', `## Noms français`, '', `Le wiki FR (${fr.frPages} pages) n'a pas de liens interlangues : appariement par empreinte de données.`, '');
   for (const [k, v] of Object.entries(fr.stats)) md.push(`- ${k} : ${v}`);
   md.push(`- Contrôles croisés EN/FR : ${xcheck.checked} valeurs comparées, ${xcheck.agree} concordantes, ${xcheck.checked - xcheck.agree} écarts → conflits.json`, `- Pages FR non appariées : ${fr.unmatched.length} (${fr.unmatched.slice(0, 15).join(', ')}…)`);
-  md.push('', `## Contrôle par seconde source`, '', `- Wiki FR : ${xcheck.checked} valeurs comparées (prix, saisons, croissance, rang, anniversaires), ${xcheck.agree} concordantes.`, `- Guide Steam « NPC Birthdays & Loved Gifts » (02/05/2026) : ${guideCheck.pnj} PNJ ; anniversaires ${guideCheck.anniversaires_ok} concordants / ${guideCheck.anniversaires_ko} divergents ; cadeaux adorés ${guideCheck.cadeaux_ok} concordants / ${guideCheck.cadeaux_ko} divergents (${guideCheck.cadeaux_non_resolus} non résolus).`, `- Succès : source officielle Steam (EN + FR).`, `- Divergences : voir \`src/data/conflits.json\` (source retenue + raison).`);
+  md.push('', `## Contrôle par seconde source`, '', `- Wiki FR : ${xcheck.checked} valeurs comparées (prix, saisons, croissance, rang, anniversaires), ${xcheck.agree} concordantes.`, `- Guide Steam « NPC Birthdays & Loved Gifts » (02/05/2026) : ${guideCheck.pnj} PNJ ; anniversaires ${guideCheck.anniversaires_ok} concordants / ${guideCheck.anniversaires_ko} divergents ; cadeaux adorés ${guideCheck.cadeaux_ok} concordants / ${guideCheck.cadeaux_ko} divergents (${guideCheck.cadeaux_non_resolus} non résolus).`, ...(wiki2
+      ? [
+          `- Coral Island Wiki (coralisland.wiki, CC0, export du ${wiki2.source.importe_le}) : ${wiki2.compares} valeurs comparées, ${wiki2.concordants} concordantes, ${wiki2.divergents} écarts (Fandom retenu, plus récent), ${wiki2.completes} champs complétés.`,
+          ...Object.entries(wiki2.parDomaine).map(([d, s]: [string, any]) => `  - ${d} : ${s.entites} fiches, ${s.champs} champs, ${s.ok} concordants, ${s.ecarts} écarts, ${s.completes} complétés`),
+        ]
+      : []),
+    `- Succès : source officielle Steam (EN + FR).`, `- Divergences : voir \`src/data/conflits.json\` (source retenue + raison).`);
   md.push('', `## Noms non résolus (top 40)`, '', `Références textuelles qui ne correspondent à aucune page (objets sans page Fandom, fautes de frappe du wiki). Conservées en texte.`, '');
   md.push(unres.slice(0, 40).map(([n, c]) => `\`${n}\` ×${c}`).join(', '));
   if (broken.length) md.push('', `## Références cassées`, '', ...broken.slice(0, 50).map((b: string) => `- ${b}`));

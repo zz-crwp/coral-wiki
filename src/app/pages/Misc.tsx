@@ -328,7 +328,11 @@ export function CreditsPage() {
             . Chaque fiche renvoie vers sa page source. Les contributeurs des wikis en sont les auteurs.
           </p>
           <p>
-            <strong>Recoupements</strong> : succès officiels Steam, guide Steam « NPC Birthdays & Loved Gifts », notes de mise à jour de Stairway Games, guides
+            <strong>Recoupements</strong> :{' '}
+            <a href="https://coralisland.wiki" target="_blank" rel="noopener">
+              Coral Island Wiki (coralisland.wiki)
+            </a>{' '}
+            (domaine public, CC0 : personnages, cadeaux, poissons, cultures, magasins), succès officiels Steam, guide Steam « NPC Birthdays & Loved Gifts », notes de mise à jour de Stairway Games, guides
             Gamerant, Screen Rant et ProGameGuides (voir les sources de chaque fiche).
           </p>
           <p>

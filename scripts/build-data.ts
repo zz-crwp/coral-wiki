@@ -15,6 +15,7 @@ import { achievements, masteries, mines, museum, quests, temple, townRank } from
 import { MAP_ICONS, UI_ICONS } from './build/icons.ts';
 import { coverage } from './coverage.ts';
 import { crossCheckGuide } from './build/steam-guide.ts';
+import { crossCheckWiki2 } from './build/wiki2.ts';
 import { localize, writeTodo } from './build/localize.ts';
 import { TM } from './i18n/tm.ts';
 
@@ -117,6 +118,8 @@ const fr = matchFr(ctx);
 const xcheck = crossCheck(ctx, fr.matches);
 const guideCheck = crossCheckGuide(ctx);
 console.log('guide Steam :', guideCheck);
+const wiki2 = crossCheckWiki2(ctx);
+if (wiki2) console.log(`coralisland.wiki : ${wiki2.compares} valeurs comparées, ${wiki2.concordants} concordantes, ${wiki2.divergents} écarts, ${wiki2.completes} complétées`);
 for (const m of fr.matches.values()) {
   const d = ctx.drafts.get(m.id)!;
   d.nom_fr = m.fr;
@@ -406,5 +409,5 @@ Meta.parse(meta);
 write('meta.json', meta);
 
 // ---------- 11. Rapport ----------
-coverage({ pages, excluded, final, articles, ctx, fr, xcheck, guideCheck, broken, errors, templeData, museumData, unresolved: resolver.unresolved });
+coverage({ pages, excluded, final, articles, ctx, fr, xcheck, guideCheck, wiki2, broken, errors, templeData, museumData, unresolved: resolver.unresolved });
 console.log(`entités: ${index.length} en ${final.size} domaines, conflits: ${ctx.conflicts.length}, refs cassées: ${broken.length}, ${((Date.now() - t0) / 1000).toFixed(1)} s`);

@@ -211,6 +211,17 @@ export function fillFromInfobox(ctx: Ctx, d: Draft) {
       d.extra.residents = clean(P.resident) || undefined;
       d.horaires = parseOpening(P.hours).flatMap((o) => o.plages);
       d.extra.ouverture = parseOpening(P.hours);
+      // « open = Tuesday • Thursday • Friday » : jours d'ouverture donnés à part des horaires
+      if (P.open && !/\d/.test(P.open)) {
+        const days = parseDays(clean(P.open));
+        if (days.length && days.length < 7) {
+          d.extra.jours_ouverture = clean(P.open);
+          for (const o of d.extra.ouverture) {
+            o.j = o.j.length === 7 ? days : o.j.filter((x: number) => days.includes(x));
+            if (/tous les jours|every ?day/i.test(o.jours) || o.j.length === days.length) o.jours = clean(P.open);
+          }
+        }
+      }
       for (const k of ['owner', 'employee', 'resident', 'location']) for (const l of links(P[k] ?? '')) { const id = ctx.ref(l, false); if (id) d.liens.add(id); }
       break;
     case 'monstres':

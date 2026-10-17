@@ -1,6 +1,6 @@
 # Rapport de couverture — Coral Wiki
 
-Généré le 2026-10-17 15:18 UTC. Version du jeu ciblée : **1.3** (18/06/2026).
+Généré le 2026-10-17 16:52 UTC. Version du jeu ciblée : **1.3** (18/06/2026).
 
 ## Totaux
 
@@ -15,8 +15,8 @@ Généré le 2026-10-17 15:18 UTC. Version du jeu ciblée : **1.3** (18/06/2026)
 | Descriptions FR (texte du jeu) | 221 |
 | Descriptions FR traduites (non officielles) | 2739 |
 | Noms FR non officiels (alias de recherche) | 2457 |
-| Confiance haute / moyenne / basse | 242 / 2685 / 72 |
-| Conflits consignés (conflits.json) | 31 |
+| Confiance haute / moyenne / basse | 295 / 2628 / 76 |
+| Conflits consignés (conflits.json) | 208 |
 | Références d'id cassées | 0 |
 | Erreurs de schéma zod | 0 |
 
@@ -28,15 +28,15 @@ Généré le 2026-10-17 15:18 UTC. Version du jeu ciblée : **1.3** (18/06/2026)
 | Mobilier & décoration | 451 | 0 | 1 | 0 | 0 | 0/447/4 | 451 |
 | Vêtements | 439 | 1 | 1 | 0 | 0 | 0/439/0 | 439 |
 | Minerais, gemmes, fossiles & artefacts | 199 | 0 | 0 | 0 | 0 | 0/199/0 | 199 |
-| Cultures & graines | 166 | 0 | 0 | 66 | 58 | 59/105/2 | 166 |
-| Personnages | 137 | 0 | 0 | 54 | 0 | 14/105/18 | 135 |
+| Cultures & graines | 166 | 0 | 0 | 66 | 58 | 70/94/2 | 166 |
+| Personnages | 137 | 0 | 0 | 54 | 0 | 15/100/22 | 135 |
 | Cuisine | 132 | 0 | 0 | 102 | 80 | 86/43/3 | 132 |
 | Guides & mécaniques | 116 | 64 | 0 | 4 | 0 | 0/112/4 | 107 |
-| Lieux & magasins | 83 | 0 | 0 | 32 | 0 | 0/76/7 | 83 |
+| Lieux & magasins | 83 | 0 | 0 | 32 | 0 | 14/62/7 | 83 |
 | Cueillette | 82 | 0 | 0 | 10 | 0 | 0/82/0 | 82 |
 | Quêtes | 81 | 81 | 0 | 0 | 0 | 0/81/0 | 0 |
 | Objets divers | 78 | 1 | 14 | 2 | 2 | 2/73/3 | 78 |
-| Poissons | 69 | 0 | 0 | 1 | 0 | 0/69/0 | 69 |
+| Poissons | 69 | 0 | 0 | 1 | 0 | 27/42/0 | 69 |
 | Élevage | 64 | 0 | 4 | 3 | 0 | 0/59/5 | 64 |
 | Armes & anneaux | 62 | 0 | 0 | 0 | 0 | 0/62/0 | 62 |
 | Groupes d'objets | 53 | 0 | 0 | 0 | 0 | 0/52/1 | 53 |
@@ -132,6 +132,12 @@ Le wiki FR (415 pages) n'a pas de liens interlangues : appariement par empreinte
 
 - Wiki FR : 455 valeurs comparées (prix, saisons, croissance, rang, anniversaires), 444 concordantes.
 - Guide Steam « NPC Birthdays & Loved Gifts » (02/05/2026) : 61 PNJ ; anniversaires 60 concordants / 1 divergents ; cadeaux adorés 254 concordants / 18 divergents (63 non résolus).
+- Coral Island Wiki (coralisland.wiki, CC0, export du 2026-10-17) : 1788 valeurs comparées, 1608 concordantes, 177 écarts (Fandom retenu, plus récent), 0 champs complétés.
+  - pnj : 85 fiches, 166 champs, 147 concordants, 19 écarts, 0 complétés
+  - poissons : 27 fiches, 108 champs, 108 concordants, 0 écarts, 0 complétés
+  - cultures : 82 fiches, 461 champs, 459 concordants, 2 écarts, 0 complétés
+  - arbres : 7 fiches, 0 champs, 0 concordants, 0 écarts, 0 complétés
+  - lieux : 23 fiches, 1053 champs, 894 concordants, 156 écarts, 0 complétés
 - Succès : source officielle Steam (EN + FR).
 - Divergences : voir `src/data/conflits.json` (source retenue + raison).
 

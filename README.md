@@ -15,6 +15,7 @@ npm run data:build   # normalisation → src/data/*.json + reports/coverage.md (
 | Inventaire + wikitext + catégories + images (1 req/s, User-Agent explicite, cache brut) | `scripts/fetch.ts` | `.cache/pages/<ns>/*.json`, `.cache/images.json` |
 | Wiki Fandom FR (noms et descriptions FR du jeu) | `scripts/fetch-fr.ts` | `.cache/fr/` |
 | Succès officiels Steam EN + FR, guide Steam anniversaires/cadeaux | `scripts/fetch-steam.ts` | `.cache/steam/` |
+| Seconde source coralisland.wiki (CC0) : export XML manuel (Cloudflare) déposé dans `imports/`, réduit en extrait versionné | `scripts/import-wiki2.ts` | `scripts/sources/coralisland-wiki.json` |
 | Images manquantes (recherche par préfixe) | `scripts/fetch-extra-images.ts` | fusion dans `.cache/images.json` |
 | Classification, extraction, relations, FR, contrôles, zod | `scripts/build-data.ts` + `scripts/build/*` | `src/data/` |
 
@@ -39,6 +40,7 @@ Relance incrémentale : `fetch.ts` rafraîchit l'inventaire (`lastrevid`) et ne 
 - Prix par qualité absents → calculés avec la formule du wiki (×1,15 / ×1,3 / ×1,5 / ×2).
 - Nom FR : wiki Fandom FR (appariement par empreinte de données, alignement manuel des titres dans `scripts/i18n/fr-alignement.json`) ou Steam ; sinon nom EN (`nom_fr_source: "en"`).
 - Conflits tranchés par une source tierce : `scripts/i18n/verifications.json`.
+- Seconde source coralisland.wiki (`scripts/build/wiki2.ts`) : la valeur la plus récente l'emporte (Fandom, à jour de la 1.3) ; si la seconde source est plus récente et isolée, le champ passe « à vérifier ». Écarts dans `conflits.json`.
 
 ### Traductions FR (non officielles)
 

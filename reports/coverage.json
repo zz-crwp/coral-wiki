@@ -1,5 +1,5 @@
 {
- "genere": "2026-10-17T15:18:07.782Z",
+ "genere": "2026-10-17T16:52:00.159Z",
  "totaux": {
   "pages_fandom": 3168,
   "entites": 2999,
@@ -13,9 +13,9 @@
   "desc_fr": 221,
   "desc_trad": 2739,
   "alias_fr": 2457,
-  "haute": 242,
-  "moyenne": 2685,
-  "basse": 72
+  "haute": 295,
+  "moyenne": 2628,
+  "basse": 76
  },
  "domaines": [
   {
@@ -78,8 +78,8 @@
    "sans_obtention": 0,
    "nom_fr": 66,
    "desc_fr": 58,
-   "haute": 59,
-   "moyenne": 105,
+   "haute": 70,
+   "moyenne": 94,
    "basse": 2,
    "article": 166
   },
@@ -91,9 +91,9 @@
    "sans_obtention": 0,
    "nom_fr": 54,
    "desc_fr": 0,
-   "haute": 14,
-   "moyenne": 105,
-   "basse": 18,
+   "haute": 15,
+   "moyenne": 100,
+   "basse": 22,
    "article": 135
   },
   {
@@ -130,8 +130,8 @@
    "sans_obtention": 0,
    "nom_fr": 32,
    "desc_fr": 0,
-   "haute": 0,
-   "moyenne": 76,
+   "haute": 14,
+   "moyenne": 62,
    "basse": 7,
    "article": 83
   },
@@ -182,8 +182,8 @@
    "sans_obtention": 0,
    "nom_fr": 1,
    "desc_fr": 0,
-   "haute": 0,
-   "moyenne": 69,
+   "haute": 27,
+   "moyenne": 42,
    "basse": 0,
    "article": 69
   },
@@ -1311,6 +1311,62 @@
   "cadeaux_ok": 254,
   "cadeaux_ko": 18,
   "cadeaux_non_resolus": 63
+ },
+ "coralisland_wiki": {
+  "source": {
+   "nom": "Coral Island Wiki (coralisland.wiki)",
+   "url": "https://coralisland.wiki",
+   "licence": "CC0 1.0 (domaine public)",
+   "export": "Coral+Island+Wiki-20261017160024.xml",
+   "importe_le": "2026-10-17"
+  },
+  "compares": 1788,
+  "concordants": 1608,
+  "divergents": 177,
+  "completes": 0,
+  "parDomaine": {
+   "pnj": {
+    "entites": 85,
+    "champs": 166,
+    "ok": 147,
+    "ecarts": 19,
+    "completes": 0
+   },
+   "poissons": {
+    "entites": 27,
+    "champs": 108,
+    "ok": 108,
+    "ecarts": 0,
+    "completes": 0
+   },
+   "cultures": {
+    "entites": 82,
+    "champs": 461,
+    "ok": 459,
+    "ecarts": 2,
+    "completes": 0
+   },
+   "arbres": {
+    "entites": 7,
+    "champs": 0,
+    "ok": 0,
+    "ecarts": 0,
+    "completes": 0
+   },
+   "lieux": {
+    "entites": 23,
+    "champs": 1053,
+    "ok": 894,
+    "ecarts": 156,
+    "completes": 0
+   }
+  },
+  "nonApparies": [
+   "Pandazen",
+   "Lele",
+   "Fish Test/Red snapper",
+   "Fish Test/Snakehead"
+  ]
  },
  "refs_cassees": [],
  "erreurs_schema": [],
@@ -2516,7 +2572,7 @@
    1
   ]
  ],
- "conflits": 31,
+ "conflits": 208,
  "avertissements": [
   "Alignement FR sans fiche EN : Taverne Locale → Local Tavern",
   "Alignement FR sans fiche EN : Œuf dur → Boiled egg"
