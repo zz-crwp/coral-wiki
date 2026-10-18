@@ -115,7 +115,9 @@ export function Sheet({
             </div>
           )}
         </div>
-        <div ref={body} class="sheet-body">
+        {/* Au cran moyen, la sheet garde sa pleine hauteur et descend de 45 % : le bas du contenu sortirait
+            de l'écran. Une marge égale au décalage permet de défiler jusqu'au bout. */}
+        <div ref={body} class="sheet-body" style={cur === 'medium' ? { paddingBottom: `calc(${Math.round(h * 0.45)}px + var(--safe-bottom) + var(--s-8))` } : undefined}>
           {children}
         </div>
       </div>
