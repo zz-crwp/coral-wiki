@@ -3,6 +3,15 @@
 Wiki compagnon hors ligne de **Coral Island** (Stairway Games), pensé pour smartphone (PWA).
 Contenu repris du [Coral Island Wiki (Fandom)](https://coralisland.fandom.com) sous licence CC BY-SA, complété et recoupé avec d'autres sources. Images © Stairway Games, chargées depuis le CDN Fandom (non copiées dans le dépôt).
 
+## Application
+
+- **Navigation** : 4 onglets (Aujourd'hui, Explorer, Progression, Session) et un bouton de recherche au pouce. Réglages derrière l'engrenage d'Aujourd'hui (`#/reglages`).
+- **Horloge de jeu** : puce persistante en haut des écrans, réglage en sheet (+1 h, +1 jour, météo) ; tous les indicateurs « maintenant » suivent.
+- **Fiches en sheet** (`?f=<id>` sur n'importe quelle page) : crans moyen / plein, glisser pour fermer, panneau latéral à partir de 960 px. Les anciens liens `#/fiche/<id>` ouvrent la liste du domaine avec la fiche par-dessus.
+- **Lignes repliables par domaine** (`src/app/rows.tsx`, composant `src/ui/XRow.tsx`) : repliée, la ligne répond à la question du joueur ; glisser pour cocher (toast « Annuler »), appui long pour le menu (épingler, fiche, source).
+- **Système de design** : jetons dans `src/design/tokens.css` (gris système, palette extraite des visuels du jeu, saisons, rayons, ombres, durées), composants dans `src/design/components.css` et `src/ui/`. Thèmes clair, sombre et noir OLED ; Fredoka réservée aux grands titres ; icônes Lucide. Page interne `#/design` avec tous les composants et états.
+- **Préférences de l'appareil** (`src/app/prefs.ts`) : thème, écran maintenu allumé (Wake Lock).
+
 ## Pipeline de données (`/scripts`)
 
 ```bash
@@ -58,7 +67,7 @@ Relance incrémentale : `fetch.ts` rafraîchit l'inventaire (`lastrevid`) et ne 
 
 ### Progression du joueur (`src/app/store.ts`)
 
-- IndexedDB `coral-wiki` : un document par profil `{ date, weather, hour, checks, favs }`, écriture différée 300 ms (forcée quand l'onglet passe en arrière-plan).
+- IndexedDB `coral-wiki` : un document par profil `{ date, weather, hour, checks, session, paliers, coeurs }`, écriture différée 300 ms (forcée quand l'onglet passe en arrière-plan).
 - Clés de suivi : `pris:<id>`, `musee:<id>`, `temple:<offrande>:<objet>`, `cuisine:<id>`, `coeur:<pnj>:<cœurs>-<n>`, `succes:<id>`. Les mêmes clés servent aux trackers, aux fiches et à l'écran Aujourd'hui.
 - Semaine en jeu : chaque saison de 28 jours commence un lundi.
 
@@ -75,6 +84,9 @@ npm run qa:offline    # SW, précache, mode avion : navigation + recherche
 node scripts/qa/fiches.ts   # 4 fiches par domaine + pages spéciales : erreurs JS, rendu
 npm run qa:progress   # profils, export/import, synchro Gist (API GitHub simulée)
 node scripts/qa/compare.ts  # échantillon de 30 fiches : infobox source ↔ app
+node scripts/qa/scroll.ts   # fluidité du défilement, CPU ralenti ×4
+node scripts/qa/screens.ts  # captures 390 px clair/sombre → reports/audit/apres/
+TEXT=26 node scripts/qa/shot.ts light aujourdhui=#/   # texte agrandi : signale tout débordement horizontal
 ```
 
 Comparaison manuelle de 30 fiches : [`reports/comparaison-30.md`](reports/comparaison-30.md).

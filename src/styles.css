@@ -1,266 +1,4 @@
-/* Coral Wiki — thème lagon (clair) / abysses (sombre). Contrastes vérifiés AA. */
-:root {
-  --bg: #f6f1e7;
-  --bg-2: #efe7d7;
-  --surface: #fffdf8;
-  --surface-2: #f9f4ea;
-  --ink: #12302f;
-  --ink-2: #3d5654;
-  --muted: #5a6e6b;
-  --line: #e2d8c4;
-  --primary: #0b6b6d;
-  --primary-ink: #ffffff;
-  --primary-soft: #d6efec;
-  --accent: #d9482f;
-  --accent-soft: #ffe2da;
-  --sun: #b7791f;
-  --focus: #1f8fff;
-  --shadow: 0 1px 2px rgb(18 48 47 / 6%), 0 4px 16px rgb(18 48 47 / 6%);
-  --radius: 16px;
-  --radius-s: 10px;
-  --tab-h: 64px;
-  --top-h: 56px;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-display: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Segoe UI Variable Display', var(--font);
-  --s-spring: #2f8f4e;
-  --s-summer: #c26b00;
-  --s-fall: #b5452a;
-  --s-winter: #2f6db5;
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --bg: #081a20;
-    --bg-2: #0c242c;
-    --surface: #0f2a33;
-    --surface-2: #133540;
-    --ink: #e6f2f0;
-    --ink-2: #bcd2d0;
-    --muted: #93adab;
-    --line: #1f4651;
-    --primary: #5fd4c8;
-    --primary-ink: #04201f;
-    --primary-soft: #123f44;
-    --accent: #ff8a73;
-    --accent-soft: #3b211d;
-    --sun: #f0b34a;
-    --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 25%);
-    --s-spring: #6fd08f;
-    --s-summer: #f2a53d;
-    --s-fall: #f08a6c;
-    --s-winter: #7fb2f0;
-    color-scheme: dark;
-  }
-}
-:root[data-theme='dark'] {
-  --bg: #081a20;
-  --bg-2: #0c242c;
-  --surface: #0f2a33;
-  --surface-2: #133540;
-  --ink: #e6f2f0;
-  --ink-2: #bcd2d0;
-  --muted: #93adab;
-  --line: #1f4651;
-  --primary: #5fd4c8;
-  --primary-ink: #04201f;
-  --primary-soft: #123f44;
-  --accent: #ff8a73;
-  --accent-soft: #3b211d;
-  --sun: #f0b34a;
-  --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 25%);
-  --s-spring: #6fd08f;
-  --s-summer: #f2a53d;
-  --s-fall: #f08a6c;
-  --s-winter: #7fb2f0;
-  color-scheme: dark;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-  background: var(--bg);
-  /* Élément focalisé ou défilé jamais masqué par la barre du haut ou les onglets */
-  scroll-padding-top: calc(var(--top-h) + var(--safe-top) + 8px);
-  scroll-padding-bottom: calc(var(--tab-h) + var(--safe-bottom) + 8px);
-}
-body {
-  margin: 0;
-  min-height: 100dvh;
-  background: var(--bg);
-  color: var(--ink);
-  font: 16px/1.5 var(--font);
-  overscroll-behavior-y: none;
-}
-img {
-  display: block;
-  max-width: 100%;
-}
-button,
-input,
-select {
-  font: inherit;
-  color: inherit;
-}
-/* ≥ 16 px : pas de zoom automatique sur iOS */
-input,
-select,
-textarea {
-  font-size: 16px;
-}
-a {
-  color: var(--primary);
-}
-:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-.skip {
-  position: absolute;
-  left: 8px;
-  top: -60px;
-  z-index: 100;
-  background: var(--primary);
-  color: var(--primary-ink);
-  padding: 10px 14px;
-  border-radius: 10px;
-}
-.skip:focus {
-  top: calc(var(--safe-top) + 8px);
-}
-
-/* ---------- Structure ---------- */
-.app {
-  min-height: 100dvh;
-  padding: calc(var(--top-h) + var(--safe-top)) var(--safe-right) calc(var(--tab-h) + var(--safe-bottom) + 16px) var(--safe-left);
-}
-.topbar {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 20;
-  height: calc(var(--top-h) + var(--safe-top));
-  padding: var(--safe-top) calc(8px + var(--safe-right)) 0 calc(8px + var(--safe-left));
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: saturate(1.4) blur(14px);
-  -webkit-backdrop-filter: saturate(1.4) blur(14px);
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-}
-.topbar h1 {
-  flex: 1;
-  margin: 0;
-  font: 700 19px/1.2 var(--font-display);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding-left: 6px;
-}
-.icon-btn {
-  min-width: 44px;
-  min-height: 44px;
-  display: inline-grid;
-  place-items: center;
-  border: 0;
-  background: none;
-  border-radius: 12px;
-  color: var(--ink);
-  cursor: pointer;
-}
-.icon-btn:active {
-  background: var(--bg-2);
-}
-.icon-btn svg {
-  width: 24px;
-  height: 24px;
-}
-
-.tabbar {
-  position: fixed;
-  inset: auto 0 0 0;
-  z-index: 20;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  height: calc(var(--tab-h) + var(--safe-bottom));
-  padding: 0 var(--safe-right) var(--safe-bottom) var(--safe-left);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: saturate(1.4) blur(14px);
-  -webkit-backdrop-filter: saturate(1.4) blur(14px);
-  border-top: 1px solid var(--line);
-}
-.tabbar a {
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 2px;
-  min-height: 44px;
-  text-decoration: none;
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-.tabbar a svg {
-  width: 26px;
-  height: 26px;
-}
-.tabbar a[aria-current='page'] {
-  color: var(--primary);
-}
-.tabbar a[aria-current='page'] .tab-pill {
-  background: var(--primary-soft);
-}
-.tab-pill {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 30px;
-  border-radius: 15px;
-  transition: background 0.2s;
-}
-
-.page {
-  padding: 12px 16px 24px;
-  max-width: 720px;
-  margin: 0 auto;
-}
-.page-title {
-  font: 800 28px/1.15 var(--font-display);
-  letter-spacing: -0.02em;
-  margin: 8px 0 4px;
-}
-.lead {
-  color: var(--muted);
-  margin: 0 0 16px;
-}
-.section-title {
-  font: 700 13px/1 var(--font);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin: 24px 4px 10px;
-}
+/* Styles des écrans existants (fiches, tableaux, articles…), en cours de migration vers src/design. */
 
 /* ---------- Cartes / listes ---------- */
 .card {
@@ -296,7 +34,7 @@ a {
   color: var(--primary);
 }
 .tile strong {
-  font: 700 15px/1.25 var(--font-display);
+  font: 700 15px/1.25 var(--font-rounded);
 }
 .tile small {
   color: var(--muted);
@@ -439,7 +177,7 @@ mark {
 }
 .group-head h2 {
   margin: 0;
-  font: 700 15px/1.2 var(--font-display);
+  font: 700 15px/1.2 var(--font-rounded);
 }
 .group-head span {
   font-size: 13px;
@@ -671,7 +409,7 @@ mark {
 }
 .hero-today h2 {
   margin: 0 0 4px;
-  font: 800 26px/1.1 var(--font-display);
+  font: 800 26px/1.1 var(--font-rounded);
 }
 .hero-today p {
   margin: 0;
@@ -703,7 +441,7 @@ mark {
 
 /* ---------- Articles ---------- */
 .article .art-h {
-  font: 700 16px/1.3 var(--font-display);
+  font: 700 16px/1.3 var(--font-rounded);
   margin: 18px 4px 6px;
 }
 .article .art-p {
@@ -794,7 +532,7 @@ main:focus {
 .fsec > summary h3 {
   flex: 1;
   margin: 0;
-  font: 700 15px/1.2 var(--font-display);
+  font: 700 15px/1.2 var(--font-rounded);
 }
 .fsec-chev {
   width: 18px;
@@ -981,7 +719,7 @@ main:focus {
 }
 .sched h4 {
   margin: 12px 0 6px;
-  font: 700 14px/1.3 var(--font-display);
+  font: 700 14px/1.3 var(--font-rounded);
 }
 .sched ol {
   list-style: none;
@@ -1186,7 +924,7 @@ a.badge {
   color: var(--muted);
 }
 .big-pct {
-  font: 800 30px/1 var(--font-display);
+  font: 800 30px/1 var(--font-rounded);
   color: var(--primary);
   font-variant-numeric: tabular-nums;
 }
@@ -1267,7 +1005,7 @@ a.badge {
 }
 .date-main {
   display: block;
-  font: 800 20px/1.15 var(--font-display);
+  font: 800 20px/1.15 var(--font-rounded);
 }
 .date-sub {
   display: block;
@@ -1818,7 +1556,7 @@ code {
 }
 .spawn-card h4 {
   margin: 0 0 8px;
-  font: 700 15px/1.25 var(--font-display);
+  font: 700 15px/1.25 var(--font-rounded);
 }
 .spawn-row {
   display: flex;
@@ -1872,7 +1610,7 @@ code {
 }
 .up-card > header h4 {
   margin: 0;
-  font: 700 16px/1.2 var(--font-display);
+  font: 700 16px/1.2 var(--font-rounded);
 }
 .up-card > header a {
   color: inherit;
@@ -1924,7 +1662,7 @@ code {
 }
 .up-shop-h h2 {
   margin: 0;
-  font: 800 20px/1.2 var(--font-display);
+  font: 800 20px/1.2 var(--font-rounded);
 }
 .up-shop-h h2 a {
   color: inherit;

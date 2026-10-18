@@ -14,7 +14,10 @@ export type Profile = {
   weather: string; // sunny | rain | storm | snow | windy | blizzard
   hour: number; // heure en jeu affichée sur « Aujourd'hui » (6–26)
   checks: Record<string, number>; // clé de suivi → horodatage de la coche
-  favs: string[];
+  favs: string[]; // ancienne liste de favoris (migrée vers `session`)
+  session?: string[]; // « Ma session » : fiches épinglées pour la journée de jeu
+  paliers?: Record<string, number>; // palier possédé par outil : 0 = de base … 4 = osmium
+  coeurs?: Record<string, number>; // niveau de cœurs avec chaque habitant (0–10, ou 15 marié)
 };
 
 const DB_NAME = 'coral-wiki';
@@ -28,7 +31,7 @@ export const ready = signal(false);
 
 function newProfile(name: string): Profile {
   const now = Date.now();
-  return { id: `p${now.toString(36)}${Math.random().toString(36).slice(2, 6)}`, name, created: now, updated: now, date: { season: 'spring', day: 1, year: 1 }, weather: 'sunny', hour: 9, checks: {}, favs: [] };
+  return { id: `p${now.toString(36)}${Math.random().toString(36).slice(2, 6)}`, name, created: now, updated: now, date: { season: 'spring', day: 1, year: 1 }, weather: 'sunny', hour: 9, checks: {}, favs: [], session: [], paliers: {}, coeurs: {} };
 }
 
 export async function initStore() {
@@ -45,6 +48,8 @@ export async function initStore() {
       await db.put('profiles', p);
       list = [p];
     }
+    // Migration : les favoris deviennent les épingles de la session
+    for (const p of list) if (!p.session) p.session = [...(p.favs ?? [])];
     profiles.value = list.sort((a, b) => a.created - b.created);
     activeId.value = ((await db.get('meta', 'active')) as string) ?? list[0].id;
   } catch {
@@ -107,7 +112,29 @@ export const setWeather = (weather: string) => update((p) => ({ ...p, weather })
 export const setHour = (hour: number) => update((p) => ({ ...p, hour }));
 
 export function toggleFav(id: string) {
-  update((p) => ({ ...p, favs: p.favs.includes(id) ? p.favs.filter((f) => f !== id) : [...p.favs, id] }));
+  togglePin(id);
+}
+
+// --- Ma session : fiches épinglées ---
+export const pinned = (id: string) => !!active.value?.session?.includes(id);
+export function togglePin(id: string) {
+  update((p) => {
+    const s = p.session ?? [];
+    return { ...p, session: s.includes(id) ? s.filter((x) => x !== id) : [...s, id] };
+  });
+}
+export function setSession(ids: string[]) {
+  update((p) => ({ ...p, session: ids }));
+}
+
+// --- Paliers d'outils et cœurs ---
+export const palier = (tool: string) => active.value?.paliers?.[tool] ?? 0;
+export function setPalier(tool: string, n: number) {
+  update((p) => ({ ...p, paliers: { ...(p.paliers ?? {}), [tool]: n } }));
+}
+export const coeurs = (npc: string) => active.value?.coeurs?.[npc] ?? 0;
+export function setCoeurs(npc: string, n: number) {
+  update((p) => ({ ...p, coeurs: { ...(p.coeurs ?? {}), [npc]: n } }));
 }
 
 // --- Gestion des profils (interface au jalon 5) ---
@@ -192,3 +219,10 @@ export async function flush() {
 /** Jour de la semaine en jeu : chaque saison de 28 jours commence un lundi (0 = lundi). */
 export const weekday = (day: number) => (day - 1) % 7;
 export const WEEKDAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+
+/** Coche ou décoche, avec un toast « Annuler » (aucune boîte de confirmation). */
+export function toggleWithUndo(key: string, label: string, notify: (msg: string, undo: () => void) => void) {
+  const was = isChecked(key);
+  setCheck(key, !was);
+  notify(was ? `${label} : décoché` : `${label} : coché`, () => setCheck(key, was));
+}

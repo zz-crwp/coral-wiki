@@ -28,105 +28,11 @@ function useAnchor(ready: boolean) {
   }, [ready]);
 }
 
-export function TemplePage() {
-  const d = useData('temple');
-  useAnchor(!!d);
-  return (
-    <>
-      <TopBar title="Temple du lac" backTo="/encyclo" />
-      <main class="page fiche" id="main">
-        {!d ? (
-          <Empty>Chargement…</Empty>
-        ) : (
-          <>
-            <a class="btn track-link" href="#/trackers/temple">Cocher mes offrandes</a>
-            <p class="lead">4 autels, {d.autels.reduce((a: number, x: any) => a + x.offrandes.length, 0)} offrandes. Chaque offrande terminée rapporte des points Héritage et débloque des récompenses par palier.</p>
-            <Section title="Paliers (toutes offrandes confondues)">
-              <ol class="events">
-                {d.paliers.map((p: any) => (
-                  <li key={p.offrandes} class="event">
-                    <span class="hearts" style={{ color: 'var(--primary)' }}>{p.offrandes}</span>
-                    <ul class="plain" style={{ paddingLeft: 0, listStyle: 'none' }}>
-                      {p.recompenses.map((r: string, i: number) => <li key={i}><RichText text={r} /></li>)}
-                    </ul>
-                  </li>
-                ))}
-              </ol>
-            </Section>
-            {d.autels.map((a: any) => (
-              <Section key={a.id} title={a.nom_fr} count={a.offrandes.length} id={a.id}>
-                {a.effet && <p class="prose" style={{ padding: '0 0 8px' }}><RichText text={a.effet} /></p>}
-                {a.offrandes.map((o: any) => (
-                  <div key={o.id} id={o.id} class="offering">
-                    <h4 class="art-h">
-                      {o.nom ?? o.nom_en} <span class="note">({o.objets.length} objets)</span>
-                    </h4>
-                    <ChipList ids={o.objets.map((x: any) => x.id)} limit={20} notes={Object.fromEntries(o.objets.map((x: any) => [x.id, `×${x.n}${x.qualite ? ` · ${QUALITY_BY_INDEX[x.qualite]}+` : ''}`]))} />
-                    {o.recompense.length > 0 && (
-                      <p class="note" style={{ marginTop: 6 }}>
-                        Récompense : {o.recompense.map((r: any) => <Chip key={r.id} id={r.id} note={`×${r.n}`} size={24} />)}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </Section>
-            ))}
-            <p class="note"><a href={d.source.url} target="_blank" rel="noopener">Source : Coral Island Wiki — Lake Temple</a></p>
-          </>
-        )}
-      </main>
-    </>
-  );
-}
-
-const COLL_FR: Record<string, string> = { poissons: 'Poissons', insectes: 'Insectes', 'creatures-marines': 'Créatures marines', artefacts: 'Artefacts', fossiles: 'Fossiles', gemmes: 'Gemmes' };
-
-export function MuseumPage() {
-  const d = useData('musee');
-  return (
-    <>
-      <TopBar title="Musée" backTo="/encyclo" />
-      <main class="page fiche" id="main">
-        {!d ? (
-          <Empty>Chargement…</Empty>
-        ) : (
-          <>
-            <a class="btn track-link" href="#/trackers/musee">Cocher mes dons</a>
-            <p class="lead">{d.collections.reduce((a: number, c: any) => a + c.objets.length, 0)} objets donnables. Chaque don rapporte 3 points Musée ; chaque collection complète en rapporte 40.</p>
-            {d.collections.map((c: any) => (
-              <Section key={c.id} title={COLL_FR[c.id] ?? c.id} count={c.objets.length} open={false} id={c.id}>
-                <ChipList ids={c.objets} limit={200} />
-              </Section>
-            ))}
-            <Section title="Paliers de dons">
-              <div class="table-wrap">
-                <table>
-                  <thead><tr><th>Dons</th><th>Récompense</th><th>Autre</th></tr></thead>
-                  <tbody>
-                    {d.paliers_dons.map((p: any) => (
-                      <tr key={p.dons}><td>{p.dons}</td><td><RichText text={p.recompense} /></td><td>{p.autre ? <RichText text={p.autre} /> : ''}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Section>
-            {d.paliers_collections.length > 0 && (
-              <Section title="Récompenses de collection" open={false}>
-                <Article blocks={d.paliers_collections as Block[]} />
-              </Section>
-            )}
-          </>
-        )}
-      </main>
-    </>
-  );
-}
-
 export function RankPage() {
   const d = useData('rang');
   return (
     <>
-      <TopBar title="Rang de la ville" backTo="/encyclo" />
+      <TopBar title="Rang de la ville" large backTo="/explorer" />
       <main class="page fiche" id="main">
         {!d ? (
           <Empty>Chargement…</Empty>
@@ -161,7 +67,7 @@ export function MinesPage() {
   const d = useData('mines');
   return (
     <>
-      <TopBar title="Mines" backTo="/encyclo" />
+      <TopBar title="Mines" large backTo="/explorer" />
       <main class="page fiche" id="main">
         {!d ? (
           <Empty>Chargement…</Empty>
@@ -222,7 +128,7 @@ export function UpgradesPage() {
   const shown = shops?.filter((s) => !sel || s.id === sel) ?? [];
   return (
     <>
-      <TopBar title="Améliorations" backTo="/encyclo" />
+      <TopBar title="Améliorations" large backTo="/explorer" />
       <main class="page fiche" id="main">
         {!shops ? (
           <Empty>Chargement…</Empty>

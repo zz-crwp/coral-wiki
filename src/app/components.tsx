@@ -1,23 +1,33 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { Icon } from './icons.tsx';
-import { back, canGoBack, tab } from './router.ts';
+import { back, canGoBack, searchOpen, tab } from './router.ts';
 import { entry, thumb, seasonsOf, SEASON_FR, type Entry } from './data.ts';
 import ICONS from '../data/icones.json';
+import { cachedTint, computeTint } from '../ui/tint.ts';
 
-/** Image du jeu : CDN d'origine, dimensions fixes, lazy, repli pictogramme si échec. */
-export function GameImg({ src, dom, size, alt = '', eager = false }: { src: string; dom: string; size: number; alt?: string; eager?: boolean }) {
-  // 0 = CORS (mise en cache propre par le service worker), 1 = sans CORS (repli), 2 = pictogramme
+/**
+ * Image du jeu sur tuile arrondie teintée de sa couleur dominante.
+ * CDN d'origine, dimensions fixes, lazy ; pictogramme du domaine pendant le chargement et en cas d'échec.
+ */
+export function GameImg({ src, dom, size, alt = '', eager = false, done = false }: { src: string; dom: string; size: number; alt?: string; eager?: boolean; done?: boolean }) {
+  // 0 = CORS (mise en cache par le service worker, teinte calculable), 1 = sans CORS (repli), 2 = pictogramme
   const [mode, setMode] = useState(src ? 0 : 2);
-  useEffect(() => setMode(src ? 0 : 2), [src]);
+  const [loaded, setLoaded] = useState(false);
+  const url = src ? thumb(src, size <= 48 ? 96 : size <= 100 ? 200 : 400) : '';
+  const [tint, setTint] = useState<string | undefined>(() => (url ? cachedTint(url) : undefined));
+  useEffect(() => {
+    setMode(src ? 0 : 2);
+    setLoaded(false);
+    setTint(url ? cachedTint(url) : undefined);
+  }, [src]);
   return (
-    <div class="thumb" style={{ width: size, height: size }}>
-      {mode === 2 ? (
-        <Icon name={dom} class="fallback" />
-      ) : (
+    <div class={`thumb${done ? ' done' : ''}`} style={{ width: size, height: size, ...(tint ? { '--tile-tint': tint } : {}) }}>
+      {(mode === 2 || !loaded) && <Icon name={dom} class="fallback" style={mode === 2 ? undefined : { position: 'absolute' }} />}
+      {mode !== 2 && (
         <img
           key={mode}
-          src={thumb(src, size <= 48 ? 96 : size <= 100 ? 200 : 400)}
+          src={url}
           width={size}
           height={size}
           alt={alt}
@@ -25,6 +35,11 @@ export function GameImg({ src, dom, size, alt = '', eager = false }: { src: stri
           decoding="async"
           referrerpolicy="no-referrer"
           crossOrigin={mode === 0 ? 'anonymous' : undefined}
+          style={loaded ? undefined : { opacity: 0 }}
+          onLoad={(e) => {
+            setLoaded(true);
+            if (mode === 0 && !tint) setTint(computeTint(e.currentTarget as HTMLImageElement, url));
+          }}
           onError={() => setMode((m) => m + 1)}
         />
       )}
@@ -32,39 +47,77 @@ export function GameImg({ src, dom, size, alt = '', eager = false }: { src: stri
   );
 }
 
-export function TopBar({ title, backTo, actions }: { title: string; backTo?: string; actions?: ComponentChildren }) {
+/** Défilement de la fenêtre au-delà d'un seuil (barre translucide, titre compact). */
+function useScrolled(threshold: number) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const f = () => setOn(window.scrollY > threshold);
+    f();
+    addEventListener('scroll', f, { passive: true });
+    return () => removeEventListener('scroll', f);
+  }, [threshold]);
+  return on;
+}
+
+/**
+ * Barre du haut en matière translucide. Avec `large`, un grand titre (police d'affichage) ouvre la page
+ * et se rétracte dans la barre au défilement, comme Apple Musique.
+ */
+export function TopBar({ title, backTo, actions, large = false, subtitle, leading }: { title: string; backTo?: string; actions?: ComponentChildren; large?: boolean; subtitle?: ComponentChildren; leading?: ComponentChildren }) {
+  const scrolled = useScrolled(large ? 40 : 2);
   return (
-    <header class="topbar">
-      {backTo !== undefined && (
-        <button class="icon-btn" onClick={() => back(backTo)} aria-label={canGoBack() ? 'Retour' : 'Remonter'}>
-          <Icon name="back" />
-        </button>
+    <>
+      <header class={`bar${scrolled ? ' scrolled' : ''}${large ? '' : ' solid'}`}>
+        <div class="bar-side">
+          {backTo !== undefined ? (
+            <button class="icon-btn back" onClick={() => back(backTo)} aria-label={canGoBack() ? 'Retour' : 'Remonter'}>
+              <Icon name="back" />
+            </button>
+          ) : (
+            leading
+          )}
+        </div>
+        {large ? (
+          <div class="bar-title" aria-hidden="true">
+            {title}
+          </div>
+        ) : (
+          <h1 class="bar-title">{title}</h1>
+        )}
+        <div class="bar-side end">{actions}</div>
+      </header>
+      {large && (
+        <div class="large-title">
+          <h1>{title}</h1>
+          {subtitle && <p>{subtitle}</p>}
+        </div>
       )}
-      <h1>{title}</h1>
-      {actions}
-    </header>
+    </>
   );
 }
 
 const TABS = [
   { id: 'aujourdhui', label: "Aujourd'hui", icon: 'today', href: '#/' },
-  { id: 'recherche', label: 'Recherche', icon: 'search', href: '#/recherche' },
-  { id: 'encyclo', label: 'Encyclopédie', icon: 'book', href: '#/encyclo' },
-  { id: 'trackers', label: 'Trackers', icon: 'check', href: '#/trackers' },
-  { id: 'plus', label: 'Plus', icon: 'more', href: '#/plus' },
+  { id: 'explorer', label: 'Explorer', icon: 'explore', href: '#/explorer' },
+  { id: 'progression', label: 'Progression', icon: 'progress', href: '#/progression' },
+  { id: 'session', label: 'Session', icon: 'session', href: '#/session' },
 ];
 
+/** Barre d'onglets flottante (4 onglets) + bouton de recherche séparé, dans la zone du pouce. */
 export function TabBar() {
   return (
     <nav class="tabbar" aria-label="Navigation principale">
-      {TABS.map((t) => (
-        <a key={t.id} href={t.href} aria-current={tab.value === t.id ? 'page' : undefined}>
-          <span class="tab-pill">
+      <div class="tab-capsule">
+        {TABS.map((t) => (
+          <a key={t.id} href={t.href} aria-current={tab.value === t.id ? 'page' : undefined}>
             <Icon name={t.icon} />
-          </span>
-          {t.label}
-        </a>
-      ))}
+            {t.label}
+          </a>
+        ))}
+      </div>
+      <button class="tab-search" aria-label="Rechercher" aria-expanded={searchOpen.value} onClick={() => (searchOpen.value = true)}>
+        <Icon name="search" />
+      </button>
     </nav>
   );
 }

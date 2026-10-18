@@ -1,0 +1,110 @@
+/* Base : typographie Dynamic Type, fond, focus, accessibilité. Dépend de tokens.css. */
+html {
+  /* Sur iOS, -apple-system-body suit la taille de texte réglée dans Réglages (Dynamic Type) ;
+     toutes les tailles sont en rem et s'agrandissent avec elle. Ailleurs : 100 % du navigateur. */
+  font: -apple-system-body;
+  font-family: var(--font);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--bg);
+  scroll-padding-top: calc(var(--bar-h) + var(--safe-top) + 8px);
+  scroll-padding-bottom: calc(var(--tab-h) + var(--safe-bottom) + 24px);
+}
+@supports not (font: -apple-system-body) {
+  html {
+    font-size: 100%;
+  }
+}
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--label);
+  font: var(--t-body);
+  letter-spacing: -0.01em;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+img {
+  display: block;
+  max-width: 100%;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+/* ≥ 16 px : pas de zoom automatique sur iOS */
+input,
+select,
+textarea {
+  font-size: max(16px, 1rem);
+}
+button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+a {
+  color: var(--tint);
+}
+:focus-visible {
+  outline: 3px solid var(--tint);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+::selection {
+  background: var(--tint-soft);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.skip {
+  position: absolute;
+  left: 8px;
+  top: -60px;
+  z-index: 100;
+  background: var(--tint);
+  color: var(--on-tint);
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+}
+.skip:focus {
+  top: calc(var(--safe-top) + 8px);
+}
+.num,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Échelle typographique (classes utilitaires) */
+.t-large { font: var(--t-large); letter-spacing: -0.01em; }
+.t-title1 { font: var(--t-title1); letter-spacing: -0.02em; }
+.t-title2 { font: var(--t-title2); letter-spacing: -0.015em; }
+.t-title3 { font: var(--t-title3); letter-spacing: -0.01em; }
+.t-headline { font: var(--t-headline); }
+.t-callout { font: var(--t-callout); }
+.t-subhead { font: var(--t-subhead); }
+.t-footnote { font: var(--t-footnote); letter-spacing: 0; }
+.t-caption { font: var(--t-caption); letter-spacing: 0; }
+.c-2 { color: var(--label-2); }
+.c-3 { color: var(--label-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

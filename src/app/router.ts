@@ -3,8 +3,8 @@ import { signal, computed } from '@preact/signals';
 
 export type Route = { path: string[]; query: URLSearchParams; raw: string };
 
-function parse(): Route {
-  const raw = location.hash.replace(/^#/, '').split('#')[0] || '/';
+function parse(hash = location.hash): Route {
+  const raw = hash.replace(/^#/, '').split('#')[0] || '/';
   const [p, q = ''] = raw.split('?');
   return { path: p.split('/').filter(Boolean).map(decodeURIComponent), query: new URLSearchParams(q), raw };
 }
@@ -12,12 +12,16 @@ function parse(): Route {
 export const route = signal<Route>(parse());
 export const tab = computed(() => {
   const s = route.value.path[0] ?? '';
-  if (s === 'recherche') return 'recherche';
-  if (['encyclo', 'fiche', 'temple', 'musee', 'rang', 'mines', 'ameliorations'].includes(s)) return 'encyclo';
-  if (s === 'trackers') return 'trackers';
-  if (['plus', 'credits', 'outils', 'favoris'].includes(s)) return 'plus';
+  if (['explorer', 'encyclo', 'fiche', 'ameliorations', 'mines', 'rang', 'outils'].includes(s)) return 'explorer';
+  if (['progression', 'trackers', 'temple', 'musee'].includes(s)) return 'progression';
+  if (['session', 'favoris'].includes(s)) return 'session';
   return 'aujourdhui';
 });
+
+/** Recherche : sheet ouverte depuis le bouton de la barre d'onglets. */
+export const searchOpen = signal(false);
+/** Requête à pré-remplir à l'ouverture de la recherche (ancien lien #/recherche?q=…). */
+export const searchSeed = signal('');
 
 const SCROLL_KEY = 'cw-scroll';
 const scrolls: Record<string, number> = (() => {
@@ -29,9 +33,18 @@ const scrolls: Record<string, number> = (() => {
 })();
 let historyDepth = 0;
 
+/** Adresse sans la fiche ouverte en sheet : ouvrir ou fermer une fiche ne fait pas défiler la page. */
+const base = (r: Route) => {
+  const q = new URLSearchParams(r.query);
+  q.delete('f');
+  return r.path.join('/') + '?' + q.toString();
+};
+
 window.addEventListener('hashchange', () => {
+  const prev = route.value;
   route.value = parse();
-  const y = scrolls[route.value.raw] ?? 0;
+  if (base(prev) === base(route.value)) return;
+  const y = scrolls[base(route.value)] ?? 0;
   // Après rendu : restaure la position (retour) ou remonte en haut (nouvelle page)
   requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
 });
@@ -39,7 +52,7 @@ window.addEventListener('hashchange', () => {
 window.addEventListener(
   'scroll',
   () => {
-    scrolls[route.value.raw] = window.scrollY;
+    scrolls[base(route.value)] = window.scrollY;
   },
   { passive: true },
 );
@@ -60,7 +73,7 @@ export function go(path: string, query?: Record<string, string | undefined>, rep
     history.replaceState(null, '', h);
     route.value = parse();
   } else {
-    delete scrolls[h.slice(1)];
+    delete scrolls[base(parse(h))];
     historyDepth++;
     location.hash = h.slice(1);
   }
@@ -78,13 +91,51 @@ export function canGoBack() {
   return historyDepth > 0;
 }
 
-// Les clics sur liens internes comptent comme navigation avant
+// --- Fiches en sheet : « #/explorer/poissons?f=arapaima » garde la liste derrière ---
+const RECENT = 'cw-recent';
+export function recent(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT) ?? '[]');
+  } catch {
+    return [];
+  }
+}
+function remember(id: string) {
+  try {
+    localStorage.setItem(RECENT, JSON.stringify([id, ...recent().filter((x) => x !== id)].slice(0, 12)));
+  } catch {}
+}
+export function openFiche(id: string) {
+  remember(id);
+  searchOpen.value = false;
+  const r = route.value;
+  // Depuis l'ancienne page « fiche », on reste en page ; sinon la sheet s'ouvre au-dessus de l'écran courant
+  const path = r.path[0] === 'fiche' ? '/explorer' : '/' + r.path.join('/');
+  const q = Object.fromEntries(r.query);
+  go(path, { ...q, f: id });
+}
+export function closeFiche() {
+  if (historyDepth > 0) back();
+  else {
+    const q = Object.fromEntries(route.value.query);
+    delete q.f;
+    go('/' + route.value.path.join('/'), q, true);
+  }
+}
+
+// Les clics sur liens internes comptent comme navigation avant ; un lien de fiche ouvre la sheet
 document.addEventListener('click', (e) => {
   const a = (e.target as HTMLElement).closest?.('a[href^="#"]');
   if (a && !e.defaultPrevented && !(e as MouseEvent).metaKey && !(e as MouseEvent).ctrlKey) {
     const h = a.getAttribute('href')!;
+    const m = /^#\/fiche\/([^?#]+)/.exec(h);
+    if (m) {
+      e.preventDefault();
+      openFiche(decodeURIComponent(m[1]));
+      return;
+    }
     if (h.slice(1) !== route.value.raw) {
-      delete scrolls[h.slice(1)];
+      delete scrolls[base(parse(h))];
       historyDepth++;
     }
   }

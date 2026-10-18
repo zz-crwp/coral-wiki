@@ -5,7 +5,7 @@ import { CheckBtn, Empty, GameImg, TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
 import { active, isChecked, toggle, weekday, WEEKDAYS, type GameDate } from '../store.ts';
 import { Chip } from '../fiche/parts.tsx';
-import { loadToday, type TodayData } from './Today.tsx';
+import { loadToday, type TodayData } from '../game.ts';
 import { go, route } from '../router.ts';
 
 const DAYS = 28;
@@ -19,30 +19,9 @@ const QUALITIES = [
   { label: 'Osmium', m: 2 },
 ];
 
-type Crop = TodayData['cultures'][number];
 
-/**
- * Plantation le jour `day` : jours restants jusqu'à la fin de la dernière saison consécutive de la culture,
- * nombre de récoltes (repousse ou replantation), coût en graines, dernier jour utile pour planter.
- */
-export function cropCalc(c: Crop, season: Season, day: number, plants: number, mult: number) {
-  if (!(c.s & SBIT[season])) return null;
-  let extra = 0;
-  for (let k = 1, s = SEASONS.indexOf(season); k < 4; k++) {
-    if (!(c.s & (1 << ((s + k) % 4)))) break;
-    extra += DAYS;
-  }
-  const rem = DAYS - day + extra;
-  const lastDay = Math.min(DAYS, DAYS + extra - c.g);
-  if (rem < c.g) return { harvests: 0, seeds: 0, cost: 0, revenue: 0, profit: 0, perDay: 0, roi: 0, rem, lastDay, cycles: 0 };
-  const cycles = c.r > 0 ? 1 : Math.floor(rem / c.g);
-  const harvests = c.r > 0 ? 1 + Math.floor((rem - c.g) / c.r) : cycles;
-  const price = Math.floor(c.v * mult);
-  const cost = cycles * c.pg * plants;
-  const revenue = harvests * price * plants;
-  const profit = revenue - cost;
-  return { harvests, seeds: cycles * plants, cost, revenue, profit, perDay: profit / rem, roi: cost ? profit / cost : 0, rem, lastDay, cycles };
-}
+export { cropCalc } from '../game.ts';
+import { cropCalc, type Crop } from '../game.ts';
 
 type Sort = 'profit' | 'perDay' | 'roi';
 type Kind = 'ferme' | 'ocean' | 'fruit';
@@ -75,7 +54,7 @@ export function CropCalcPage() {
 
   return (
     <>
-      <TopBar title="Rentabilité des cultures" backTo="/plus" />
+      <TopBar title="Rentabilité des cultures" large backTo="/reglages" />
       <main class="page" id="main">
         <div class="card form">
           <div class="seg seg-full" role="group" aria-label="Saison">
@@ -229,7 +208,7 @@ export function GiftPlannerPage() {
   const setF = (f: string) => go('/outils/cadeaux', { f: f || undefined }, true);
   return (
     <>
-      <TopBar title="Cadeaux" backTo="/plus" />
+      <TopBar title="Cadeaux" large backTo="/reglages" />
       <main class="page" id="main">
         <p class="note" style={{ margin: '0 4px 10px' }}>
           Semaine {Math.floor((d.day - 1) / 7) + 1} de {SEASON_FR[d.season].toLowerCase()}, an {d.year} · 2 cadeaux par habitant et par semaine (la semaine commence le lundi).

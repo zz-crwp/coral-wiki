@@ -16,8 +16,10 @@
     "qa:progress": "node scripts/qa/progress.ts"
   },
   "dependencies": {
+    "@fontsource-variable/fredoka": "5.3.0",
     "@preact/signals": "^2.11.3",
     "idb": "^8.0.4",
+    "lucide-preact": "1.59.0",
     "minisearch": "^7.2.0",
     "preact": "^11.0.1",
     "zod": "^4.6.7"

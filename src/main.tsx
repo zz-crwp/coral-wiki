@@ -1,64 +1,102 @@
 import { render } from 'preact';
 import { lazy, Suspense } from 'preact/compat';
+import { useEffect } from 'preact/hooks';
+import './design/tokens.css';
+import './design/base.css';
 import './styles.css';
-import { route } from './app/router.ts';
+import './design/components.css';
+import fredoka from '@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2?url';
+import { go, route, searchOpen, searchSeed } from './app/router.ts';
 import { TabBar } from './app/components.tsx';
-
 import { TodayPage } from './app/pages/Today.tsx';
 import { initStore, ready } from './app/store.ts';
-import { loadEntries } from './app/data.ts';
+import { entry, loadEntries } from './app/data.ts';
+import { ClockSheet } from './ui/Clock.tsx';
+import { ContextMenu, Toaster } from './ui/feedback.tsx';
+import { FicheSheet, SearchSheet } from './ui/Overlays.tsx';
+import { applyPrefs } from './app/prefs.ts';
 
-const SearchPage = lazy(() => import('./app/pages/Search.tsx').then((m) => m.SearchPage));
-const EncycloPage = lazy(() => import('./app/pages/Encyclo.tsx').then((m) => m.EncycloPage));
-const DomainListPage = lazy(() => import('./app/pages/Encyclo.tsx').then((m) => m.DomainListPage));
-const FichePage = lazy(() => import('./app/pages/Fiche.tsx').then((m) => m.FichePage));
-const TemplePage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.TemplePage));
-const MuseumPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.MuseumPage));
-const RankPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.RankPage));
-const TrackersPage = lazy(() => import('./app/pages/Trackers.tsx').then((m) => m.TrackersPage));
+const ExplorerPage = lazy(() => import('./app/pages/Explorer.tsx').then((m) => m.ExplorerPage));
+const DomainPage = lazy(() => import('./app/pages/Domain.tsx').then((m) => m.DomainPage));
+const ProgressionPage = lazy(() => import('./app/pages/Trackers.tsx').then((m) => m.TrackersPage));
 const TrackerPage = lazy(() => import('./app/pages/Trackers.tsx').then((m) => m.TrackerPage));
+const SessionPage = lazy(() => import('./app/pages/Session.tsx').then((m) => m.SessionPage));
 const CalendarPage = lazy(() => import('./app/pages/Calendar.tsx').then((m) => m.CalendarPage));
-const MorePage = lazy(() => import('./app/pages/Misc.tsx').then((m) => m.MorePage));
+const SettingsPage = lazy(() => import('./app/pages/Misc.tsx').then((m) => m.MorePage));
 const CreditsPage = lazy(() => import('./app/pages/Misc.tsx').then((m) => m.CreditsPage));
-const FavoritesPage = lazy(() => import('./app/pages/Misc.tsx').then((m) => m.FavoritesPage));
 const CropCalcPage = lazy(() => import('./app/pages/Tools.tsx').then((m) => m.CropCalcPage));
 const GiftPlannerPage = lazy(() => import('./app/pages/Tools.tsx').then((m) => m.GiftPlannerPage));
 const GiftNpcPage = lazy(() => import('./app/pages/Tools.tsx').then((m) => m.GiftNpcPage));
 const UpgradesPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.UpgradesPage));
+const RankPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.RankPage));
 const MinesPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.MinesPage));
+const TemplePage = lazy(() => import('./app/pages/Temple.tsx').then((m) => m.TemplePage));
+const DesignPage = lazy(() => import('./app/pages/Design.tsx').then((m) => m.DesignPage));
+
+/** Anciennes adresses (avant la refonte) → nouvelles, en remplaçant l'historique. */
+function Redirect({ to, q }: { to: string; q?: Record<string, string | undefined> }) {
+  useEffect(() => go(to, q, true), [to]);
+  return null;
+}
+/** Lien profond vers une fiche : liste du domaine, ligne dépliée et sheet ouverte. */
+function FicheRedirect({ id }: { id: string }) {
+  useEffect(() => {
+    loadEntries().then(() => {
+      const e = entry(id);
+      go(e ? `/explorer/${e.dom}` : '/explorer', e ? { open: id, f: id } : undefined, true);
+    });
+  }, [id]);
+  return null;
+}
 
 function Page() {
   if (!ready.value) return null;
-  const [a, b] = route.value.path;
+  const [a, b, c] = route.value.path;
+  const q = Object.fromEntries(route.value.query);
   switch (a) {
-    case 'recherche':
-      return <SearchPage />;
-    case 'encyclo':
-      return b ? <DomainListPage dom={b} /> : <EncycloPage />;
-    case 'fiche':
-      return <FichePage key={b} id={b} />;
-    case 'temple':
-      return <TemplePage />;
-    case 'musee':
-      return <MuseumPage />;
-    case 'rang':
-      return <RankPage />;
-    case 'ameliorations':
-      return <UpgradesPage />;
-    case 'mines':
-      return <MinesPage />;
-    case 'trackers':
-      return b ? <TrackerPage key={b} id={b} /> : <TrackersPage />;
-    case 'outils':
-      return b === 'cultures' ? <CropCalcPage /> : route.value.path[2] ? <GiftNpcPage key={route.value.path[2]} id={route.value.path[2]} /> : <GiftPlannerPage />;
-    case 'favoris':
-      return <FavoritesPage />;
+    case 'explorer':
+      if (!b) return <ExplorerPage />;
+      if (b === 'ameliorations') return <UpgradesPage />;
+      if (b === 'rang') return <RankPage />;
+      if (b === 'mines') return <MinesPage />;
+      return <DomainPage key={b} dom={b} />;
+    case 'progression':
+      if (b === 'temple') return <TemplePage />;
+      return b ? <TrackerPage key={b} id={b} /> : <ProgressionPage />;
+    case 'session':
+      return <SessionPage />;
     case 'calendrier':
       return <CalendarPage />;
-    case 'plus':
-      return <MorePage />;
+    case 'reglages':
+      return <SettingsPage />;
     case 'credits':
       return <CreditsPage />;
+    case 'design':
+      return <DesignPage />;
+    case 'outils':
+      return b === 'cultures' ? <CropCalcPage /> : c ? <GiftNpcPage key={c} id={c} /> : <GiftPlannerPage />;
+    // Anciennes adresses
+    case 'fiche':
+      return <FicheRedirect id={b} />;
+    case 'encyclo':
+      return <Redirect to={b ? `/explorer/${b}` : '/explorer'} q={q} />;
+    case 'trackers':
+      return <Redirect to={b ? `/progression/${b}` : '/progression'} q={q} />;
+    case 'temple':
+    case 'musee':
+      return <Redirect to={`/progression/${a}`} />;
+    case 'ameliorations':
+    case 'rang':
+    case 'mines':
+      return <Redirect to={`/explorer/${a}`} q={q} />;
+    case 'favoris':
+      return <Redirect to="/session" />;
+    case 'plus':
+      return <Redirect to="/reglages" />;
+    case 'recherche':
+      searchSeed.value = q.q ?? '';
+      searchOpen.value = true;
+      return <Redirect to="/" />;
     default:
       return <TodayPage />;
   }
@@ -67,17 +105,36 @@ function Page() {
 function App() {
   return (
     <div class="app">
-      <a class="skip" href="#main" onClick={(e) => { e.preventDefault(); const m = document.getElementById("main"); m?.setAttribute("tabindex", "-1"); m?.focus(); }}>
+      <a class="skip" href="#main" onClick={(e) => { e.preventDefault(); const m = document.getElementById('main'); m?.setAttribute('tabindex', '-1'); m?.focus(); }}>
         Aller au contenu
       </a>
       <Suspense fallback={null}>
         <Page />
+        <FicheSheet />
       </Suspense>
       <TabBar />
+      <SearchSheet />
+      <ClockSheet />
+      <ContextMenu />
+      <Toaster />
     </div>
   );
 }
 
+// Police des grands titres : Fredoka, embarquée (fonctionne hors ligne)
+if ('fonts' in document) {
+  const f = new FontFace('Fredoka', `url(${fredoka}) format('woff2')`, { weight: '300 700', display: 'swap' });
+  f.load().then((ff) => document.fonts.add(ff)).catch(() => {});
+}
+// Clavier virtuel : hauteur exposée en --kb pour que les sheets restent au-dessus
+if (window.visualViewport) {
+  const vv = window.visualViewport;
+  const upd = () => document.documentElement.style.setProperty('--kb', `${Math.max(0, window.innerHeight - vv.height - vv.offsetTop)}px`);
+  vv.addEventListener('resize', upd);
+  vv.addEventListener('scroll', upd);
+}
+
+applyPrefs();
 render(<App />, document.getElementById('app')!);
 initStore().then(() => import('./app/sync.ts').then((m) => m.loadGistConf()));
 

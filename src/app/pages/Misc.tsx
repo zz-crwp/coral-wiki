@@ -1,19 +1,11 @@
-import { useEffect, useState } from 'preact/hooks';
-import { DOMAINS, entry, loadEntries, meta, SEASON_FR, type Entry } from '../data.ts';
-import { Empty, GameImg, TopBar } from '../components.tsx';
+import { useState } from 'preact/hooks';
+import { meta, SEASON_FR } from '../data.ts';
+import { TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
-import { active, createProfile, deleteProfile, profiles, renameProfile, switchProfile, toggleFav } from '../store.ts';
+import { active, createProfile, deleteProfile, profiles, renameProfile, switchProfile } from '../store.ts';
+import { setTheme, setWake, theme, wakeOn, wakeSupported, type Theme } from '../prefs.ts';
+import { Segmented } from '../../ui/controls.tsx';
 import { connect, disconnect, exportFile, gist, importFile, setAuto, syncNow, syncState } from '../sync.ts';
-
-type Theme = 'system' | 'light' | 'dark';
-function readTheme(): Theme {
-  try {
-    const t = localStorage.getItem('cw-theme');
-    return t === 'light' || t === 'dark' ? t : 'system';
-  } catch {
-    return 'system';
-  }
-}
 
 const Link = ({ href, icon, label, sub }: { href: string; icon: string; label: string; sub?: string }) => (
   <a class="setting link" href={href}>
@@ -26,56 +18,56 @@ const Link = ({ href, icon, label, sub }: { href: string; icon: string; label: s
   </a>
 );
 
+/** Réglages : profils, affichage, sauvegarde et synchro. Ouverts depuis l'engrenage de l'onglet Aujourd'hui. */
 export function MorePage() {
-  const [theme, setTheme] = useState<Theme>(readTheme());
-  const apply = (t: Theme) => {
-    setTheme(t);
-    try {
-      if (t === 'system') localStorage.removeItem('cw-theme');
-      else localStorage.setItem('cw-theme', t);
-    } catch {}
-    if (t === 'system') delete document.documentElement.dataset.theme;
-    else document.documentElement.dataset.theme = t;
-  };
-  const p = active.value;
   return (
     <>
-      <TopBar title="Plus" />
-      <main class="page" id="main">
-        <h2 class="section-title">Outils</h2>
-        <div class="card">
-          <Link href="#/outils/cultures" icon="cultures" label="Rentabilité des cultures" sub="Bénéfice selon le jour de plantation" />
-          <Link href="#/outils/cadeaux" icon="cake" label="Planificateur de cadeaux" sub="Anniversaires, cadeaux de la semaine, préférences" />
-          <Link href="#/ameliorations" icon="outils" label="Améliorations par magasin" sub="Forge, labo, charpentier, sac… : or et matériaux" />
-          <Link href="#/calendrier" icon="festivals" label="Calendrier" sub="Festivals et anniversaires" />
-          <Link href="#/favoris" icon="star" label="Favoris" sub={`${p?.favs.length ?? 0} fiche${(p?.favs.length ?? 0) > 1 ? 's' : ''}`} />
-        </div>
+      <TopBar title="Réglages" large backTo="/" />
+      <main class="page settings-page" id="main">
         <Profiles />
+        <h2 class="group-label">Affichage</h2>
+        <div class="group">
+          <div class="setting col">
+            <span id="theme-l">Thème</span>
+            <Segmented
+              label="Thème"
+              value={theme.value}
+              onChange={(t: Theme) => setTheme(t)}
+              options={[
+                ['system', 'Auto'],
+                ['light', 'Clair'],
+                ['dark', 'Sombre'],
+                ['oled', 'Noir OLED'],
+              ]}
+            />
+          </div>
+          <label class="setting">
+            <span class="set-t">
+              Garder l'écran allumé
+              <small>{wakeSupported ? 'Pratique pendant une session de jeu, consomme un peu plus de batterie' : 'Non pris en charge par ce navigateur'}</small>
+            </span>
+            <input type="checkbox" role="switch" class="switch" checked={wakeOn.value} disabled={!wakeSupported} onChange={(e) => setWake((e.target as HTMLInputElement).checked)} />
+          </label>
+        </div>
+        <h2 class="group-label">Outils</h2>
+        <div class="group">
+          <Link href="#/outils/cultures" icon="cultures" label="Rentabilité des cultures" sub="Bénéfice selon le jour de plantation" />
+          <Link href="#/outils/cadeaux" icon="gift" label="Planificateur de cadeaux" sub="Anniversaires, cadeaux de la semaine, préférences" />
+          <Link href="#/calendrier" icon="calendar-days" label="Calendrier" sub="Festivals et anniversaires" />
+        </div>
         <Backup />
         <GistSync />
-        <h2 class="section-title">Affichage</h2>
-        <div class="card">
-          <div class="setting">
-            <span id="theme-l">Thème</span>
-            <div class="seg" role="group" aria-labelledby="theme-l">
-              {(['system', 'light', 'dark'] as Theme[]).map((t) => (
-                <button key={t} aria-pressed={theme === t} onClick={() => apply(t)}>
-                  {{ system: 'Auto', light: 'Clair', dark: 'Sombre' }[t]}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <h2 class="section-title">À propos</h2>
-        <div class="card">
+        <h2 class="group-label">À propos</h2>
+        <div class="group">
           <Link href="#/credits" icon="info" label="Crédits et licences" />
+          <Link href="#/design" icon="grid" label="Système de design" sub="Composants, couleurs et états" />
           <div class="setting">
             <span>Version du jeu couverte</span>
             <strong>{meta.game_version}</strong>
           </div>
           <div class="setting">
             <span>Données du wiki</span>
-            <span class="note">{new Date(meta.fandom_fetched_at).toLocaleDateString('fr-FR')}</span>
+            <span class="c-2">{new Date(meta.fandom_fetched_at).toLocaleDateString('fr-FR')}</span>
           </div>
         </div>
       </main>
@@ -109,8 +101,8 @@ function Profiles() {
   );
   return (
     <>
-      <h2 class="section-title">Profils (parties)</h2>
-      <div class="card" role="radiogroup" aria-label="Profil actif">
+      <h2 class="group-label">Profils (parties)</h2>
+      <div class="group" role="radiogroup" aria-label="Profil actif">
         {list.map((p) =>
           editing === p.id ? (
             <div key={p.id}>{form}</div>
@@ -165,8 +157,8 @@ function Backup() {
   };
   return (
     <>
-      <h2 class="section-title">Sauvegarde</h2>
-      <div class="card">
+      <h2 class="group-label">Sauvegarde</h2>
+      <div class="group">
         <button class="setting link" onClick={() => exportFile().then(() => setMsg({ t: 'Fichier de sauvegarde téléchargé.' }))}>
           <Icon name="download" class="set-ic" />
           <span class="set-t">
@@ -184,10 +176,7 @@ function Backup() {
         </label>
         <div class="setting">
           <span id="imp-l">Mode d'import</span>
-          <div class="seg" role="group" aria-labelledby="imp-l">
-            <button aria-pressed={!replace} onClick={() => setReplace(false)}>Fusion</button>
-            <button aria-pressed={replace} onClick={() => setReplace(true)}>Remplacer</button>
-          </div>
+          <Segmented label="Mode d'import" value={replace ? 'r' : 'f'} onChange={(v) => setReplace(v === 'r')} options={[['f', 'Fusion'], ['r', 'Remplacer']]} />
         </div>
         {msg && <p class={`note pad${msg.err ? ' err' : ''}`} role="status">{msg.t}</p>}
       </div>
@@ -216,8 +205,8 @@ function GistSync() {
   };
   return (
     <>
-      <h2 class="section-title">Synchronisation (GitHub Gist)</h2>
-      <div class="card">
+      <h2 class="group-label">Synchronisation (GitHub Gist)</h2>
+      <div class="group">
         {c ? (
           <>
             <div class="setting">
@@ -234,7 +223,7 @@ function GistSync() {
                 Automatique
                 <small>À l'ouverture et quand l'app passe en arrière-plan</small>
               </span>
-              <input type="checkbox" class="switch" checked={!!c.auto} onChange={(e) => setAuto((e.target as HTMLInputElement).checked)} />
+              <input type="checkbox" role="switch" class="switch" checked={!!c.auto} onChange={(e) => setAuto((e.target as HTMLInputElement).checked)} />
             </label>
             {st.msg && <p class={`note pad${st.error ? ' err' : ''}`} role="status">{st.msg}</p>}
             <button class="setting link danger" onClick={() => confirm('Désactiver la synchronisation et oublier le jeton sur cet appareil ?') && disconnect()}>
@@ -268,48 +257,10 @@ function GistSync() {
   );
 }
 
-export function FavoritesPage() {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    loadEntries().then(() => setReady(true));
-  }, []);
-  const favs = active.value?.favs ?? [];
-  const list = ready ? favs.map((id) => entry(id)).filter((e): e is Entry => !!e) : [];
-  return (
-    <>
-      <TopBar title="Favoris" backTo="/plus" />
-      <main class="page" id="main">
-        {!ready ? (
-          <Empty>Chargement…</Empty>
-        ) : !list.length ? (
-          <Empty icon="star">Aucun favori. Touchez l'étoile en haut d'une fiche pour l'ajouter ici.</Empty>
-        ) : (
-          <div class="card list">
-            {list.map((e) => (
-              <div key={e.id} class="row trow">
-                <a class="trow-link" href={`#/fiche/${e.id}`}>
-                  <GameImg src={e.img} dom={e.dom} size={44} />
-                  <span class="txt">
-                    <span class="name">{e.fr}</span>
-                    <span class="sub">{DOMAINS[e.dom]} · {e.cat}</span>
-                  </span>
-                </a>
-                <button class="icon-btn" aria-label={`Retirer ${e.fr} des favoris`} onClick={() => toggleFav(e.id)}>
-                  <Icon name="close" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </>
-  );
-}
-
 export function CreditsPage() {
   return (
     <>
-      <TopBar title="Crédits" backTo="/plus" />
+      <TopBar title="Crédits" large backTo="/reglages" />
       <main class="page" id="main">
         <div class="card prose" style={{ paddingTop: 16 }}>
           <p>

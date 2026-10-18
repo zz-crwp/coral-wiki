@@ -24,8 +24,8 @@ export default defineConfig({
         scope: base,
         display: 'standalone',
         orientation: 'portrait',
-        theme_color: '#0b5f63',
-        background_color: '#f6f1e7',
+        theme_color: '#f2f2f6',
+        background_color: '#f2f2f6',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -35,7 +35,7 @@ export default defineConfig({
       },
       workbox: {
         // Shell + toutes les données (découpées par domaine) précachées : navigation et recherche hors ligne.
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,woff2}'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: `${base}index.html`,
         cleanupOutdatedCaches: true,

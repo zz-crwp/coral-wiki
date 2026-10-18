@@ -54,7 +54,7 @@ async function device(browser: Browser) {
 }
 const pressed = (p: Page) => p.$$eval('button.check[aria-pressed="true"], button.jtile-btn[aria-pressed="true"]', (e) => e.length);
 async function openTemple(p: Page) {
-  await p.goto(`${BASE}#/trackers/temple`, { waitUntil: 'domcontentloaded' });
+  await p.goto(`${BASE}#/progression/poissons`, { waitUntil: 'domcontentloaded' });
   await p.reload({ waitUntil: 'domcontentloaded' });
   await p.waitForSelector('button.check, button.jtile-btn', { timeout: 10000 });
   await wait(p, 400);
@@ -75,7 +75,7 @@ for (const b of btns.slice(0, 3)) await b.evaluate((e) => (e as HTMLElement).cli
 await wait(A, 500);
 ok((await pressed(A)) === 3, 'profil 1 : 3 coches');
 
-await A.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
+await A.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
 await A.waitForSelector('.setting.add');
 await A.click('.setting.add');
 await A.type('#pname', 'Deuxième ferme');
@@ -86,7 +86,7 @@ ok((await pressed(A)) === 0, 'profil 2 créé et actif : 0 coche');
 await A.$$eval('button.check, button.jtile-btn', (b, i) => (b[i] as HTMLElement).click(), 5);
 await wait(A, 500);
 
-await A.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
+await A.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
 await A.waitForSelector('.radio');
 await clickText(A, '.radio', 'Ma ferme');
 await openTemple(A);
@@ -96,7 +96,7 @@ ok((await pressed(A)) === 3, 'retour au profil 1 après rechargement : 3 coches 
 const dir = mkdtempSync(join(tmpdir(), 'cw-qa-'));
 const cdp = await A.createCDPSession();
 await cdp.send('Page.setDownloadBehavior' as any, { behavior: 'allow', downloadPath: dir });
-await A.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
+await A.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
 await A.waitForSelector('.setting.link');
 await clickText(A, 'button.setting', 'Exporter');
 await wait(A, 1500);
@@ -108,9 +108,9 @@ await openTemple(A);
 await A.$$eval('button.check, button.jtile-btn', (b, i) => (b[i] as HTMLElement).click(), 0); // décoche
 await wait(A, 500);
 ok((await pressed(A)) === 2, 'modification après export : 2 coches');
-await A.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
-await A.waitForSelector('.seg');
-await clickText(A, '.seg button', 'Remplacer');
+await A.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
+await A.waitForSelector('.segmented');
+await clickText(A, '.segmented button', 'Remplacer');
 A.once('dialog', (d) => d.accept());
 const input = await A.$('input[type=file]');
 await input!.uploadFile(join(dir, file!));
@@ -119,7 +119,7 @@ await openTemple(A);
 ok((await pressed(A)) === 3, 'import (remplacement) : état de l’export restauré (3 coches)');
 
 // 3. Gist : connexion sur l'appareil A, puis récupération sur un appareil B vierge
-await A.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
+await A.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
 await A.waitForSelector('#tok');
 await A.type('#tok', FAKE_TOKEN);
 await A.keyboard.press('Enter');
@@ -128,7 +128,7 @@ const g = [...gists.values()][0];
 ok(!!g && g.public === false && JSON.parse(g.files['coral-wiki.json'].content).profiles.length === 2, 'Gist privé créé avec les 2 profils');
 
 const B = await device(browser);
-await B.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
+await B.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
 await B.waitForSelector('#tok');
 await B.type('#tok', FAKE_TOKEN);
 await B.keyboard.press('Enter');
@@ -142,10 +142,10 @@ await clickText(B, '.radio', 'Ma ferme');
 await openTemple(B);
 await B.$$eval('button.check, button.jtile-btn', (b, i) => (b[i] as HTMLElement).click(), 10);
 await wait(B, 500);
-await B.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
+await B.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
 await clickText(B, '.btn', 'Synchroniser');
 await wait(B, 1500);
-await A.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
+await A.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
 await A.waitForSelector('.btn');
 await clickText(A, '.btn', 'Synchroniser');
 await wait(A, 1500);
@@ -154,7 +154,7 @@ ok((await pressed(A)) === 4, 'modification de B visible sur A après synchro (4 
 
 // Mauvais jeton refusé
 const C = await device(browser);
-await C.goto(`${BASE}#/plus`, { waitUntil: 'domcontentloaded' });
+await C.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
 await C.waitForSelector('#tok');
 await C.type('#tok', 'github_pat_11AAAAAAA0123456789abcdefghijklmnopqrstuvwxyz');
 await C.keyboard.press('Enter');

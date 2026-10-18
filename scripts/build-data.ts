@@ -129,6 +129,22 @@ for (const m of fr.matches.values()) {
   d.extra.nom_fr_methode = m.how;
 }
 
+// ---------- 6a. Stades de pousse illustrés (fichiers « <Culture>_stage_N.png » du wiki) ----------
+{
+  const stages = new Map<string, { n: string; url: string }[]>();
+  for (const im of loadJson<{ name: string; url: string }[]>('allimages.json', [])) {
+    const m = /^(.+)_stage_(\d+|R)\.png$/i.exec(im.name);
+    if (!m) continue;
+    const k = m[1].replace(/_/g, ' ').toLowerCase();
+    (stages.get(k) ?? stages.set(k, []).get(k)!).push({ n: m[2].toUpperCase(), url: im.url.replace('https://static.wikia.nocookie.net/coralisland/images/', '').replace(/\/revision\/.*$/, '') });
+  }
+  for (const d of ctx.drafts.values()) {
+    if (!['cultures', 'arbres'].includes(String(d.domain))) continue;
+    const st = stages.get(d.nom_en.toLowerCase());
+    if (st) d.extra.stades = st.sort((a, b) => (a.n === 'R' ? 99 : +a.n) - (b.n === 'R' ? 99 : +b.n));
+  }
+}
+
 // ---------- 6b. Groupes sans image : image du premier membre ----------
 for (const d of ctx.drafts.values()) {
   if (d.domain !== 'groupes' || d.image) continue;

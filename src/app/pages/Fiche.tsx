@@ -7,9 +7,9 @@ import { CheckBtn, Empty, GameImg, GIcon, Gold, RichText, TopBar } from '../comp
 import { entityChecks, heartKeys } from '../trackers.ts';
 import { isUpgrade, QualityUpgrades, UpgradeList } from '../fiche/upgrades.tsx';
 import { NeededFor, NowCard, SpeciesHere, UpgradeSection, Vendors } from '../fiche/context.tsx';
-import { active, isChecked, toggle, toggleFav } from '../store.ts';
+import { active, isChecked, pinned, toggle, togglePin } from '../store.ts';
 import { Icon } from '../icons.tsx';
-import { Chip, ChipList, Hearts, KV, Prices, Section, SeasonChips, Timeline } from '../fiche/parts.tsx';
+import { Chip, ChipList, Hearts, KV, Prices, Section, SectionOpen, SeasonChips, Timeline } from '../fiche/parts.tsx';
 import { EXTRA_FIELDS, GIFT_LEVELS, QUALITY_BY_INDEX, UNIVERSAL_CODE, WEATHER_FR, hours, ranges } from '../fiche/labels.ts';
 
 type X = Record<string, any>;
@@ -67,7 +67,8 @@ function Spawn({ e }: { e: Entity }) {
   );
 }
 
-export function FichePage({ id }: { id: string }) {
+/** Contenu d'une fiche (modèle unique pour tous les domaines), affiché dans une sheet ou une page. */
+export function FicheView({ id }: { id: string }) {
   const [e, setE] = useState<Entity | null | undefined>(undefined);
   const [art, setArt] = useState<Block[] | undefined>();
   const [all, setAll] = useState<Entry[]>([]);
@@ -77,52 +78,76 @@ export function FichePage({ id }: { id: string }) {
     loadEntries().then(setAll);
     loadEntity(id).then((x) => {
       setE(x ?? null);
-      if (x) document.title = `${x.nom_fr} — Coral Wiki`;
       const en = entry(id);
       if (en) loadArticle(en.dom, id).then(setArt);
     });
-    return () => (document.title = 'Coral Wiki');
   }, [id]);
 
-  if (e === undefined) return <TopBar title="" backTo="/encyclo" />;
-  if (e === null)
-    return (
-      <>
-        <TopBar title="Introuvable" backTo="/encyclo" />
-        <main class="page">
-          <Empty icon="search">Cette fiche n'existe pas.</Empty>
-        </main>
-      </>
-    );
+  if (e === undefined) return <div class="fiche-loading" aria-busy="true" />;
+  if (e === null) return <Empty icon="search">Cette fiche n'existe pas.</Empty>;
   const dom = entry(id)?.dom ?? 'objets';
+  const primary = PRIMARY[dom] ?? PRIMARY_DEFAULT;
+  return (
+    <SectionOpen.Provider value={(t) => primary.includes(t)}>
+    <article class="fiche" data-id={id}>
+      <Hero e={e} dom={dom} />
+      <NowCard e={e} dom={dom} />
+      <TrackCard e={e} dom={dom} />
+      <UpgradeSection e={e} />
+      {dom === 'lieux' && <SpeciesHere e={e} />}
+      <DomainSections e={e} dom={dom} all={all} />
+      <KeyFacts e={e} dom={dom} />
+      <Relations e={e} dom={dom} all={all} />
+      {art && art.length > 0 && (
+        <Section title="Article du wiki (anglais)" open={dom === 'guides'}>
+          <Article blocks={art} />
+        </Section>
+      )}
+      <Sources e={e} />
+    </article>
+    </SectionOpen.Provider>
+  );
+}
+
+/** Section(s) dépliée(s) d'office, par domaine : celle qui répond à la question qu'on se pose en jeu. */
+const CATCH_SEC = ['Où et quand'];
+const PRIMARY_DEFAULT = ['En bref', 'Obtention', 'Fabrication', 'Recette', 'Améliorer', 'Obtenir'];
+const PRIMARY: Record<string, string[]> = {
+  poissons: CATCH_SEC,
+  insectes: CATCH_SEC,
+  'creatures-marines': CATCH_SEC,
+  cueillette: [...CATCH_SEC, 'En bref'],
+  pnj: ['Cadeaux'],
+  lieux: ['Ouverture', 'Articles en vente', 'À trouver ici'],
+  outils: ['Améliorer', 'Obtenir'],
+  armes: ['Améliorer', 'Obtenir', 'En bref'],
+  cultures: ['En bref'],
+  arbres: ['En bref'],
+  elevage: ['En bref', 'Produits'],
+  cuisine: ['Recette'],
+  artisanat: ['Fabrication', 'Production'],
+  festivals: ['En bref'],
+  quetes: ['Quête'],
+  maitrises: ['Compétences'],
+  guides: ['Article du wiki (anglais)'],
+};
+
+/** Ancienne route #/fiche/<id> : page autonome (liens externes, favoris du navigateur). */
+export function FichePage({ id }: { id: string }) {
+  const e = entry(id);
   return (
     <>
       <TopBar
-        title={e.nom_fr}
-        backTo={`/encyclo/${dom}`}
+        title={e?.fr ?? ''}
+        backTo={e ? `/explorer/${e.dom}` : '/explorer'}
         actions={
-          <button class="icon-btn fav" aria-pressed={!!active.value?.favs.includes(id)} aria-label="Favori" onClick={() => toggleFav(id)}>
-            <Icon name={active.value?.favs.includes(id) ? 'star-on' : 'star'} />
+          <button class="icon-btn" aria-pressed={pinned(id)} aria-label={pinned(id) ? 'Retirer de la session' : 'Épingler à la session'} onClick={() => togglePin(id)}>
+            <Icon name={pinned(id) ? 'unpin' : 'pin'} />
           </button>
         }
       />
-      <main class="page fiche" id="main">
-        <article>
-          <Hero e={e} dom={dom} />
-          <TrackCard e={e} dom={dom} />
-          <NowCard e={e} dom={dom} />
-          <KeyFacts e={e} dom={dom} />
-          <UpgradeSection e={e} />
-          {dom === 'lieux' && <SpeciesHere e={e} />}
-          <DomainSections e={e} dom={dom} all={all} />
-          <Relations e={e} dom={dom} all={all} />
-          {art && art.length > 0 && (
-            <Section title="Article du wiki (anglais)" open={dom === 'guides'}>
-              <Article blocks={art} />
-            </Section>
-          )}
-          <Sources e={e} />
-        </article>
+      <main class="page" id="main">
+        <FicheView id={id} />
       </main>
     </>
   );
@@ -143,9 +168,9 @@ function Hero({ e, dom }: { e: Entity; dom: string }) {
             </div>
           )}
           <div class="badges" style={{ marginTop: 8 }}>
-            <a class="badge" href={`#/encyclo/${dom}`}>{DOMAINS[dom]}</a>
-            <span class="badge">{e.categorie}</span>
-            {e.sous_categorie && <span class="badge">{e.sous_categorie}</span>}
+            <a class="badge" href={`#/explorer/${dom}`}>{DOMAINS[dom]}</a>
+            {e.categorie && e.categorie !== DOMAINS[dom] && <span class="badge">{e.categorie}</span>}
+            {e.sous_categorie && e.sous_categorie !== e.categorie && <span class="badge">{e.sous_categorie}</span>}
           </div>
         </div>
       </div>
@@ -189,7 +214,7 @@ function TrackCard({ e, dom }: { e: Entity; dom: string }) {
 function KeyFacts({ e, dom }: { e: Entity; dom: string }) {
   const x = e.extra as X;
   const rows: [string, ComponentChildren][] = [];
-  const catchDom = CATCH.includes(dom);
+  const catchDom = CATCH_SEC.includes(dom);
   if (e.saisons.length && !catchDom) rows.push(['Saisons', <SeasonChips seasons={e.saisons} />]);
   if (e.meteo.length && !catchDom) rows.push(['Météo', e.meteo.length >= 6 ? 'Toutes' : e.meteo.map((w) => WEATHER_FR[w] ?? w).join(', ')]);
   if (e.horaires.length && dom !== 'lieux' && !catchDom)
@@ -213,7 +238,7 @@ function KeyFacts({ e, dom }: { e: Entity; dom: string }) {
     else rows.push([label, typeof v === 'number' && fmt ? fmt(v) : String(v).replace(/\s*\n\s*/g, ', ')]);
   }
   if (x.debloque_par) rows.push(['Débloqué par', <Chip id={x.debloque_par.maitrise} note={`niveau ${x.debloque_par.niveau}`} />]);
-  if (x.don_musee) rows.push(['Musée', <a href="#/musee">Peut être donné au musée</a>]);
+  if (x.don_musee) rows.push(['Musée', <a href="#/progression/musee">Peut être donné au musée</a>]);
   if (x.image_de) rows.push(['Image', <span class="note">portrait du propriétaire (pas de photo du lieu)</span>]);
   const hasPrice = e.prix && e.prix.base;
   if (!rows.length && !hasPrice) return null;
@@ -235,7 +260,7 @@ function DomainSections({ e, dom, all }: { e: Entity; dom: string; all: Entry[] 
   const out: ComponentChildren[] = [];
 
   // Poissons, insectes, créatures : où et quand (une carte par zone)
-  if (CATCH.includes(dom)) out.push(<Spawn e={e} />);
+  if (CATCH_SEC.includes(dom)) out.push(<Spawn e={e} />);
 
   // Lieux : horaires d'ouverture + stock
   if (Array.isArray(x.ouverture) && x.ouverture.length)
@@ -451,7 +476,7 @@ function Relations({ e, dom, all }: { e: Entity; dom: string; all: Entry[] }) {
         <ul class="plain">
           {x.offrandes.map((o: X, i: number) => (
             <li key={i}>
-              <a href={`#/temple#${o.offrande}`}>{o.nom ?? o.offrande}</a> <span class="note">({o.autel_nom})</span> — ×{o.n}
+              <a href={`#/progression/temple?open=${o.offrande}`}>{o.nom ?? o.offrande}</a> <span class="note">({o.autel_nom})</span> — ×{o.n}
               {o.qualite ? ` (qualité ${QUALITY_BY_INDEX[o.qualite]} minimum)` : ''}
             </li>
           ))}

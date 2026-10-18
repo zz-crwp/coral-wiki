@@ -22,12 +22,13 @@ await page.goto(BASE, { waitUntil: 'networkidle0' });
 let ok = 0;
 for (const id of [...ids, 'scott', 'sams-general-store', 'mason-jar', 'maitrise-mining']) {
   await page.goto(`${BASE}#/fiche/${id}`, { waitUntil: 'domcontentloaded' });
-  const t = await page.waitForSelector('.hero h2', { timeout: 8000 }).then(() => true).catch(() => false);
-  const secs = await page.$$eval('.fsec', (s) => s.length);
+  const t = await page.waitForSelector(`.fiche[data-id="${id}"] .hero h2`, { timeout: 8000 }).then(() => true).catch(() => false);
+  await page.waitForSelector(`.fiche[data-id="${id}"] .fsec`, { timeout: 4000 }).catch(() => null);
+  const secs = await page.$$eval(`.fiche[data-id="${id}"] .fsec`, (s) => s.length);
   if (t && secs > 0) ok++;
   else errors.push(`fiche ${id} : rendu incomplet (titre ${t}, sections ${secs})`);
 }
-for (const p of ['temple', 'musee', 'rang', 'mines', 'ameliorations', 'ameliorations?magasin=laboratory', 'trackers/poissons', 'trackers/musee', 'fiche/pickaxe', 'fiche/wood', 'fiche/ocean', 'fiche/ling', 'fiche/laboratory', 'outils/cultures', 'outils/cadeaux/scott', 'calendrier', 'encyclo', 'recherche?q=graines%20de%20myrtille', 'recherche?q=thon']) {
+for (const p of ['progression', 'progression/temple', 'progression/musee', 'progression/poissons', 'explorer', 'explorer/rang', 'explorer/mines', 'explorer/ameliorations', 'explorer/ameliorations?magasin=laboratory', 'explorer/outils', 'explorer/pnj', 'explorer/cultures', 'explorer/lieux', 'explorer/cuisine', 'session', 'reglages', 'design', 'outils/cultures', 'outils/cadeaux/scott', 'calendrier']) {
   await page.goto(`${BASE}#/${p}`, { waitUntil: 'domcontentloaded' });
   await new Promise((r) => setTimeout(r, 800));
   const txt = await page.$eval('main', (m) => m.textContent?.slice(0, 120) ?? '').catch(() => '');

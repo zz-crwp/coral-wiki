@@ -1,0 +1,231 @@
+/*
+ * Coral Wiki — jetons de design (fichier unique).
+ * Neutres : gris système Apple, très légèrement réchauffés vers le sable en clair.
+ * Couleurs du jeu : extraites des visuels officiels (couverture, en-tête Steam, visuel 2025, logo,
+ * image d'accueil du wiki) par k-moyennes ; saisons extraites des icônes des cueillettes de chaque saison.
+ * Les variantes « -text » sont assombries (clair) ou éclaircies (sombre) pour tenir le contraste AA (4,5:1).
+ */
+:root {
+  /* — Palette du jeu (valeurs brutes extraites) — */
+  --lagon: #10adf3;          /* couverture 19 %, fond d'écran 32 % */
+  --lagon-deep: #0e8db4;     /* couverture 16 %, en-tête Steam 13 % */
+  --foam: #76d3f0;           /* couverture 9 % */
+  --abyss: #226977;          /* couverture 15 % */
+  --jungle: #636c36;         /* en-tête Steam 15 % */
+  --palm: #37a697;           /* visuel « Island hopping » 18 % */
+  --sand: #ad985f;           /* en-tête Steam 11 % */
+  --sand-light: #e5be84;     /* visuel 2025 9 % */
+  --coral: #e88983;          /* fleurs d'été 20 % */
+  --hibiscus: #d13b3e;       /* fleurs d'été 24 % */
+  --sunset: #d69a5a;         /* visuel 2025 18 % */
+  --ink-logo: #35556d;       /* logo 29 % des couleurs saturées */
+
+  /* — Saisons (extraites des cueillettes) — */
+  --spring: #99a44a;
+  --summer: #d13b3e;
+  --fall: #af9254;
+  --winter: #9672c3;
+
+  /* — Thème clair — */
+  --bg: #f2f2f6;             /* fond groupé (gris système) */
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;        /* cartes, lignes */
+  --surface-2: #f4f3f0;      /* champ, puce, tuile vide : gris réchauffé sable */
+  --fill: rgb(118 118 128 / 0.12);
+  --fill-strong: rgb(118 118 128 / 0.2);
+  --separator: rgb(60 60 67 / 0.18);
+  --label: #10181f;          /* encre du logo assombrie */
+  --label-2: #5b6670;        /* secondaire, 5,6:1 sur blanc */
+  --label-3: #6a747c;        /* tertiaire, 4,6:1 sur blanc */
+  --tint: #0a7398;           /* lagon profond, 5,3:1 sur blanc : liens, actions */
+  --tint-soft: rgb(14 141 180 / 0.12);
+  --on-tint: #ffffff;
+  --ok: #187a3c;   --ok-soft: rgb(24 122 60 / 0.12);
+  --on-ok: #ffffff; /* texte posé sur --ok */
+  --ko: #c02f27;   --ko-soft: rgb(192 47 39 / 0.1);
+  --warn: #8f5608; --warn-soft: rgb(214 154 90 / 0.18);
+  --spring-text: #5a6619;
+  --summer-text: #ad2a2e;
+  --fall-text: #7a5f22;
+  --winter-text: #6a4b9e;
+  --material: rgb(249 249 251 / 0.72);   /* barres et sheets translucides */
+  --material-border: rgb(0 0 0 / 0.08);
+  --scrim: rgb(0 0 0 / 0.28);
+
+  /* — Rayons (continus) — */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-full: 999px;
+
+  /* — Espacements (grille 4/8) — */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+
+  /* — Ombres et flou — */
+  --shadow-sm: 0 1px 2px rgb(16 24 31 / 0.06);
+  --shadow-md: 0 1px 2px rgb(16 24 31 / 0.05), 0 6px 18px rgb(16 24 31 / 0.07);
+  --shadow-lg: 0 10px 40px rgb(16 24 31 / 0.18);
+  --blur: saturate(180%) blur(22px);
+
+  /* — Mouvement — */
+  --dur-fast: 200ms;
+  --dur: 280ms;
+  --dur-slow: 350ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);  /* courbe des sheets iOS */
+  --ease-spring: linear(0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017 19.4%, 1.067, 1.087 23.6%, 1.085 25.4%, 1.04 31.2%, 1.006 37.5%, 0.997 43.6%, 1.001);
+
+  /* — Typographie : pile système (SF sur iOS) ; échelle Dynamic Type (taille « Large ») en rem — */
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-rounded: ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+  --font-display: 'Fredoka', ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --t-large: 700 2.125rem/1.2 var(--font-display);   /* 34 / 41 */
+  --t-title1: 700 1.75rem/1.2 var(--font);            /* 28 / 34 */
+  --t-title2: 700 1.375rem/1.27 var(--font);          /* 22 / 28 */
+  --t-title3: 600 1.25rem/1.25 var(--font);           /* 20 / 25 */
+  --t-headline: 600 1.0625rem/1.3 var(--font);        /* 17 / 22 */
+  --t-body: 400 1.0625rem/1.3 var(--font);            /* 17 / 22 */
+  --t-callout: 400 1rem/1.3 var(--font);              /* 16 / 21 */
+  --t-subhead: 400 0.9375rem/1.33 var(--font);        /* 15 / 20 */
+  --t-footnote: 400 0.8125rem/1.38 var(--font);       /* 13 / 18 */
+  --t-caption: 400 0.75rem/1.33 var(--font);          /* 12 / 16 */
+  --t-caption2: 500 0.6875rem/1.2 var(--font);        /* 11 / 13 */
+
+  /* — Gabarits — */
+  --tab-h: 64px;
+  --bar-h: 52px;
+  --hit: 44px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --gutter: max(16px, var(--safe-left));
+  --gutter-r: max(16px, var(--safe-right));
+
+  /* — Alias des anciens noms (styles des fiches en cours de migration) — */
+  --bg-2: var(--fill);
+  --ink: var(--label);
+  --ink-2: var(--label-2);
+  --muted: var(--label-2);
+  --line: var(--separator);
+  --primary: var(--tint);
+  --primary-ink: var(--on-tint);
+  --primary-soft: var(--tint-soft);
+  --accent: var(--ko);
+  --accent-soft: var(--ko-soft);
+  --sun: var(--warn);
+  --focus: var(--tint);
+  --shadow: var(--shadow-md);
+  --radius: var(--r-md);
+  --radius-s: var(--r-sm);
+  --top-h: var(--bar-h);
+  --s-spring: var(--spring-text);
+  --s-summer: var(--summer-text);
+  --s-fall: var(--fall-text);
+  --s-winter: var(--winter-text);
+
+  color-scheme: light;
+}
+
+/* Thème sombre (gris système sombres) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='oled']) {
+    --bg: #111315;
+    --bg-elevated: #1c1f22;
+    --surface: #1c1f22;
+    --surface-2: #26292d;
+    --fill: rgb(120 120 128 / 0.24);
+    --fill-strong: rgb(120 120 128 / 0.36);
+    --separator: rgb(84 84 88 / 0.6);
+    --label: #f2f4f5;
+    --label-2: #a8b2b9;
+    --label-3: #85909a;
+    --tint: #5cc8ec;
+    --tint-soft: rgb(92 200 236 / 0.16);
+    --on-tint: #04222c;
+    --ok: #5fd38a;   --ok-soft: rgb(95 211 138 / 0.16);
+  --on-ok: #05290f;
+    --ko: #ff8a80;   --ko-soft: rgb(255 138 128 / 0.14);
+    --warn: #f0b36a; --warn-soft: rgb(240 179 106 / 0.16);
+    --spring-text: #c3cd73;
+    --summer-text: #ff8f8a;
+    --fall-text: #d8bd80;
+    --winter-text: #c3a6ee;
+    --material: rgb(28 31 34 / 0.72);
+    --material-border: rgb(255 255 255 / 0.08);
+    --scrim: rgb(0 0 0 / 0.5);
+    --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(0 0 0 / 0.25);
+    --shadow-lg: 0 10px 40px rgb(0 0 0 / 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #111315;
+  --bg-elevated: #1c1f22;
+  --surface: #1c1f22;
+  --surface-2: #26292d;
+  --fill: rgb(120 120 128 / 0.24);
+  --fill-strong: rgb(120 120 128 / 0.36);
+  --separator: rgb(84 84 88 / 0.6);
+  --label: #f2f4f5;
+  --label-2: #a8b2b9;
+  --label-3: #85909a;
+  --tint: #5cc8ec;
+  --tint-soft: rgb(92 200 236 / 0.16);
+  --on-tint: #04222c;
+  --ok: #5fd38a;   --ok-soft: rgb(95 211 138 / 0.16);
+  --on-ok: #05290f;
+  --ko: #ff8a80;   --ko-soft: rgb(255 138 128 / 0.14);
+  --warn: #f0b36a; --warn-soft: rgb(240 179 106 / 0.16);
+  --spring-text: #c3cd73;
+  --summer-text: #ff8f8a;
+  --fall-text: #d8bd80;
+  --winter-text: #c3a6ee;
+  --material: rgb(28 31 34 / 0.72);
+  --material-border: rgb(255 255 255 / 0.08);
+  --scrim: rgb(0 0 0 / 0.5);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(0 0 0 / 0.25);
+  --shadow-lg: 0 10px 40px rgb(0 0 0 / 0.5);
+  color-scheme: dark;
+}
+/* Sombre OLED : noir pur pour jouer la nuit (pixels éteints) */
+:root[data-theme='oled'] {
+  --bg: #000000;
+  --bg-elevated: #0e0f10;
+  --surface: #0e0f10;
+  --surface-2: #18191b;
+  --fill: rgb(120 120 128 / 0.22);
+  --fill-strong: rgb(120 120 128 / 0.34);
+  --separator: rgb(84 84 88 / 0.5);
+  --label: #f2f4f5;
+  --label-2: #a8b2b9;
+  --label-3: #85909a;
+  --tint: #5cc8ec;
+  --tint-soft: rgb(92 200 236 / 0.14);
+  --on-tint: #04222c;
+  --ok: #5fd38a;   --ok-soft: rgb(95 211 138 / 0.14);
+  --on-ok: #05290f;
+  --ko: #ff8a80;   --ko-soft: rgb(255 138 128 / 0.12);
+  --warn: #f0b36a; --warn-soft: rgb(240 179 106 / 0.14);
+  --spring-text: #c3cd73;
+  --summer-text: #ff8f8a;
+  --fall-text: #d8bd80;
+  --winter-text: #c3a6ee;
+  --material: rgb(10 10 11 / 0.78);
+  --material-border: rgb(255 255 255 / 0.07);
+  --scrim: rgb(0 0 0 / 0.6);
+  --shadow-sm: none;
+  --shadow-md: 0 0 0 1px rgb(255 255 255 / 0.06);
+  --shadow-lg: 0 0 0 1px rgb(255 255 255 / 0.08);
+  color-scheme: dark;
+}

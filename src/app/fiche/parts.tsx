@@ -1,5 +1,6 @@
 // Briques d'affichage des fiches : puces liées, sections, prix, frise horaire.
-import { useState } from 'preact/hooks';
+import { createContext } from 'preact';
+import { useContext, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { entry, SEASON_FR, type Season } from '../data.ts';
 import { GameImg, GIcon, RichText } from '../components.tsx';
@@ -41,7 +42,12 @@ export function ChipList({ ids, limit = 18, notes }: { ids: string[]; limit?: nu
 }
 
 /** Section de fiche, repliable (ouverte par défaut). */
-export function Section({ title, count, children, open = true, id }: { title: string; count?: number; children: ComponentChildren; open?: boolean; id?: string }) {
+/** Sections ouvertes par défaut dans une fiche : la (les) section(s) principale(s) du domaine, le reste replié. */
+export const SectionOpen = createContext<((title: string) => boolean) | null>(null);
+
+export function Section({ title, count, children, open, id }: { title: string; count?: number; children: ComponentChildren; open?: boolean; id?: string }) {
+  const rule = useContext(SectionOpen);
+  open ??= rule ? rule(title) : true;
   return (
     <details class="fsec" open={open} id={id}>
       <summary>

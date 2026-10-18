@@ -6,3 +6,5 @@ reports/lighthouse
 .claude
 scripts/i18n/todo
 imports
+reports/shots
+reports/audit

@@ -28,7 +28,7 @@ export function CalendarPage() {
   const cur = evOf(sel);
   return (
     <>
-      <TopBar title="Calendrier" backTo="/" />
+      <TopBar title="Calendrier" large backTo="/" />
       <main class="page" id="main">
         <div class="seg seg-full" role="group" aria-label="Saison">
           {SEASONS.map((s) => (

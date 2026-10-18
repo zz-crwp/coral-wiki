@@ -9,8 +9,7 @@ import type { Entity } from '../../data/schema.ts';
 import { entry, SEASONS, SEASON_FR, type Season } from '../data.ts';
 import { CheckBtn, GameImg, GIcon, Gold } from '../components.tsx';
 import { active, isChecked, toggle, weekday, WEEKDAYS, type GameDate } from '../store.ts';
-import { catchZones, loadToday, openNow, type TodayData } from '../pages/Today.tsx';
-import { cropCalc } from '../pages/Tools.tsx';
+import { catchZones, cropCalc, loadToday, nextOpening, openNow, whereNow, type TodayData } from '../game.ts';
 import { hours, ranges } from './labels.ts';
 import { Chip, Section } from './parts.tsx';
 import { UpgradeList } from './upgrades.tsx';
@@ -29,18 +28,6 @@ function useToday() {
     loadToday().then(setT);
   }, []);
   return t;
-}
-
-/** Prochaine ouverture d'une boutique à partir du jour et de l'heure en jeu. */
-function nextOpening(b: TodayData['boutiques'][number], d: GameDate, hr: number) {
-  for (let k = 0; k < 8; k++) {
-    const wd = (weekday(d.day) + k) % 7;
-    if (b.f.includes(wd)) continue;
-    const plages = b.o.filter((o) => o.j.includes(wd)).flatMap((o) => o.p).sort((a, c) => a.from - c.from);
-    const r = plages.find((p) => (k > 0 ? true : p.from > hr));
-    if (r) return { k, wd, from: r.from };
-  }
-  return null;
 }
 
 function ShopNow({ b, d, hr, label }: { b: TodayData['boutiques'][number]; d: GameDate; hr: number; label?: ComponentChildren }) {
@@ -327,57 +314,3 @@ export function Vendors({ rows }: { rows: X[] }) {
   );
 }
 
-// ---------- Où est l'habitant en ce moment (emploi du temps du wiki) ----------
-
-const FR_DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-const FR_SEASONS: Record<string, Season> = { printemps: 'spring', été: 'summer', ete: 'summer', automne: 'fall', hiver: 'winter' };
-type Scope = { days: number[] | null; seasons: Season[] | null; dates: { s: Season; a: number; b: number }[]; wet: boolean | null };
-
-/** « Été ; lundi – vendredi », « Tous les jours sauf le mercredi », « 15–28 de l'automne », « Samedi, pluie ou neige »… */
-function parseScope(txt: string): Scope {
-  const t = txt.toLowerCase().replace(/[–—]/g, '-');
-  const seasons = Object.entries(FR_SEASONS).filter(([k]) => new RegExp(`(^|[^a-zà-ü])${k}([^a-zà-ü]|$)`).test(t)).map(([, v]) => v);
-  const dates = [...t.matchAll(/(\d{1,2})(?:\s*(?:-|à)\s*(\d{1,2}))?(?:\s*et\s*\d{1,2})?\s+d[eu]\s+l?'?\s*(printemps|été|ete|automne|hiver)/g)].map((m) => ({ s: FR_SEASONS[m[3]], a: +m[1], b: +(m[2] ?? m[1]) }));
-  const wet = /pluvieux|pluie|neige|orage|neigeux/.test(t) ? true : null;
-  let days: number[] | null = null;
-  if (/tous les jours|n'importe quel jour|chaque jour/.test(t)) days = [0, 1, 2, 3, 4, 5, 6];
-  const set = new Set<number>();
-  for (const m of t.matchAll(/(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\s*(?:-|à)\s*(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)/g))
-    for (let i = FR_DAYS.indexOf(m[1]); ; i = (i + 1) % 7) {
-      set.add(i);
-      if (i === FR_DAYS.indexOf(m[2])) break;
-    }
-  for (const [i, d] of FR_DAYS.entries()) if (new RegExp(`\\b${d}\\b`).test(t) && !new RegExp(`sauf (le )?${d}`).test(t)) set.add(i);
-  if (set.size) days = days ?? [...set];
-  const sauf = /sauf (le )?(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)/.exec(t);
-  if (sauf) days = (days ?? [0, 1, 2, 3, 4, 5, 6]).filter((d) => d !== FR_DAYS.indexOf(sauf[2]));
-  return { days, seasons: seasons.length ? seasons : null, dates, wet };
-}
-
-export function whereNow(schedule: X[], d: GameDate, weather: string, hour: number) {
-  const wd = weekday(d.day);
-  const wet = ['rain', 'storm', 'snow', 'blizzard'].includes(weather);
-  let best: { score: number; etapes: X[] } | null = null;
-  for (const block of schedule) {
-    const bs = parseScope(block.condition ?? '');
-    for (const g of block.groupes ?? []) {
-      const gs = parseScope(g.jours ?? '');
-      const seasons = gs.seasons ?? bs.seasons;
-      const dates = [...gs.dates, ...bs.dates];
-      const w = gs.wet ?? bs.wet;
-      if (seasons && !seasons.includes(d.season)) continue;
-      if (dates.length && !dates.some((x) => x.s === d.season && x.a <= d.day && d.day <= x.b)) continue;
-      if (w && !wet) continue;
-      if (gs.days && !dates.length && !gs.days.includes(wd)) continue;
-      if (!gs.days && !dates.length && !w && /^(cabanon|autres jours)/i.test(g.jours ?? '')) continue;
-      // Le plus spécifique l'emporte : date > météo > saison > jours > habituel
-      const score = (dates.length ? 8 : 0) + (w ? 4 : 0) + (seasons ? 2 : 0) + (gs.days && gs.days.length < 7 ? 1 : 0);
-      if (!best || score > best.score) best = { score, etapes: g.etapes ?? [] };
-    }
-  }
-  if (!best?.etapes.length) return null;
-  const steps = best.etapes.filter((s) => s.texte && !/à compléter|to be added|^\(?\?\)?$/i.test(s.texte)).sort((a, b) => a.heure - b.heure);
-  if (!steps.length) return null;
-  const cur = [...steps].reverse().find((s) => s.heure <= hour);
-  return cur ? { texte: cur.texte as string, depuis: cur.heure as number } : { texte: `Chez soi (sort vers ${hours(steps[0].heure)})`, depuis: null };
-}
