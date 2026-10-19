@@ -138,10 +138,10 @@ export function entityChecks(e: { id: string; categorie: string; extra: Record<s
   const out: { key: string; label: string; href: string }[] = [];
   const x = e.extra;
   if (['poissons', 'insectes', 'creatures-marines'].includes(dom))
-    out.push({ key: `pris:${e.id}`, label: dom === 'poissons' ? 'Pêché au moins une fois' : 'Attrapé au moins une fois', href: `#/progression/${dom === 'creatures-marines' ? 'creatures' : dom}` });
-  if (x.don_musee) out.push({ key: `musee:${e.id}`, label: 'Donné au musée', href: '#/progression/musee' });
-  for (const o of x.offrandes ?? []) out.push({ key: `temple:${o.offrande}:${e.id}`, label: `Offert au temple · ${o.nom ?? o.offrande} (×${o.n})`, href: '#/progression/temple' });
-  if (dom === 'cuisine' && e.categorie !== 'Ustensile') out.push({ key: `cuisine:${e.id}`, label: 'Cuisiné au moins une fois', href: '#/progression/cuisine' });
-  if (dom === 'succes') out.push({ key: `succes:${e.id}`, label: 'Succès obtenu', href: '#/progression/succes' });
+    out.push({ key: `pris:${e.id}`, label: dom === 'poissons' ? 'Pêché au moins une fois' : 'Attrapé au moins une fois', href: `#/collections/${dom === 'creatures-marines' ? 'creatures' : dom}` });
+  if (x.don_musee) out.push({ key: `musee:${e.id}`, label: 'Donné au musée', href: '#/collections/musee' });
+  for (const o of x.offrandes ?? []) out.push({ key: `temple:${o.offrande}:${e.id}`, label: `Offert au temple · ${o.nom ?? o.offrande} (×${o.n})`, href: '#/collections/temple' });
+  if (dom === 'cuisine' && e.categorie !== 'Ustensile') out.push({ key: `cuisine:${e.id}`, label: 'Cuisiné au moins une fois', href: '#/collections/cuisine' });
+  if (dom === 'succes') out.push({ key: `succes:${e.id}`, label: 'Succès obtenu', href: '#/collections/succes' });
   return out;
 }

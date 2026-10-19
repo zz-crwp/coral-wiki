@@ -5,29 +5,25 @@ import './design/tokens.css';
 import './design/base.css';
 import './styles.css';
 import './design/components.css';
-import fredoka from '@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2?url';
-import { go, route, searchOpen, searchSeed } from './app/router.ts';
+import { go, route } from './app/router.ts';
 import { TabBar } from './app/components.tsx';
 import { TodayPage } from './app/pages/Today.tsx';
 import { initStore, ready } from './app/store.ts';
 import { entry, loadEntries } from './app/data.ts';
 import { ClockSheet } from './ui/Clock.tsx';
 import { ContextMenu, Toaster } from './ui/feedback.tsx';
-import { FicheSheet, SearchSheet } from './ui/Overlays.tsx';
+import { FicheSheet } from './ui/Overlays.tsx';
+import { WhatsNew } from './ui/WhatsNew.tsx';
 import { applyPrefs } from './app/prefs.ts';
 
-const ExplorerPage = lazy(() => import('./app/pages/Explorer.tsx').then((m) => m.ExplorerPage));
+const SearchPage = lazy(() => import('./app/pages/Search.tsx').then((m) => m.SearchPage));
 const DomainPage = lazy(() => import('./app/pages/Domain.tsx').then((m) => m.DomainPage));
-const ProgressionPage = lazy(() => import('./app/pages/Trackers.tsx').then((m) => m.TrackersPage));
+const CollectionsPage = lazy(() => import('./app/pages/Trackers.tsx').then((m) => m.TrackersPage));
 const TrackerPage = lazy(() => import('./app/pages/Trackers.tsx').then((m) => m.TrackerPage));
-const SessionPage = lazy(() => import('./app/pages/Session.tsx').then((m) => m.SessionPage));
+const QuickEntryPage = lazy(() => import('./app/pages/Trackers.tsx').then((m) => m.QuickEntryPage));
 const CalendarPage = lazy(() => import('./app/pages/Calendar.tsx').then((m) => m.CalendarPage));
 const SettingsPage = lazy(() => import('./app/pages/Misc.tsx').then((m) => m.MorePage));
 const CreditsPage = lazy(() => import('./app/pages/Misc.tsx').then((m) => m.CreditsPage));
-const CropCalcPage = lazy(() => import('./app/pages/Tools.tsx').then((m) => m.CropCalcPage));
-const GiftPlannerPage = lazy(() => import('./app/pages/Tools.tsx').then((m) => m.GiftPlannerPage));
-const GiftNpcPage = lazy(() => import('./app/pages/Tools.tsx').then((m) => m.GiftNpcPage));
-const UpgradesPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.UpgradesPage));
 const RankPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.RankPage));
 const MinesPage = lazy(() => import('./app/pages/Special.tsx').then((m) => m.MinesPage));
 const TemplePage = lazy(() => import('./app/pages/Temple.tsx').then((m) => m.TemplePage));
@@ -43,7 +39,7 @@ function FicheRedirect({ id }: { id: string }) {
   useEffect(() => {
     loadEntries().then(() => {
       const e = entry(id);
-      go(e ? `/explorer/${e.dom}` : '/explorer', e ? { open: id, f: id } : undefined, true);
+      go(e ? (e.dom === 'pnj' ? '/habitants' : `/chercher/${e.dom}`) : '/chercher', e ? { open: id, f: id } : undefined, true);
     });
   }, [id]);
   return null;
@@ -54,17 +50,17 @@ function Page() {
   const [a, b, c] = route.value.path;
   const q = Object.fromEntries(route.value.query);
   switch (a) {
-    case 'explorer':
-      if (!b) return <ExplorerPage />;
-      if (b === 'ameliorations') return <UpgradesPage />;
+    case 'chercher':
+      if (!b) return <SearchPage />;
       if (b === 'rang') return <RankPage />;
       if (b === 'mines') return <MinesPage />;
       return <DomainPage key={b} dom={b} />;
-    case 'progression':
+    case 'collections':
       if (b === 'temple') return <TemplePage />;
-      return b ? <TrackerPage key={b} id={b} /> : <ProgressionPage />;
-    case 'session':
-      return <SessionPage />;
+      if (b && c === 'saisie') return <QuickEntryPage key={b} id={b} />;
+      return b ? <TrackerPage key={b} id={b} /> : <CollectionsPage />;
+    case 'habitants':
+      return <DomainPage key="habitants" dom="pnj" root />;
     case 'calendrier':
       return <CalendarPage />;
     case 'reglages':
@@ -73,30 +69,34 @@ function Page() {
       return <CreditsPage />;
     case 'design':
       return <DesignPage />;
-    case 'outils':
-      return b === 'cultures' ? <CropCalcPage /> : c ? <GiftNpcPage key={c} id={c} /> : <GiftPlannerPage />;
-    // Anciennes adresses
+    // Anciennes adresses (v1) : redirigées sans casser les favoris du navigateur
     case 'fiche':
       return <FicheRedirect id={b} />;
+    case 'explorer':
     case 'encyclo':
-      return <Redirect to={b ? `/explorer/${b}` : '/explorer'} q={q} />;
+      if (b === 'pnj') return <Redirect to="/habitants" q={q} />;
+      if (b === 'ameliorations') return <Redirect to={q.magasin ? '/chercher/lieux' : '/chercher'} q={q.magasin ? { f: q.magasin } : undefined} />;
+      return <Redirect to={b ? `/chercher/${b}` : '/chercher'} q={q} />;
+    case 'progression':
     case 'trackers':
-      return <Redirect to={b ? `/progression/${b}` : '/progression'} q={q} />;
+      return <Redirect to={b ? `/collections/${b}` : '/collections'} q={q} />;
     case 'temple':
     case 'musee':
-      return <Redirect to={`/progression/${a}`} />;
+      return <Redirect to={`/collections/${a}`} />;
     case 'ameliorations':
+      return <Redirect to="/chercher" />;
     case 'rang':
     case 'mines':
-      return <Redirect to={`/explorer/${a}`} q={q} />;
+      return <Redirect to={`/chercher/${a}`} />;
+    case 'outils':
+      return <Redirect to={b === 'cultures' ? '/chercher/cultures' : '/habitants'} q={b === 'cadeaux' && c ? { f: c } : undefined} />;
+    case 'session':
     case 'favoris':
-      return <Redirect to="/session" />;
+      return <Redirect to="/" />;
     case 'plus':
       return <Redirect to="/reglages" />;
     case 'recherche':
-      searchSeed.value = q.q ?? '';
-      searchOpen.value = true;
-      return <Redirect to="/" />;
+      return <Redirect to="/chercher" q={q} />;
     default:
       return <TodayPage />;
   }
@@ -113,7 +113,7 @@ function App() {
         <FicheSheet />
       </Suspense>
       <TabBar />
-      <SearchSheet />
+      <WhatsNew />
       <ClockSheet />
       <ContextMenu />
       <Toaster />
@@ -121,11 +121,6 @@ function App() {
   );
 }
 
-// Police des grands titres : Fredoka, embarquée (fonctionne hors ligne)
-if ('fonts' in document) {
-  const f = new FontFace('Fredoka', `url(${fredoka}) format('woff2')`, { weight: '300 700', display: 'swap' });
-  f.load().then((ff) => document.fonts.add(ff)).catch(() => {});
-}
 // Clavier virtuel : hauteur exposée en --kb pour que les sheets restent au-dessus
 if (window.visualViewport) {
   const vv = window.visualViewport;

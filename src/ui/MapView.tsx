@@ -46,6 +46,7 @@ export function MapView({ pins, labels, aspect = 16 / 10 }: { pins: Pin[]; label
                 src={c.img}
                 alt=""
                 loading="lazy"
+                fetchpriority="low"
                 decoding="async"
                 width={c.w}
                 height={c.h}

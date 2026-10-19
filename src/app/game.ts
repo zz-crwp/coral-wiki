@@ -53,12 +53,6 @@ export function catchState(c: Capture, d: GameDate, weather: string, hr: number)
   return { now: now.zones.length > 0, today: today.zones.length > 0, season, zones: today.zones, h: today.h, next: today.h.find((r) => r.from > hr)?.from };
 }
 
-/** « jours 15–28 » quand une fenêtre de jours s'applique cette saison. */
-export function dayWindows(c: Capture, bit: number) {
-  const dj = [...(c.dj ?? []), ...(c.c ?? []).flatMap((x) => x.dj ?? [])].filter(([b]) => b & bit);
-  return [...new Set(dj.map(([, a, z]) => `${a}–${z}`))];
-}
-
 /** Rentabilité d'une culture plantée aujourd'hui (prix de base, 1 récolte par plant). */
 export function cropPlan(c: Crop, d: GameDate) {
   const r = cropCalc(c, d.season, d.day, 1, 1);

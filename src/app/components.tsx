@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { Icon } from './icons.tsx';
-import { back, canGoBack, searchOpen, tab } from './router.ts';
-import { entry, thumb, seasonsOf, SEASON_FR, type Entry } from './data.ts';
+import { back, canGoBack, tab } from './router.ts';
+import { entry, thumb, type Entry } from './data.ts';
 import ICONS from '../data/icones.json';
 import { cachedTint, computeTint } from '../ui/tint.ts';
 
@@ -98,12 +98,12 @@ export function TopBar({ title, backTo, actions, large = false, subtitle, leadin
 
 const TABS = [
   { id: 'aujourdhui', label: "Aujourd'hui", icon: 'today', href: '#/' },
-  { id: 'explorer', label: 'Explorer', icon: 'explore', href: '#/explorer' },
-  { id: 'progression', label: 'Progression', icon: 'progress', href: '#/progression' },
-  { id: 'session', label: 'Session', icon: 'session', href: '#/session' },
+  { id: 'chercher', label: 'Chercher', icon: 'search', href: '#/chercher' },
+  { id: 'collections', label: 'Collections', icon: 'progress', href: '#/collections' },
+  { id: 'habitants', label: 'Habitants', icon: 'habitants', href: '#/habitants' },
 ];
 
-/** Barre d'onglets flottante (4 onglets) + bouton de recherche séparé, dans la zone du pouce. */
+/** Barre d'onglets flottante : 4 onglets, à portée du pouce. */
 export function TabBar() {
   return (
     <nav class="tabbar" aria-label="Navigation principale">
@@ -115,25 +115,10 @@ export function TabBar() {
           </a>
         ))}
       </div>
-      <button class="tab-search" aria-label="Rechercher" aria-expanded={searchOpen.value} onClick={() => (searchOpen.value = true)}>
-        <Icon name="search" />
-      </button>
     </nav>
   );
 }
 
-export function SeasonBadges({ mask }: { mask: number }) {
-  if (!mask || mask === 15) return null;
-  return (
-    <span class="badges">
-      {seasonsOf(mask).map((s) => (
-        <span key={s} class={`badge ${s}`}>
-          {SEASON_FR[s]}
-        </span>
-      ))}
-    </span>
-  );
-}
 
 export function EntryRow({ e, sub, highlight }: { e: Entry; sub?: ComponentChildren; highlight?: string }) {
   return (

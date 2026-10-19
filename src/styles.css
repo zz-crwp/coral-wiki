@@ -28,11 +28,7 @@
 .tile:active {
   transform: scale(0.98);
 }
-.tile .pic {
-  width: 40px;
-  height: 40px;
-  color: var(--primary);
-}
+
 .tile strong {
   font: 700 15px/1.25 var(--font-rounded);
 }
@@ -130,59 +126,7 @@ mark {
 }
 
 /* ---------- Recherche ---------- */
-.searchbox {
-  position: sticky;
-  top: calc(var(--top-h) + var(--safe-top));
-  z-index: 10;
-  margin: 0 -16px;
-  padding: 8px 16px 10px;
-  background: linear-gradient(var(--bg) 75%, transparent);
-}
-.searchbox label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 48px;
-  padding: 0 6px 0 14px;
-  background: var(--surface);
-  border: 1.5px solid var(--line);
-  border-radius: 24px;
-  box-shadow: var(--shadow);
-}
-.searchbox label:focus-within {
-  border-color: var(--primary);
-}
-.searchbox svg {
-  width: 20px;
-  height: 20px;
-  color: var(--muted);
-  flex: none;
-}
-.searchbox input {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  border: 0;
-  outline: 0;
-  background: none;
-}
-.searchbox input::-webkit-search-cancel-button {
-  display: none;
-}
-.group-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin: 20px 4px 8px;
-}
-.group-head h2 {
-  margin: 0;
-  font: 700 15px/1.2 var(--font-rounded);
-}
-.group-head span {
-  font-size: 13px;
-  color: var(--muted);
-}
+
 .more-btn {
   width: 100%;
   min-height: 44px;
@@ -396,31 +340,6 @@ mark {
   font-weight: 700;
   min-height: 36px;
   cursor: pointer;
-}
-
-.hero-today {
-  position: relative;
-  overflow: hidden;
-  padding: 20px;
-  border-radius: 22px;
-  color: #fff;
-  background: radial-gradient(120% 90% at 100% 0%, #3fc1b0 0%, transparent 55%), linear-gradient(160deg, #0b6b6d 0%, #08485a 60%, #062f3f 100%);
-  box-shadow: var(--shadow);
-}
-.hero-today h2 {
-  margin: 0 0 4px;
-  font: 800 26px/1.1 var(--font-rounded);
-}
-.hero-today p {
-  margin: 0;
-  opacity: 0.9;
-}
-.hero-today .wave {
-  position: absolute;
-  right: -10px;
-  bottom: -6px;
-  width: 180px;
-  opacity: 0.25;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -698,16 +617,7 @@ main:focus {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.gift-love .gift-l {
-  color: var(--accent);
-}
-.gift-like .gift-l {
-  color: var(--s-spring);
-}
-.gift-dislike .gift-l,
-.gift-hate .gift-l {
-  color: var(--muted);
-}
+
 .uni > summary {
   cursor: pointer;
   color: var(--primary);
@@ -882,12 +792,7 @@ a.badge {
 .trow.done .name {
   color: var(--muted);
 }
-.tracker-row {
-  height: auto;
-  min-height: 76px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
+
 .t-ic {
   flex: none;
   width: 44px;
@@ -908,26 +813,7 @@ a.badge {
   color: var(--primary);
   font-variant-numeric: tabular-nums;
 }
-.tracker-head {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-}
-.tracker-head .txt {
-  flex: 1;
-  min-width: 0;
-}
-.tracker-head .sub {
-  font-size: 13px;
-  color: var(--muted);
-}
-.big-pct {
-  font: 800 30px/1 var(--font-rounded);
-  color: var(--primary);
-  font-variant-numeric: tabular-nums;
-}
+
 .select-chip {
   padding: 0 4px 0 10px;
 }
@@ -940,30 +826,7 @@ a.badge {
   min-height: 36px;
   max-width: 62vw;
 }
-.field {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 10px;
-  padding: 4px 14px;
-  min-height: 48px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-s);
-  font-weight: 600;
-}
-.field select {
-  flex: 1;
-  min-height: 44px;
-}
-.tsec .group-head {
-  align-items: center;
-  gap: 10px;
-}
-.tsec .group-head h2 {
-  flex: 1;
-  min-width: 0;
-}
+
 .tsec .linkbtn {
   min-height: 44px;
 }
@@ -977,83 +840,7 @@ a.badge {
 }
 
 /* ---------- Aujourd'hui ---------- */
-.date-card {
-  padding: 12px;
-  margin-bottom: 4px;
-}
-.date-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.icon-btn.on-dark {
-  color: #fff;
-}
-.icon-btn.on-dark:active {
-  background: rgb(255 255 255 / 15%);
-}
-.date-label {
-  flex: 1;
-  min-width: 0;
-  min-height: 56px;
-  border: 0;
-  background: none;
-  color: #fff;
-  text-align: center;
-  cursor: pointer;
-  border-radius: 12px;
-}
-.date-main {
-  display: block;
-  font: 800 20px/1.15 var(--font-rounded);
-}
-.date-sub {
-  display: block;
-  font-size: 13px;
-  opacity: 0.9;
-  margin-top: 2px;
-}
-.date-edit {
-  display: grid;
-  gap: 10px;
-  margin: 8px 4px 4px;
-}
-.seg-dark {
-  background: rgb(0 0 0 / 22%);
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-}
-.seg-dark button {
-  color: #fff;
-  min-width: 0;
-}
-.seg-dark button[aria-pressed='true'] {
-  background: #fff;
-  color: #0b4f55;
-}
-.date-fields {
-  display: flex;
-  gap: 10px;
-}
-.date-fields label {
-  flex: 1;
-  display: grid;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-}
-.date-fields select,
-.date-fields input {
-  min-height: 44px;
-  border-radius: 10px;
-  border: 0;
-  padding: 0 10px;
-  font: inherit;
-  font-size: 16px;
-  background: #fff;
-  color: #12302f;
-  width: 100%;
-}
+
 .weather {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -1104,11 +891,7 @@ a.badge {
 .row.now {
   background: var(--primary-soft);
 }
-.inline-ic {
-  width: 14px;
-  height: 14px;
-  vertical-align: -2px;
-}
+
 .gain {
   color: var(--s-spring);
   font-weight: 700;
@@ -1232,13 +1015,7 @@ a.badge {
 .event .check {
   margin: -10px -6px 0 -10px;
 }
-.track-link {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-decoration: none;
-  margin: 0 0 12px;
-}
+
 .track-card .name {
   white-space: normal;
   font-weight: 600;
@@ -1251,9 +1028,6 @@ a.badge {
 .chip[aria-pressed='true'] .note,
 .chip[aria-selected='true'] .note {
   color: inherit;
-}
-.tracker-row .sub {
-  white-space: normal;
 }
 
 /* ---------- Plus : réglages, profils, sauvegarde ---------- */
@@ -1371,18 +1145,7 @@ a.badge {
 .gist-form .note {
   margin: 0;
 }
-.check-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  font-weight: 600;
-}
-.check-line input {
-  width: 22px;
-  height: 22px;
-  accent-color: var(--primary);
-}
+
 .btn:disabled {
   opacity: 0.55;
   cursor: default;
@@ -1393,18 +1156,6 @@ code {
   padding: 0 4px;
   border-radius: 4px;
 }
-.icon-btn.fav[aria-pressed='true'] {
-  color: var(--sun);
-}
-.fav-strip {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-}
-.fav-strip .xchip {
-  flex: none;
-}
 
 /* ---------- Outils ---------- */
 .card.form {
@@ -1414,73 +1165,17 @@ code {
 .card.form .seg-full {
   margin-bottom: 10px;
 }
-.form-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.form-row label {
-  flex: 1;
-  display: grid;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
-}
-.form-row select,
-.form-row input {
-  min-height: 44px;
-  border-radius: 10px;
-  border: 1.5px solid var(--line);
-  padding: 0 10px;
-  font: inherit;
-  font-size: 16px;
-  background: var(--surface-2);
-  color: var(--ink);
-  width: 100%;
-}
+
 .form-label {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink-2);
   margin: 0 2px 4px;
 }
-.seg-5 {
-  grid-template-columns: repeat(5, 1fr);
-}
-.seg-5 button {
-  font-size: 13px;
-}
-.calc-row {
-  height: auto;
-  min-height: 72px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  align-items: flex-start;
-}
-.calc-row .sub {
-  white-space: normal;
-}
-.calc-row .name strong {
-  float: right;
-  margin-left: 8px;
-}
+
 .loss {
   color: var(--accent);
   font-weight: 700;
-}
-.gift-row .check {
-  margin: 0 -6px 0 0;
-}
-.field input[type='search'] {
-  flex: 1;
-  min-width: 0;
-  min-height: 44px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 16px;
 }
 
 /* ---------- Icônes officielles du jeu ---------- */
@@ -1651,26 +1346,7 @@ code {
   font-size: 13px;
   color: var(--ink-2);
 }
-.up-shop {
-  margin-bottom: 18px;
-}
-.up-shop-h {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 14px 4px 8px;
-}
-.up-shop-h h2 {
-  margin: 0;
-  font: 800 20px/1.2 var(--font-rounded);
-}
-.up-shop-h h2 a {
-  color: inherit;
-  text-decoration: none;
-}
-.up-shop-h .note {
-  margin: 2px 0 0;
-}
+
 table.qup th,
 table.qup td {
   text-align: center;

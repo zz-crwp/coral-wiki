@@ -6,7 +6,7 @@ import { entry, SEASONS, SEASON_FR, seasonsOf, type Entry, type Season } from '.
 import { GameImg, GIcon, Gold, RichText } from './components.tsx';
 import { Icon } from './icons.tsx';
 import { coeurs, isChecked, palier, setCoeurs, setPalier, setCheck, weekday, WEEKDAYS, type Profile } from './store.ts';
-import { catchState, cropCalc, daysUntil, dayWindows, inDays, SBIT, shopState, whereNow, type Capture, type Crop, type Shop, type TodayData } from './game.ts';
+import { catchState, cropCalc, daysUntil, inDays, SBIT, shopState, whereNow, type Capture, type Crop, type Shop, type TodayData } from './game.ts';
 import { hours, ranges, WEATHER_FR } from './fiche/labels.ts';
 import { Chip, ChipList, Prices, ZoneLinks } from './fiche/parts.tsx';
 import { UpgradeList } from './fiche/upgrades.tsx';
@@ -130,7 +130,6 @@ function catchRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
   const key = `pris:${en.id}`;
   const st = cap ? catchState(cap, c.p.date, c.p.weather, c.p.hour) : null;
   const zone = st?.zones[0] ?? e?.lieux[0] ?? '';
-  const dj = cap ? dayWindows(cap, SBIT[c.p.date.season]) : [];
   return {
     done: isChecked(key),
     check: { key, label: 'Attrapé', off: 'Pas attrapé' },
@@ -426,8 +425,8 @@ function placeRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
             </div>
           )}
           {((x.stock ?? []) as X[]).some((r) => r.materiaux) && (
-            <a class="btn ghost" href={`#/explorer/ameliorations?magasin=${en.id}`}>
-              Améliorations proposées
+            <a class="btn ghost" href={`#/fiche/${en.id}`}>
+              Améliorations proposées (fiche)
             </a>
           )}
           {more(en.id)}

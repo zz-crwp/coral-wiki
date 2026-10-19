@@ -40,7 +40,15 @@ export const ready = signal(false);
 /** Joueur de cet appareil (auteur des coches). */
 export const me = signal<Player>({ id: 'moi', name: 'Moi' });
 /** Coches effectives du profil actif (les miennes + les communes du partenaire) : clé → horodatage. */
-export const checks = computed(() => onKeys(effective(active.value?.prog ?? {}, active.value?.partner?.prog)));
+export const checks = computed(() => onKeys(marks.value));
+/** Marques effectives (auteur compris) du profil actif. */
+export const marks = computed(() => effective(active.value?.prog ?? {}, active.value?.partner?.prog));
+/** Auteur d'une coche quand ce n'est pas moi (prénom du partenaire), sinon rien. */
+export function byPartner(key: string): string | null {
+  const m = marks.value[key];
+  const p = active.value?.partner;
+  return m && m.s === 1 && p && m.par === p.player ? p.name : null;
+}
 /** Appelé après chaque coche locale (la synchro programme l'envoi groupé). */
 export const localChange = signal(0);
 const newId = (p: string) => `${p}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -161,9 +169,6 @@ export const setDate = (date: GameDate) => update((p) => ({ ...p, date }));
 export const setWeather = (weather: string) => update((p) => ({ ...p, weather }));
 export const setHour = (hour: number) => update((p) => ({ ...p, hour }));
 
-export function toggleFav(id: string) {
-  togglePin(id);
-}
 
 // --- Ma session : fiches épinglées ---
 export const pinned = (id: string) => !!active.value?.session?.includes(id);
@@ -172,9 +177,6 @@ export function togglePin(id: string) {
     const s = p.session ?? [];
     return { ...p, session: s.includes(id) ? s.filter((x) => x !== id) : [...s, id] };
   });
-}
-export function setSession(ids: string[]) {
-  update((p) => ({ ...p, session: ids }));
 }
 
 // --- Paliers d'outils et cœurs ---

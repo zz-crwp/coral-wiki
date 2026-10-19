@@ -3,11 +3,12 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import type { Entity } from '../../data/schema.ts';
 import { DOMAINS, entry, loadArticle, loadEntity, loadEntries, SEASON_FR, type Block, type Entry, type Season } from '../data.ts';
-import { CheckBtn, Empty, GameImg, GIcon, Gold, RichText, TopBar } from '../components.tsx';
+import { CheckBtn, Empty, GameImg, GIcon, Gold, RichText } from '../components.tsx';
 import { entityChecks, heartKeys } from '../trackers.ts';
 import { isUpgrade, QualityUpgrades, UpgradeList } from '../fiche/upgrades.tsx';
 import { NeededFor, NowCard, SpeciesHere, UpgradeSection, Vendors } from '../fiche/context.tsx';
-import { active, isChecked, pinned, toggle, togglePin } from '../store.ts';
+import { checks, isChecked, toggleWithUndo } from '../store.ts';
+import { toast } from '../../ui/feedback.tsx';
 import { Icon } from '../icons.tsx';
 import { Chip, ChipList, Hearts, KV, Prices, Section, SectionOpen, SeasonChips, Timeline, ZoneLinks } from '../fiche/parts.tsx';
 import { MapView, PIN_COLORS, type Pin } from '../../ui/MapView.tsx';
@@ -81,31 +82,38 @@ export function FicheView({ id }: { id: string }) {
   const [e, setE] = useState<Entity | null | undefined>(undefined);
   const [art, setArt] = useState<Block[] | undefined>();
   const [all, setAll] = useState<Entry[]>([]);
+  // En-tête, usages et « en ce moment » d'abord ; le reste de la fiche au premier moment libre
+  const [full, setFull] = useState(false);
   useEffect(() => {
     setE(undefined);
     setArt(undefined);
+    setFull(false);
     loadEntries().then(setAll);
     loadEntity(id).then((x) => {
       setE(x ?? null);
-      const en = entry(id);
-      if (en) loadArticle(en.dom, id).then(setArt);
+      const dom = (x as X | undefined)?.dom ?? entry(id)?.dom;
+      if (dom === 'guides') loadArticle(dom, id).then(setArt);
+      const idle = window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 30));
+      idle(() => setFull(true), { timeout: 400 });
     });
   }, [id]);
 
   if (e === undefined) return <div class="fiche-loading" aria-busy="true" />;
   if (e === null) return <Empty icon="search">Cette fiche n'existe pas.</Empty>;
-  const dom = entry(id)?.dom ?? 'objets';
+  const dom = (e as X).dom ?? entry(id)?.dom ?? 'objets';
   const primary = PRIMARY[dom] ?? PRIMARY_DEFAULT;
   return (
     <SectionOpen.Provider value={(t) => primary.includes(t)}>
     <article class="fiche" data-id={id}>
       <Hero e={e} dom={dom} />
-      {dom === 'lieux' && (e.extra as X).carte && (
+      {full && dom === 'lieux' && (e.extra as X).carte && (
         <section class="card place-map" aria-label="Sur la carte">
           <MapView pins={(e.extra as X).carte} labels={[entry(id)?.fr ?? e.nom_fr]} aspect={4 / 3} />
         </section>
       )}
       <NowCard e={e} dom={dom} />
+      {full && (
+        <>
       <TrackCard e={e} dom={dom} />
       <UpgradeSection e={e} />
       {dom === 'lieux' && <SpeciesHere e={e} />}
@@ -118,6 +126,8 @@ export function FicheView({ id }: { id: string }) {
         </Section>
       )}
       <Sources e={e} />
+        </>
+      )}
     </article>
     </SectionOpen.Provider>
   );
@@ -146,27 +156,6 @@ const PRIMARY: Record<string, string[]> = {
   guides: ['Article du wiki (anglais)'],
 };
 
-/** Ancienne route #/fiche/<id> : page autonome (liens externes, favoris du navigateur). */
-export function FichePage({ id }: { id: string }) {
-  const e = entry(id);
-  return (
-    <>
-      <TopBar
-        title={e?.fr ?? ''}
-        backTo={e ? `/explorer/${e.dom}` : '/explorer'}
-        actions={
-          <button class="icon-btn" aria-pressed={pinned(id)} aria-label={pinned(id) ? 'Retirer de la session' : 'Épingler à la session'} onClick={() => togglePin(id)}>
-            <Icon name={pinned(id) ? 'unpin' : 'pin'} />
-          </button>
-        }
-      />
-      <main class="page" id="main">
-        <FicheView id={id} />
-      </main>
-    </>
-  );
-}
-
 function Hero({ e, dom }: { e: Entity; dom: string }) {
   const [showEn, setShowEn] = useState(false);
   // Titre en français : nom officiel, sinon traduction (signalée comme non officielle)
@@ -185,24 +174,87 @@ function Hero({ e, dom }: { e: Entity; dom: string }) {
             </div>
           )}
           <div class="badges" style={{ marginTop: 8 }}>
-            <a class="badge" href={`#/explorer/${dom}`}>{DOMAINS[dom]}</a>
+            <a class="badge" href={`#/chercher/${dom}`}>{DOMAINS[dom]}</a>
             {e.categorie && e.categorie !== DOMAINS[dom] && <span class="badge">{e.categorie}</span>}
             {e.sous_categorie && e.sous_categorie !== e.categorie && <span class="badge">{e.sous_categorie}</span>}
           </div>
         </div>
       </div>
+      <Usage e={e} />
       {e.description && (
         <div class="prose">
           <p lang={showEn ? 'en' : 'fr'} style={{ margin: 0 }}>
             {showEn ? e.description_en : e.description}
           </p>
           {e.description_lang === 'fr-trad' && (
-            <button class="linkbtn" onClick={() => setShowEn(!showEn)}>
-              {showEn ? 'Voir la traduction' : 'Traduction non officielle · voir le texte original'}
+            <button class="linkbtn subtle" onClick={() => setShowEn(!showEn)} aria-label={showEn ? 'Voir la traduction française' : 'Traduction non officielle : voir le texte original anglais'}>
+              {showEn ? 'Traduction' : 'Texte original'}
             </button>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * « Je le garde ou je le vends ? » (Q4) : verdict puis badges d'usage, croisés avec la progression commune.
+ * À GARDER si l'objet manque au musée ou au temple, ou sert à une quête ; sinon VENDABLE s'il a un prix.
+ */
+function Usage({ e }: { e: Entity }) {
+  const x = e.extra as X;
+  const c = checks.value;
+  const badges: ComponentChildren[] = [];
+  const keep: string[] = [];
+  if (x.don_musee) {
+    const done = !!c[`musee:${e.id}`];
+    if (!done) keep.push('musée');
+    badges.push(
+      <a key="m" class={`pill ${done ? 'ok' : 'warn'}`} href="#/collections/musee?manquants=1">
+        Musée : {done ? 'donné' : 'manquant'}
+      </a>,
+    );
+  }
+  for (const o of (x.offrandes ?? []) as X[]) {
+    const done = !!c[`temple:${o.offrande}:${e.id}`];
+    if (!done) keep.push('temple');
+    badges.push(
+      <a key={o.offrande} class={`pill ${done ? 'ok' : 'warn'}`} href={`#/collections/temple?open=${o.offrande}`}>
+        Temple : {o.nom ?? o.offrande}
+        {o.n > 1 ? ` ×${o.n}` : ''}
+        {done ? ' · offert' : ''}
+      </a>,
+    );
+  }
+  const quests = ((x.requis_pour ?? []) as X[]).filter((r) => r.type === 'quete');
+  for (const q of quests) {
+    keep.push('quête');
+    badges.push(
+      <a key={q.id} class="pill warn" href={`#/fiche/${q.id}`}>
+        Quête : {entry(q.id)?.fr ?? q.id}
+      </a>,
+    );
+  }
+  const love = (e.aime_par?.love ?? []) as string[];
+  if (love.length)
+    badges.push(
+      <span key="l" class="pill tint">
+        Adoré par : {love.slice(0, 3).map((id) => entry(id)?.fr ?? id).join(', ')}
+        {love.length > 3 ? ` +${love.length - 3}` : ''}
+      </span>,
+    );
+  if (e.utilise_dans.length) badges.push(<span key="r" class="pill">Recettes : {e.utilise_dans.length}</span>);
+  if ((x.utilise_pour ?? []).length) badges.push(<span key="u" class="pill">Améliorations : {x.utilise_pour.length}</span>);
+  const sell = !!e.prix?.base;
+  if (!badges.length && !keep.length) return null;
+  return (
+    <div class="usage">
+      {keep.length ? (
+        <span class="verdict-big keep">À GARDER · {[...new Set(keep)].join(', ')}</span>
+      ) : sell ? (
+        <span class="verdict-big sell">VENDABLE · {e.prix!.base} PO</span>
+      ) : null}
+      <div class="usage-badges">{badges}</div>
     </div>
   );
 }
@@ -215,7 +267,7 @@ function TrackCard({ e, dom }: { e: Entity; dom: string }) {
     <div class="card list track-card" aria-label="Suivi">
       {items.map((it) => (
         <div key={it.key} class={`row trow${isChecked(it.key) ? ' done' : ''}`}>
-          <CheckBtn on={isChecked(it.key)} label={it.label} onToggle={() => toggle(it.key)} />
+          <CheckBtn on={isChecked(it.key)} label={it.label} onToggle={() => toggleWithUndo(it.key, it.label, toast)} />
           <a class="trow-link" href={it.href}>
             <span class="txt">
               <span class="name">{it.label}</span>
@@ -255,7 +307,7 @@ function KeyFacts({ e, dom }: { e: Entity; dom: string }) {
     else rows.push([label, typeof v === 'number' && fmt ? fmt(v) : String(v).replace(/\s*\n\s*/g, ', ')]);
   }
   if (x.debloque_par) rows.push(['Débloqué par', <Chip id={x.debloque_par.maitrise} note={`niveau ${x.debloque_par.niveau}`} />]);
-  if (x.don_musee) rows.push(['Musée', <a href="#/progression/musee">Peut être donné au musée</a>]);
+  if (x.don_musee) rows.push(['Musée', <a href="#/collections/musee">Peut être donné au musée</a>]);
   if (x.image_de) rows.push(['Image', <span class="note">portrait du propriétaire (pas de photo du lieu)</span>]);
   const hasPrice = e.prix && e.prix.base;
   if (!rows.length && !hasPrice) return null;
@@ -317,7 +369,7 @@ function DomainSections({ e, dom, all }: { e: Entity; dom: string; all: Entry[] 
               const key = heartKeys(e.id, arr.map((v) => v.coeurs))[i];
               return (
               <li key={i} class="event">
-                <CheckBtn on={isChecked(key)} label={`Scène ${h.coeurs ? `${h.coeurs} cœurs ` : ''}vue`} onToggle={() => toggle(key)} />
+                <CheckBtn on={isChecked(key)} label={`Scène ${h.coeurs ? `${h.coeurs} cœurs ` : ''}vue`} onToggle={() => toggleWithUndo(key, 'Scène de cœur', toast)} />
                 <Hearts n={h.coeurs} />
                 <div>
                   <p>{h.resume ?? h.resume_en ?? <span class="note">Résumé à vérifier</span>}</p>
@@ -494,7 +546,7 @@ function Relations({ e, dom, all }: { e: Entity; dom: string; all: Entry[] }) {
         <ul class="plain">
           {x.offrandes.map((o: X, i: number) => (
             <li key={i}>
-              <a href={`#/progression/temple?open=${o.offrande}`}>{o.nom ?? o.offrande}</a> <span class="note">({o.autel_nom})</span> — ×{o.n}
+              <a href={`#/collections/temple?open=${o.offrande}`}>{o.nom ?? o.offrande}</a> <span class="note">({o.autel_nom})</span> — ×{o.n}
               {o.qualite ? ` (qualité ${QUALITY_BY_INDEX[o.qualite]} minimum)` : ''}
             </li>
           ))}

@@ -4,6 +4,7 @@ import { TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
 import { active, createProfile, deleteProfile, listBackups, me, profiles, renameProfile, setPlayerName, switchProfile } from '../store.ts';
 import { toast } from '../../ui/feedback.tsx';
+import { VERSION } from '../../ui/WhatsNew.tsx';
 import { setTheme, setWake, theme, wakeOn, wakeSupported, type Theme } from '../prefs.ts';
 import { Segmented } from '../../ui/controls.tsx';
 import { connect, disconnect, download, exportFile, gist, importFile, pair, setAuto, shareLink, syncNow, syncState, unpair } from '../sync.ts';
@@ -35,10 +36,11 @@ export function MorePage() {
               value={theme.value}
               onChange={(t: Theme) => setTheme(t)}
               options={[
-                ['system', 'Auto'],
+                ['soir', 'Soir'],
+                ['system', 'Système'],
                 ['light', 'Clair'],
                 ['dark', 'Sombre'],
-                ['oled', 'Noir OLED'],
+                ['oled', 'OLED'],
               ]}
             />
           </div>
@@ -50,10 +52,8 @@ export function MorePage() {
             <input type="checkbox" role="switch" class="switch" checked={wakeOn.value} disabled={!wakeSupported} onChange={(e) => setWake((e.target as HTMLInputElement).checked)} />
           </label>
         </div>
-        <h2 class="group-label">Outils</h2>
+        <h2 class="group-label">Calendrier</h2>
         <div class="group">
-          <Link href="#/outils/cultures" icon="cultures" label="Rentabilité des cultures" sub="Bénéfice selon le jour de plantation" />
-          <Link href="#/outils/cadeaux" icon="gift" label="Planificateur de cadeaux" sub="Anniversaires, cadeaux de la semaine, préférences" />
           <Link href="#/calendrier" icon="calendar-days" label="Calendrier" sub="Festivals et anniversaires" />
         </div>
         <Backup />
@@ -62,6 +62,10 @@ export function MorePage() {
         <div class="group">
           <Link href="#/credits" icon="info" label="Crédits et licences" />
           <Link href="#/design" icon="grid" label="Système de design" sub="Composants, couleurs et états" />
+          <div class="setting">
+            <span>Version de l'app</span>
+            <strong class="tabular">{VERSION}</strong>
+          </div>
           <div class="setting">
             <span>Version du jeu couverte</span>
             <strong>{meta.game_version}</strong>

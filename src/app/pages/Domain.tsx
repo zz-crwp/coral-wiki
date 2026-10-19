@@ -67,7 +67,8 @@ function filtersFor(kind: Kind): Filter[] {
   }
 }
 
-export function DomainPage({ dom }: { dom: string }) {
+/** Liste d'un domaine ; `root` : affichée comme onglet (Habitants), sans retour. */
+export function DomainPage({ dom, root = false }: { dom: string; root?: boolean }) {
   const [list, setList] = useState<Entry[] | null>(null);
   const [ents, setEnts] = useState<Map<string, Entity>>(new Map());
   const [t, setT] = useState<TodayData | null>(null);
@@ -104,13 +105,24 @@ export function DomainPage({ dom }: { dom: string }) {
       .sort((a, b) => (LIVE.includes(kind) ? (a.spec.sortKey ?? 0) - (b.spec.sortKey ?? 0) : 0) || a.e.fr.localeCompare(b.e.fr, 'fr'));
   }, [list, ents, ctx, filter, cat, checks.value, p.coeurs, p.paliers]);
 
+  // Rendu progressif : les 24 premières lignes tout de suite, le reste par tranches quand le navigateur est libre
+  const [limit, setLimit] = useState(24);
+  const idx = target ? rows.findIndex((r) => r.e.id === target) : -1;
+  const shown = Math.max(limit, idx + 10);
+  useEffect(() => {
+    if (shown >= rows.length) return;
+    const idle = window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 16));
+    const h = idle(() => setLimit((l) => l + 30));
+    return () => (window.cancelIdleCallback ?? clearTimeout)(h as number);
+  }, [shown, rows.length]);
+
   const cats = useMemo(() => {
     const m = new Map<string, number>();
     for (const e of list ?? []) m.set(e.cat, (m.get(e.cat) ?? 0) + 1);
     return [...m].sort((a, b) => b[1] - a[1]);
   }, [list]);
 
-  const setQ = (k: string, v: string) => go(`/explorer/${dom}`, { filtre: k === 'filtre' ? v || undefined : filter || undefined, cat: k === 'cat' ? v || undefined : cat || undefined }, true);
+  const setQ = (k: string, v: string) => go(root ? '/habitants' : `/chercher/${dom}`, { filtre: k === 'filtre' ? v || undefined : filter || undefined, cat: k === 'cat' ? v || undefined : cat || undefined }, true);
   const toggleRow = (id: string) => {
     const n = new Set(open);
     n.has(id) ? n.delete(id) : n.add(id);
@@ -124,13 +136,13 @@ export function DomainPage({ dom }: { dom: string }) {
     saveOpen(dom, n);
   };
   const big = kind === 'generic' && rows.length > 120;
-  const title = DOMAINS[dom] ?? dom;
+  const title = root ? 'Habitants' : DOMAINS[dom] ?? dom;
 
   return (
     <>
       <TopBar
         title={title}
-        backTo="/explorer"
+        backTo={root ? undefined : '/chercher'}
         large
         subtitle={list ? `${rows.length} sur ${list.length}${filter || cat ? ' · filtré' : ''}` : ' '}
         actions={
@@ -163,13 +175,7 @@ export function DomainPage({ dom }: { dom: string }) {
         )}
         {kind === 'crop' && (
           <p class="t-footnote c-2 hint">
-            Triées par bénéfice par jour si plantées aujourd'hui ({p.date.day} {SEASON_FR[p.date.season].toLowerCase()}).{' '}
-            <a href="#/outils/cultures">Calculateur détaillé</a>
-          </p>
-        )}
-        {kind === 'npc' && (
-          <p class="t-footnote c-2 hint">
-            <a href="#/outils/cadeaux">Cadeaux de la semaine pour tous les habitants</a>
+            Triées par bénéfice par jour si plantées aujourd'hui ({p.date.day} {SEASON_FR[p.date.season].toLowerCase()}).
           </p>
         )}
         {!list || !ctx ? (
@@ -182,7 +188,7 @@ export function DomainPage({ dom }: { dom: string }) {
           </div>
         ) : (
           <div class="group xlist">
-            {rows.map(({ e, spec }) => (
+            {rows.slice(0, shown).map(({ e, spec }) => (
               <XRow
                 key={e.id}
                 id={e.id}

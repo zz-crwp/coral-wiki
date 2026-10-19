@@ -33,8 +33,8 @@ export function mapData(ctx: Ctx): { cartes: MapInfo[] } | null {
       const top = m.origin === 'bottom-left' ? 1 - (y - y0) / (y1 - y0) : (y - y0) / (y1 - y0);
       markers.push({ id: String(k.id), title: k.popup?.title ?? '', cat: cats.get(String(k.categoryId)) ?? '', link: k.popup?.link?.url ?? '', x: Math.round(((x - x0) / (x1 - x0)) * 1000), y: Math.round(top * 1000), map: mi as 0 | 1 });
     }
-    // Vignette de 2000 px servie par le CDN du wiki (image non copiée dans le dépôt)
-    const width = Math.min(2000, img.width);
+    // Vignette de 1600 px servie par le CDN du wiki (image non copiée dans le dépôt)
+    const width = Math.min(1600, img.width);
     const url = String(img.url).replace('/revision/latest', `/revision/latest/scale-to-width-down/${width}`);
     cartes.push({ nom: NOMS[mi], img: url, w: width, h: Math.round((img.height * width) / img.width), source: `https://coralisland.fandom.com/wiki/${t.replace(/ /g, '_')}` });
   });

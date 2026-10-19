@@ -12,16 +12,11 @@ function parse(hash = location.hash): Route {
 export const route = signal<Route>(parse());
 export const tab = computed(() => {
   const s = route.value.path[0] ?? '';
-  if (['explorer', 'encyclo', 'fiche', 'ameliorations', 'mines', 'rang', 'outils'].includes(s)) return 'explorer';
-  if (['progression', 'trackers', 'temple', 'musee'].includes(s)) return 'progression';
-  if (['session', 'favoris'].includes(s)) return 'session';
+  if (['chercher', 'explorer', 'encyclo', 'fiche', 'recherche'].includes(s)) return 'chercher';
+  if (['collections', 'progression', 'trackers', 'temple', 'musee'].includes(s)) return 'collections';
+  if (['habitants'].includes(s)) return 'habitants';
   return 'aujourdhui';
 });
-
-/** Recherche : sheet ouverte depuis le bouton de la barre d'onglets. */
-export const searchOpen = signal(false);
-/** Requête à pré-remplir à l'ouverture de la recherche (ancien lien #/recherche?q=…). */
-export const searchSeed = signal('');
 
 const SCROLL_KEY = 'cw-scroll';
 const scrolls: Record<string, number> = (() => {
@@ -91,7 +86,7 @@ export function canGoBack() {
   return historyDepth > 0;
 }
 
-// --- Fiches en sheet : « #/explorer/poissons?f=arapaima » garde la liste derrière ---
+// --- Fiches en sheet : « #/chercher/poissons?f=arapaima » garde la liste derrière ---
 const RECENT = 'cw-recent';
 export function recent(): string[] {
   try {
@@ -107,10 +102,9 @@ function remember(id: string) {
 }
 export function openFiche(id: string) {
   remember(id);
-  searchOpen.value = false;
   const r = route.value;
   // Depuis l'ancienne page « fiche », on reste en page ; sinon la sheet s'ouvre au-dessus de l'écran courant
-  const path = r.path[0] === 'fiche' ? '/explorer' : '/' + r.path.join('/');
+  const path = r.path[0] === 'fiche' ? '/chercher' : '/' + r.path.join('/');
   const q = Object.fromEntries(r.query);
   go(path, { ...q, f: id });
 }

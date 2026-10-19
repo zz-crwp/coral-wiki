@@ -246,7 +246,7 @@ export function DesignPage() {
             <strong class="c-1">temple</strong> · Offrandes : « que me manque-t-il pour cette offrande ? » → emblème de l’autel, emplacements pleins ou vides comme en jeu, récompense.
           </p>
           <div class="group">
-            <a class="row" href="#/progression/temple">
+            <a class="row" href="#/collections/temple">
               <span class="txt">
                 <span class="name">Voir le Temple du lac</span>
               </span>

@@ -1,7 +1,7 @@
 // Préférences d'affichage propres à l'appareil (pas au profil) : thème et écran maintenu allumé.
 import { signal } from '@preact/signals';
 
-export type Theme = 'system' | 'light' | 'dark' | 'oled';
+export type Theme = 'soir' | 'system' | 'light' | 'dark' | 'oled';
 const read = (k: string) => {
   try {
     return localStorage.getItem(k);
@@ -16,12 +16,17 @@ const write = (k: string, v: string | null) => {
   } catch {}
 };
 
-export const theme = signal<Theme>((['light', 'dark', 'oled'].includes(read('cw-theme') ?? '') ? read('cw-theme') : 'system') as Theme);
+export const theme = signal<Theme>((['system', 'light', 'dark', 'oled'].includes(read('cw-theme') ?? '') ? read('cw-theme') : 'soir') as Theme);
+/** « Auto (soir) » : sombre de 19 h à 7 h (heure réelle), sinon comme le système. */
+const evening = () => {
+  const h = new Date().getHours();
+  return h >= 19 || h < 7;
+};
 export const wakeOn = signal(read('cw-wake') === '1');
 
 export function setTheme(t: Theme) {
   theme.value = t;
-  write('cw-theme', t === 'system' ? null : t);
+  write('cw-theme', t === 'soir' ? null : t);
   applyPrefs();
 }
 
@@ -42,11 +47,14 @@ export function setWake(on: boolean) {
   else lock?.release().catch(() => {}), (lock = null);
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && wakeOn.value) requestWake();
+  if (document.visibilityState !== 'visible') return;
+  if (wakeOn.value) requestWake();
+  if (theme.value === 'soir') applyPrefs(); // le soir arrive pendant que l'app est ouverte
 });
+setInterval(() => theme.value === 'soir' && applyPrefs(), 10 * 60_000);
 
 export function applyPrefs() {
-  const t = theme.value;
+  const t = theme.value === 'soir' ? (evening() ? 'dark' : 'system') : theme.value;
   if (t === 'system') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = t;
   // Couleur de la barre d'état assortie au fond du thème choisi

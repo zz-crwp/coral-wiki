@@ -6,9 +6,10 @@ import { toast } from '../../ui/feedback.tsx';
 import { loadDomain } from '../data.ts';
 import { FChip, Filters, Ring } from '../../ui/controls.tsx';
 import { Icon } from '../icons.tsx';
-import { active, checks as checksSig, isChecked, palier, setChecks, toggleWithUndo } from '../store.ts';
+import { active, byPartner, checks as checksSig, isChecked, palier, setChecks, toggleWithUndo } from '../store.ts';
 import { inSeason, loadMusee, loadTracker, name, progress, seasonBit, TRACKERS, type Tracker, type TItem } from '../trackers.ts';
 import { go, route } from '../router.ts';
+import { catchState, loadToday, type TodayData } from '../game.ts';
 
 const ICON: Record<string, string> = { temple: 'temple', musee: 'musee', coeur: 'heart' };
 const RING_COLORS: Record<string, string> = { temple: 'var(--palm)', musee: 'var(--sunset)', poissons: 'var(--lagon)', insectes: 'var(--jungle)', creatures: 'var(--abyss)', cuisine: 'var(--hibiscus)', coeur: 'var(--coral)', succes: 'var(--sand)' };
@@ -32,7 +33,7 @@ export function TrackersPage() {
   const toolTotal = tools.reduce((a, t) => a + t.max, 0);
   return (
     <>
-      <TopBar title="Progression" large subtitle={p ? `${p.name} · ${SEASON_FR[p.date.season]}, an ${p.date.year}` : undefined} />
+      <TopBar title="Collections" large subtitle={p ? `${p.name} · ${SEASON_FR[p.date.season]}, an ${p.date.year}` : undefined} />
       <main class="page" id="main">
         {!all ? (
           <div class="skeleton-list" aria-busy="true" />
@@ -42,9 +43,9 @@ export function TrackersPage() {
               {[
                 { id: 'temple', label: 'Temple', v: pr('temple') },
                 { id: 'musee', label: 'Musée', v: pr('musee') },
-                { id: 'poissons', label: 'Prises', v: catches, href: '#/progression/poissons' },
+                { id: 'poissons', label: 'Prises', v: catches, href: '#/collections/poissons' },
               ].map((r) => (
-                <a key={r.id} href={r.href ?? `#/progression/${r.id}`} class="ring-cell">
+                <a key={r.id} href={r.href ?? `#/collections/${r.id}`} class="ring-cell">
                   <Ring value={r.v.done} total={r.v.total} size={96} stroke={11} color={RING_COLORS[r.id]} label={r.label} />
                   <strong>{r.label}</strong>
                   <span class="tabular c-2">
@@ -59,7 +60,7 @@ export function TrackersPage() {
                 const v = progress(t.items, checks);
                 const missSeason = t.items.some((i) => i.seasons) ? t.items.filter((i) => inSeason(i, bit) && !checks[i.key]).length : 0;
                 return (
-                  <a key={t.id} class="row prog-row" href={`#/progression/${t.id}`}>
+                  <a key={t.id} class="row prog-row" href={`#/collections/${t.id}`}>
                     <Ring value={v.done} total={v.total} size={44} stroke={5} color={RING_COLORS[t.id]} label={t.titre}>
                       <span class="ring-ic" style={{ color: RING_COLORS[t.id] }}>
                         <Icon name={ICON[t.id] ?? t.icon} />
@@ -77,7 +78,7 @@ export function TrackersPage() {
                   </a>
                 );
               })}
-              <a class="row prog-row" href="#/explorer/outils">
+              <a class="row prog-row" href="#/chercher/outils">
                 <Ring value={toolDone} total={toolTotal || 1} size={44} stroke={5} color="var(--ink-logo)" label="Paliers d'outils">
                   <span class="ring-ic" style={{ color: 'var(--ink-logo)' }}>
                     <Icon name="outils" />
@@ -123,21 +124,24 @@ export function TrackerPage({ id }: { id: string }) {
     } catch {}
   };
   const [musee, setMusee] = useState<any>(null);
+  const [today, setToday] = useState<TodayData | null>(null);
   useEffect(() => {
     loadTracker(id).then(setT);
+    loadToday().then(setToday);
     if (id === 'musee') loadMusee().then(setMusee);
   }, [id]);
   const p = active.value;
   const checks = checksSig.value;
   const q = route.value.query;
   const missing = q.get('manquants') === '1';
+  const now = q.get('maintenant') === '1';
   const season = q.get('saison') === '1';
   const group = q.get('groupe') ?? '';
   const lieu = q.get('lieu') ?? '';
   const set = (k: string, v: string | undefined) => {
-    const cur: Record<string, string | undefined> = { manquants: missing ? '1' : undefined, saison: season ? '1' : undefined, groupe: group || undefined, lieu: lieu || undefined };
+    const cur: Record<string, string | undefined> = { manquants: missing ? '1' : undefined, maintenant: now ? '1' : undefined, saison: season ? '1' : undefined, groupe: group || undefined, lieu: lieu || undefined };
     cur[k] = v || undefined;
-    go(`/progression/${id}`, cur, true);
+    go(`/collections/${id}`, cur, true);
   };
   const bit = seasonBit(p?.date.season ?? 'spring');
   const lieux = useMemo(() => {
@@ -146,7 +150,13 @@ export function TrackerPage({ id }: { id: string }) {
     return [...m].sort((a, b) => a[0].localeCompare(b[0], 'fr'));
   }, [t]);
   const hasSeasons = t?.items.some((i) => i.seasons) ?? false;
-  const items = (t?.items ?? []).filter((i) => (!missing || !checks[i.key]) && (!season || inSeason(i, bit)) && (!group || i.group === group) && (!lieu || i.lieux.includes(lieu)));
+  // « Disponible maintenant » : captures qu'on peut attraper à l'heure, la météo et le jour du profil
+  const nowIds = useMemo(() => {
+    if (!today || !p) return new Set<string>();
+    return new Set(today.captures.filter((c) => catchState(c, p.date, p.weather, p.hour).now).map((c) => c.id));
+  }, [today, p?.date.season, p?.date.day, p?.weather, p?.hour]);
+  const canNow = (t?.items ?? []).some((i) => nowIds.has(i.id)) || (today?.captures.length ?? 0) > 0 && ['poissons', 'insectes', 'creatures', 'musee'].includes(id);
+  const items = (t?.items ?? []).filter((i) => (!missing || !checks[i.key]) && (!now || nowIds.has(i.id)) && (!season || inSeason(i, bit)) && (!group || i.group === group) && (!lieu || i.lieux.includes(lieu)));
   const pr = progress(t?.items ?? [], checks);
 
   // Regroupement à l'affichage (groupe, puis sous-groupe pour le temple)
@@ -161,7 +171,7 @@ export function TrackerPage({ id }: { id: string }) {
     const shown = new Set(items.map((i) => i.key));
     for (const s of out) s.items = s.all.filter((i) => shown.has(i.key));
     return out.filter((s) => s.items.length);
-  }, [t, items.length, missing, season, group, lieu, checks]);
+  }, [t, items.length, missing, now, season, group, lieu, checks, nowIds]);
 
   if (!TRACKERS.some((x) => x.id === id)) return <Empty>Tracker inconnu.</Empty>;
   const titre = TRACKERS.find((x) => x.id === id)!.titre;
@@ -173,14 +183,19 @@ export function TrackerPage({ id }: { id: string }) {
       <TopBar
         title={titre}
         large
-        backTo="/progression"
+        backTo="/collections"
         subtitle={t ? `${pr.done} / ${pr.total} ${t.unite}` : ' '}
         actions={
-          canGrid ? (
-            <button class="icon-btn" aria-label={grid ? 'Afficher en liste' : 'Afficher en grille (journal)'} onClick={() => setView(grid ? 'liste' : 'grille')}>
-              <Icon name={grid ? 'list' : 'grid'} />
-            </button>
-          ) : undefined
+          <>
+            {canGrid && (
+              <button class="icon-btn" aria-label={grid ? 'Afficher en liste' : 'Afficher en grille (journal)'} onClick={() => setView(grid ? 'liste' : 'grille')}>
+                <Icon name={grid ? 'list' : 'grid'} />
+              </button>
+            )}
+            <a class="btn plain small" href={`#/collections/${id}/saisie`}>
+              Saisie rapide
+            </a>
+          </>
         }
       />
       <main class="page" id="main">
@@ -212,6 +227,11 @@ export function TrackerPage({ id }: { id: string }) {
               <FChip on={missing} onClick={() => set('manquants', missing ? '' : '1')}>
                 Manquants
               </FChip>
+              {canNow && (
+                <FChip on={now} onClick={() => set('maintenant', now ? '' : '1')}>
+                  Disponible maintenant
+                </FChip>
+              )}
               {hasSeasons && (
                 <FChip on={season} onClick={() => set('saison', season ? '' : '1')}>
                   <span class="season-dot" style={{ background: `var(--${p?.date.season})` }} />
@@ -329,11 +349,6 @@ export function TrackerPage({ id }: { id: string }) {
   );
 }
 
-function countComplete(t: Tracker, checks: Record<string, number>) {
-  const by = new Map<string, boolean>();
-  for (const i of t.items) by.set(i.sg ?? '', (by.get(i.sg ?? '') ?? true) && !!checks[i.key]);
-  return [...by.values()].filter(Boolean).length;
-}
 
 export function TrackRow({ it }: { it: TItem }) {
   const e = entry(it.id);
@@ -345,7 +360,9 @@ export function TrackRow({ it }: { it: TItem }) {
       <a class="trow-link" href={`#/fiche/${it.id}`}>
         <GameImg src={e?.img ?? ''} dom={e?.dom ?? 'objets'} size={40} />
         <span class="txt">
-          <span class="name">{label}</span>
+          <span class="name">
+            {label} <PlayerDot name={byPartner(it.key)} />
+          </span>
           {(it.sub || it.lieux.length > 0) && <span class="sub">{it.sub ?? it.lieux.slice(0, 3).join(', ')}</span>}
         </span>
       </a>
@@ -353,26 +370,95 @@ export function TrackRow({ it }: { it: TItem }) {
   );
 }
 
-/** Vignette du journal : toucher coche / décoche ; le nom mène à la fiche. Non coché = estompé. */
-function JournalTile({ it }: { it: TItem }) {
+/** Initiale colorée du partenaire sur une coche qu'il ou elle a faite (Q10). */
+export function PlayerDot({ name }: { name: string | null }) {
+  if (!name) return null;
+  return (
+    <span class="player-dot" title={`Coché par ${name}`} aria-label={`coché par ${name}`}>
+      {name.slice(0, 1).toUpperCase()}
+    </span>
+  );
+}
+
+/** Vignette du journal : toucher coche / décoche (toast « Annuler ») ; en saisie rapide, pas de lien vers la fiche. */
+function JournalTile({ it, big = false }: { it: TItem; big?: boolean }) {
   const e = entry(it.id);
   const label = name(it);
+  const who = byPartner(it.key);
   const on = isChecked(it.key);
   return (
-    <div class={`jtile${on ? ' done' : ''}`} role="listitem">
+    <div class={`jtile${on ? ' done' : ''}${big ? ' big' : ''}`} role="listitem">
       <button class="jtile-btn" aria-pressed={on} aria-label={`${label}${it.sub ? ` (${it.sub})` : ''} : ${on ? 'fait' : 'à faire'}`} onClick={() => toggleWithUndo(it.key, label, toast)}>
-        <GameImg src={e?.img ?? ''} dom={e?.dom ?? 'objets'} size={52} />
+        <GameImg src={e?.img ?? ''} dom={e?.dom ?? 'objets'} size={big ? 60 : 52} />
         {on && (
           <svg class="jtile-ok" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="12" r="11" />
             <path d="m7 12.5 3.2 3.2L17 9" />
           </svg>
         )}
+        <PlayerDot name={who} />
       </button>
-      <a class="jtile-name" href={`#/fiche/${it.id}`}>
-        {label}
-      </a>
+      {big ? (
+        <span class="jtile-name">{label}</span>
+      ) : (
+        <a class="jtile-name" href={`#/fiche/${it.id}`}>
+          {label}
+        </a>
+      )}
       {it.sub && <span class="jtile-sub">{it.sub}</span>}
     </div>
   );
 }
+
+/**
+ * Saisie rapide : la collection en grille, comme le journal du jeu. Un tap = donné / attrapé (toast « Annuler »).
+ * Pour rattraper une progression existante en quelques minutes.
+ */
+export function QuickEntryPage({ id }: { id: string }) {
+  const [t, setT] = useState<Tracker | null>(null);
+  const [missing, setMissing] = useState(false);
+  const [group, setGroup] = useState('');
+  useEffect(() => {
+    loadTracker(id).then(setT);
+  }, [id]);
+  const checks = checksSig.value;
+  if (!TRACKERS.some((x) => x.id === id)) return <Empty>Collection inconnue.</Empty>;
+  const titre = TRACKERS.find((x) => x.id === id)!.titre;
+  const pr = progress(t?.items ?? [], checks);
+  // Ordre figé à l'ouverture du filtre « Manquants » : une tuile cochée reste en place (pas de saut sous le doigt)
+  const items = (t?.items ?? []).filter((i) => (!group || i.group === group) && (!missing || !checks[i.key] || recentlyOn.has(i.key)));
+  return (
+    <>
+      <TopBar title="Saisie rapide" backTo={`/collections/${id}`} subtitle={titre} actions={<span class="tabular c-2 qe-count">{pr.done}/{pr.total}</span>} />
+      <main class="page quick" id="main">
+        <p class="t-footnote c-2 hint">{titre} : touchez chaque objet déjà fait dans votre partie. Un toast permet d'annuler.</p>
+        <Filters label="Filtres">
+          <FChip on={missing} onClick={() => (recentlyOn.clear(), setMissing(!missing))}>
+            Manquants
+          </FChip>
+          {t && t.groups.length > 1 && t.groups.length < 40 && t.groups.map((g) => (
+            <FChip key={g} on={group === g} onClick={() => setGroup(group === g ? '' : g)} n={progress(t.items.filter((i) => i.group === g), checks).total - progress(t.items.filter((i) => i.group === g), checks).done}>
+              {g}
+            </FChip>
+          ))}
+        </Filters>
+        {!t ? (
+          <div class="skeleton-list" aria-busy="true" />
+        ) : (
+          <div class="jgrid quick-grid" role="list" onClick={(e) => {
+            const b = (e.target as HTMLElement).closest('.jtile-btn');
+            const k = b?.closest('[data-k]')?.getAttribute('data-k');
+            if (k) recentlyOn.add(k);
+          }}>
+            {items.map((it) => (
+              <div key={it.key} data-k={it.key} style={{ display: 'contents' }}>
+                <JournalTile it={it} big />
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </>
+  );
+}
+const recentlyOn = new Set<string>();

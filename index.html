@@ -18,10 +18,35 @@
     <script>
       // Thème appliqué avant le rendu (évite le flash).
       try {
-        var t = localStorage.getItem('cw-theme');
+        // Par défaut « Auto (soir) » : sombre de 19 h à 7 h, sinon comme le système
+        var t = localStorage.getItem('cw-theme') || 'soir';
+        var h = new Date().getHours();
+        if (t === 'soir') t = h >= 19 || h < 7 ? 'dark' : '';
         if (t === 'light' || t === 'dark' || t === 'oled') document.documentElement.dataset.theme = t;
       } catch (e) {}
+      // Lien direct vers une fiche (?f=<id> ou #/fiche/<id>) : son fichier part dès maintenant
+      try {
+        var m = /[?&]f=([a-z0-9-]+)/.exec(location.hash) || /^#\/fiche\/([a-z0-9-]+)/.exec(location.hash);
+        if (m) {
+          var l = document.createElement('link');
+          l.rel = 'preload';
+          l.as = 'fetch';
+          l.crossOrigin = 'anonymous';
+          l.href = 'e/' + m[1] + '.json';
+          document.head.appendChild(l);
+        }
+      } catch (e) {}
     </script>
+      <!-- Police des grands titres (OFL) : préchargée, elle arrive avec le JS au lieu d'après lui -->
+    <link rel="preload" href="/fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      @font-face {
+        font-family: 'Fredoka';
+        src: url('fonts/fredoka.woff2') format('woff2'); /* relatif à la base du site */
+        font-weight: 300 700;
+        font-display: swap;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>

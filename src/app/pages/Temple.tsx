@@ -1,7 +1,7 @@
 // Temple du lac : une ligne par offrande, comme l'écran du jeu — emblème de l'autel, emplacements des objets
 // (pleins quand offerts, vides sinon) et récompense. Dépliée : chaque objet avec où et quand le trouver.
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { entry, loadEntries, SEASON_FR, seasonsOf, type Season } from '../data.ts';
+import { entry, loadEntries, seasonsOf, type Season } from '../data.ts';
 import { GameImg, RichText, TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
 import { active, checks, isChecked, setCheck, setChecks } from '../store.ts';
@@ -74,7 +74,7 @@ export function TemplePage() {
 
   return (
     <>
-      <TopBar title="Temple du lac" large backTo="/progression" subtitle={d ? `${stats.offrDone} offrandes sur ${stats.offr} · ${stats.done}/${stats.items} objets` : ' '} actions={<ClockChip />} />
+      <TopBar title="Temple du lac" large backTo="/collections" subtitle={d ? `${stats.offrDone} offrandes sur ${stats.offr} · ${stats.done}/${stats.items} objets` : ' '} actions={<ClockChip />} />
       <main class="page" id="main">
         {d && (
           <section class="rings-hero card temple-hero" aria-label="Avancement des autels">

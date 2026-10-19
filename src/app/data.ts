@@ -22,9 +22,12 @@ export type Entry = {
   alias: string; // redirections EN (alias de recherche)
   frAlias: string; // nom FR non officiel ('' si aucun)
   universal: string; // niveau de cadeau universel : L/l/n/d/h ou ''
+  use?: Usage; // usages résumés (verdict à garder / vendable)
 };
+/** m = donnable au musée, t = offrandes du temple, q = quêtes, l = habitants qui l'adorent, p = prix de base. */
+export type Usage = { m?: 1; t?: string[]; q?: number; l?: number; p?: number };
 
-type RawSearch = { img: string; e: (string | number)[][] };
+type RawSearch = { img: string; e: unknown[][] };
 
 let entriesP: Promise<Entry[]> | null = null;
 let byId: Map<string, Entry> | null = null;
@@ -32,7 +35,7 @@ let byId: Map<string, Entry> | null = null;
 export function loadEntries(): Promise<Entry[]> {
   return (entriesP ??= import('../data/search.json').then((m) => {
     const raw = (m.default ?? m) as unknown as RawSearch;
-    const list = raw.e.map(([id, fr, en, cat, dom, img, s, alias, frAlias, universal]) => ({
+    const list = raw.e.map(([id, fr, en, cat, dom, img, s, alias, frAlias, universal, use]) => ({
       id: id as string,
       // Nom affiché : FR officiel, sinon traduction FR (non officielle), sinon anglais
       fr: (fr as string) || (frAlias as string) || (en as string),
@@ -45,6 +48,7 @@ export function loadEntries(): Promise<Entry[]> {
       alias: (alias as string) ?? '',
       frAlias: (frAlias as string) ?? '',
       universal: (universal as string) ?? '',
+      use: (use as Usage | undefined) ?? undefined,
     }));
     byId = new Map(list.map((e) => [e.id, e]));
     return list;
@@ -70,11 +74,19 @@ export function loadDomain(dom: string): Promise<Map<string, Entity>> {
   return p;
 }
 
+/** Une fiche : son petit fichier `e/<id>.json` ; repli sur le domaine complet (précaché) si hors ligne. */
 export async function loadEntity(id: string): Promise<Entity | undefined> {
+  // Le petit fichier part tout de suite, en parallèle de l'index (inutile de l'attendre pour connaître le domaine)
+  const small = fetch(`${import.meta.env.BASE_URL}e/${id}.json`)
+    .then((r) => (r.ok ? (r.json() as Promise<Entity>) : undefined))
+    .catch(() => undefined);
+  const known = byId?.get(id);
+  if (known && cache.has(known.dom)) return (await loadDomain(known.dom)).get(id);
+  const x = await small;
+  if (x) return x;
   await loadEntries();
   const e = entry(id);
-  if (!e) return undefined;
-  return (await loadDomain(e.dom)).get(id);
+  return e ? (await loadDomain(e.dom)).get(id) : undefined;
 }
 
 export type Block = { t: 'h'; l: number; x: string } | { t: 'p'; x: string } | { t: 'ul'; i: string[] } | { t: 'tb'; h: string[]; r: string[][]; c?: string };

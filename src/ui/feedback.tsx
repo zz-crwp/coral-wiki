@@ -9,7 +9,7 @@ type Toast = { id: number; msg: string; undo?: () => void };
 const toastSig = signal<Toast | null>(null);
 let seq = 0;
 
-/** Affiche un message court ; avec `undo`, propose « Annuler » pendant 4 secondes. */
+/** Affiche un message court ; avec `undo`, propose « Annuler » pendant 5 secondes. */
 export function toast(msg: string, undo?: () => void) {
   toastSig.value = { id: ++seq, msg, undo };
 }
@@ -21,7 +21,7 @@ export function Toaster() {
     const id = t.id;
     const h = setTimeout(() => {
       if (toastSig.value?.id === id) toastSig.value = null;
-    }, 4000);
+    }, 5000);
     return () => clearTimeout(h);
   }, [t?.id]);
   if (!t) return null;

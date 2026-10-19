@@ -326,7 +326,8 @@ for (const [dom, list] of final) {
   counts[dom] = list.length;
   for (const e of list) index.push({ id: e.id, fr: e.nom_fr, en: e.nom_en, c: e.categorie, d: dom, i: e.image?.url ?? null, ...(e.saisons.length && e.saisons.length < 4 ? { s: e.saisons } : {}), ...(e.nom_fr_alias ? { a: e.nom_fr_alias } : {}) } as any);
 }
-for (const [dom, arts] of articles) write(`articles/${dom}.json`, arts);
+// Articles anglais complets : seulement pour les guides (le texte y est le contenu) ; ailleurs, lien vers le wiki
+for (const [dom, arts] of articles) if (dom === 'guides') write(`articles/${dom}.json`, arts);
 // Index de recherche compact : [id, nom_fr, nom_en, catégorie, domaine, image, saisons(bitmask), alias]
 const IMG_PREFIX = 'https://static.wikia.nocookie.net/coralisland/images/';
 const shortImg = (u: string | null) => (!u ? '' : u.startsWith(IMG_PREFIX) ? u.slice(IMG_PREFIX.length).replace(/\/revision\/latest.*$/, '') : u);
@@ -340,10 +341,20 @@ write('search.json', {
   img: IMG_PREFIX,
   e: index.map((x) => {
     const al = [...(aliases.get(x.id) ?? [])].filter((a) => a.toLowerCase() !== x.en.toLowerCase() && a.toLowerCase() !== x.fr.toLowerCase());
-    const row: (string | number)[] = [x.id, x.fr === x.en ? '' : x.fr, x.en, x.c, x.d, shortImg(x.i), (x.s ?? []).reduce((a, k) => a | SB[k], 0)];
+    const row: unknown[] = [x.id, x.fr === x.en ? '' : x.fr, x.en, x.c, x.d, shortImg(x.i), (x.s ?? []).reduce((a, k) => a | SB[k], 0)];
     const ent = byIdFinal.get(x.id);
     const U: Record<string, string> = { love: 'L', like: 'l', neutral: 'n', dislike: 'd', hate: 'h' };
     row.push(al.join('|'), (x as any).a ?? '', U[(ent?.extra as any)?.cadeau_universel] ?? '');
+    // Usages (verdict « à garder / vendable » dès la recherche) : musée, offrandes du temple, quêtes, adoré par, prix
+    const ex = (ent?.extra ?? {}) as any;
+    const u: Record<string, unknown> = {};
+    if (ex.don_musee) u.m = 1;
+    if (ex.offrandes?.length) u.t = ex.offrandes.map((o: any) => o.offrande);
+    const q = (ex.requis_pour ?? []).filter((r: any) => r.type === 'quete').length;
+    if (q) u.q = q;
+    if (ent?.aime_par?.love?.length) u.l = ent.aime_par.love.length;
+    if (ent?.prix?.base) u.p = ent.prix.base;
+    if (Object.keys(u).length) row.push(u);
     return row;
   }),
 });
