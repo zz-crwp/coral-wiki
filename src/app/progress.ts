@@ -80,9 +80,8 @@ export function recent(p: Progress, n = 15): { key: string; m: Mark }[] {
 /** Profil lu (v1 ou v2, base ou fichier) → forme v2 complète, sans perdre de coche. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeProfile(p: any, par: string): any {
-  const fallback = p.updated || p.created || Date.now();
-  const migrated = migrateChecks(p.checks, par, fallback);
-  const prog = p.prog && typeof p.prog === 'object' ? merge(p.prog, migrated) : migrated;
+  // Profil v2 : ses marques font foi (le champ `checks` d'un export v2 n'est qu'une copie pour la v1)
+  const prog = p.prog && typeof p.prog === 'object' ? merge(p.prog) : migrateChecks(p.checks, par, p.updated || p.created || Date.now());
   const { checks: _v1, ...rest } = p;
   return { favs: [], session: [...(p.favs ?? [])], paliers: {}, coeurs: {}, weather: 'sunny', hour: 9, ...rest, prog };
 }

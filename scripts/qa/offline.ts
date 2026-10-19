@@ -32,20 +32,20 @@ await page.waitForSelector('.tabbar', { timeout: 10000 });
 ok(true, 'rechargement hors ligne : shell affiché');
 
 await page.goto(`${BASE}#/recherche?q=myrtile`, { waitUntil: 'domcontentloaded' });
-await page.waitForSelector('.search-results .row', { timeout: 10000 }).catch(() => null);
-const hit = await page.$$eval('.search-results .row .name', (els) => els.map((e) => e.textContent));
+await page.waitForSelector('.search-page .row', { timeout: 10000 }).catch(() => null);
+const hit = await page.$$eval('.search-page .row .name', (els) => els.map((e) => e.textContent));
 ok(hit.includes('Myrtille'), `recherche hors ligne « myrtile » → ${hit.slice(0, 3).join(', ')}`);
 
 await page.goto(`${BASE}#/fiche/scott`, { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('.hero h2', { timeout: 10000 }).catch(() => null);
 ok((await page.$eval('.hero h2', (e) => e.textContent).catch(() => '')) === 'Scott', 'fiche hors ligne (Scott)');
 
-await page.goto(`${BASE}#/explorer/poissons`, { waitUntil: 'domcontentloaded' });
+await page.goto(`${BASE}#/chercher/poissons`, { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('.xrow', { timeout: 10000 }).catch(() => null);
 ok((await page.$$('.xrow')).length > 5, 'liste hors ligne (poissons)');
 
 // Progression : coche hors ligne, rechargement, l'état doit survivre.
-await page.goto(`${BASE}#/progression/poissons`, { waitUntil: 'domcontentloaded' });
+await page.goto(`${BASE}#/collections/poissons`, { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('button.check, button.jtile-btn', { timeout: 10000 });
 const before = await page.$$eval('button.check[aria-pressed="true"], button.jtile-btn[aria-pressed="true"]', (e) => e.length);
 // Clic par script : la première vignette peut se trouver sous la barre d'onglets flottante
@@ -57,7 +57,7 @@ await page.evaluate(() => new Promise((r) => setTimeout(r, 500)));
 const after = await page.$$eval('button.check[aria-pressed="true"], button.jtile-btn[aria-pressed="true"]', (e) => e.length);
 ok(after === before + 1, `coche conservée après rechargement hors ligne (${before} → ${after})`);
 
-for (const [h, sel, label] of [['#/', '.now-hero', "Aujourd'hui"], ['#/progression', '.prog-row', 'progression'], ['#/progression/temple', '.xrow', 'temple'], ['#/calendrier', '.cal-d', 'calendrier']] as const) {
+for (const [h, sel, label] of [['#/', '.now-hero', "Aujourd'hui"], ['#/collections', '.prog-row', 'collections'], ['#/collections/temple', '.xrow', 'temple'], ['#/habitants', '.xrow', 'habitants'], ['#/collections/musee/saisie', '.jtile', 'saisie rapide'], ['#/calendrier', '.cal-d', 'calendrier']] as const) {
   await page.goto(`${BASE}${h}`, { waitUntil: 'domcontentloaded' });
   ok(!!(await page.waitForSelector(sel, { timeout: 10000 }).catch(() => null)), `${label} hors ligne`);
 }

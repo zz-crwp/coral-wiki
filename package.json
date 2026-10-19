@@ -13,7 +13,10 @@
     "qa:offline": "node scripts/qa/offline.ts",
     "icons": "pwa-assets-generator",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
-    "qa:progress": "node scripts/qa/progress.ts"
+    "qa:progress": "node scripts/qa/progress.ts",
+    "test": "node --test scripts/qa/progress.test.ts",
+    "qa:questions": "node scripts/qa/questions.ts",
+    "qa:migration": "node scripts/qa/migration.ts"
   },
   "dependencies": {
     "@preact/signals": "^2.11.3",

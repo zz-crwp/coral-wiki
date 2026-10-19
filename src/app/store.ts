@@ -125,6 +125,7 @@ function persist(p: Profile) {
 addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') flush();
 });
+addEventListener('pagehide', () => flush());
 
 function update(fn: (p: Profile) => Profile) {
   const cur = active.value;
@@ -150,15 +151,18 @@ export function setChecks(keys: string[], on: boolean) {
     for (const k of keys) prog[k] = mark(eff[k] ?? prog[k], on, me.value.id, now);
     return { ...p, prog };
   });
+  flush(); // une coche est écrite tout de suite : fermer l'app juste après ne la perd pas
   localChange.value++;
 }
 /** Remplace la progression du partenaire (lue depuis son Gist) sur le profil actif. */
 export function setPartner(partner: Partner | undefined) {
   update((p) => ({ ...p, partner }));
+  flush(); // écrit tout de suite : une relecture réseau ne doit pas être perdue si l'app se ferme
 }
 /** Intègre des marques reçues (mon propre Gist relu depuis un autre appareil). */
 export function absorb(prog: Progress) {
   update((p) => ({ ...p, prog: merge(p.prog, prog) }));
+  flush();
 }
 export async function setPlayerName(name: string) {
   me.value = { ...me.value, name: name.trim() || 'Moi' };

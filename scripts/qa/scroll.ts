@@ -4,7 +4,7 @@ import puppeteer from 'puppeteer-core';
 
 const BASE = process.env.QA_URL ?? 'http://localhost:4174/coral-wiki/';
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const PAGES = ['#/', '#/explorer', '#/explorer/poissons', '#/explorer/pnj', '#/explorer/objets', '#/explorer/cultures', '#/progression/temple', '#/progression/musee', '#/explorer/poissons?f=arapaima'];
+const PAGES = ['#/', '#/chercher', '#/chercher/poissons', '#/habitants', '#/chercher/objets', '#/chercher/cultures', '#/collections/temple', '#/collections/musee', '#/collections/musee/saisie', '#/chercher/poissons?f=arapaima'];
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true });
 const page = await browser.newPage();
 await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1');

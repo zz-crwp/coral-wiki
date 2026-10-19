@@ -6,7 +6,7 @@
 //   au premier plan, avec ETag (réponse 304 sans quota). Le jeton (classic, scope gist) reste sur l'appareil.
 import { effect, signal } from '@preact/signals';
 import { absorb, active, flush, getMeta, importProfiles, localChange, me, profiles, setMeta, setPartner, type Profile } from './store.ts';
-import type { Progress } from './progress.ts';
+import { effective, onKeys, type Progress } from './progress.ts';
 
 const FILE = 'progress.json';
 const API = 'https://api.github.com';
@@ -16,7 +16,9 @@ export type Backup = { app: 'coral-wiki'; version: 2; exported_at: string; playe
 export type GistFile = { app: 'coral-wiki'; version: 2; player: { id: string; name: string }; partie: { id: string; name: string }; updated: number; progress: Progress };
 
 export function backup(): Backup {
-  return { app: 'coral-wiki', version: 2, exported_at: new Date().toISOString(), player: me.value, profiles: profiles.value };
+  // `checks` (clé → horodatage) en plus des marques : un fichier v2 reste importable par la v1 (retour arrière)
+  const list = profiles.value.map((p) => ({ ...p, checks: onKeys(effective(p.prog, p.partner?.prog)) }));
+  return { app: 'coral-wiki', version: 2, exported_at: new Date().toISOString(), player: me.value, profiles: list };
 }
 
 export function parseBackup(text: string): unknown[] {

@@ -1,42 +1,38 @@
-// Captures d'audit après refonte : chaque écran à 390 px, thème clair et sombre → reports/audit/apres/<theme>/<nom>.jpg
-// (les captures « avant » sont dans reports/audit/<theme>/, mêmes noms de fichiers)
+// Captures d'audit v2 : chaque écran à 390 px, clair et sombre → reports/audit/v2/<thème>/<nom>.jpg
+// (v1 : reports/audit/v1/, mêmes noms ; les pages supprimées en v2 n'ont pas d'équivalent)
 // Usage : npm run build && npx vite preview --port 4174 & node scripts/qa/screens.ts
 import puppeteer from 'puppeteer-core';
 import { mkdirSync } from 'node:fs';
 
 const BASE = process.env.QA_URL ?? 'http://localhost:4174/coral-wiki/';
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const OUT = process.env.OUT ?? 'reports/audit/apres';
+const OUT = process.env.OUT ?? 'reports/audit/v2';
 
 export const SCREENS: [string, string][] = [
   ['01-aujourdhui', '#/'],
   ['02-calendrier', '#/calendrier'],
-  ['03-recherche-vide', '#/recherche'],
-  ['04-recherche-thon', '#/recherche?q=thon'],
-  ['05-encyclopedie', '#/explorer'],
-  ['06-liste-poissons', '#/explorer/poissons'],
-  ['07-fiche-poisson', '#/explorer/poissons?f=arapaima'],
-  ['08-fiche-pnj', '#/explorer/pnj?f=scott'],
-  ['09-fiche-outil', '#/explorer/outils?f=pickaxe'],
-  ['10-fiche-magasin', '#/explorer/lieux?f=laboratory'],
-  ['11-fiche-culture', '#/explorer/cultures?f=strawberry'],
-  ['12-fiche-lieu', '#/explorer/lieux?f=ocean'],
-  ['13-fiche-materiau', '#/explorer/ressources?f=bronze-bar'],
-  ['14-temple', '#/progression/temple'],
-  ['15-musee', '#/progression/musee'],
-  ['16-ameliorations', '#/explorer/ameliorations?magasin=sanchez-brothers-blacksmith'],
-  ['17-trackers', '#/progression'],
-  ['18-tracker-poissons', '#/progression/poissons'],
-  ['19-tracker-temple', '#/progression/temple?open=offrande-essential-resources'],
-  ['20-outil-cultures', '#/outils/cultures'],
-  ['21-cadeaux', '#/outils/cadeaux'],
-  ['22-cadeaux-scott', '#/outils/cadeaux/scott'],
+  ['03-recherche-vide', '#/chercher'],
+  ['04-recherche-thon', '#/chercher?q=thon'],
+  ['05-encyclopedie', '#/chercher'],
+  ['06-liste-poissons', '#/chercher/poissons'],
+  ['07-fiche-poisson', '#/chercher/poissons?f=arapaima'],
+  ['08-fiche-pnj', '#/habitants?f=scott'],
+  ['09-fiche-outil', '#/chercher/outils?f=pickaxe'],
+  ['10-fiche-magasin', '#/chercher/lieux?f=laboratory'],
+  ['11-fiche-culture', '#/chercher/cultures?f=strawberry'],
+  ['12-fiche-lieu', '#/chercher/lieux?f=ocean'],
+  ['13-fiche-materiau', '#/chercher/ressources?f=wood'],
+  ['14-temple', '#/collections/temple'],
+  ['15-musee', '#/collections/musee'],
+  ['17-trackers', '#/collections'],
+  ['18-tracker-poissons', '#/collections/poissons'],
+  ['19-tracker-temple', '#/collections/temple?open=offrande-essential-resources'],
   ['23-plus', '#/reglages'],
-  ['24-rang', '#/explorer/rang'],
-  ['25-session', '#/session'],
-  ['26-liste-pnj', '#/explorer/pnj'],
-  ['27-liste-outils', '#/explorer/outils'],
-  ['28-design', '#/design'],
+  ['24-rang', '#/chercher/rang'],
+  ['26-liste-pnj', '#/habitants'],
+  ['27-liste-outils', '#/chercher/outils'],
+  ['29-saisie-rapide', '#/collections/musee/saisie'],
+  ['30-chercher-bois', '#/chercher?q=bois'],
 ];
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-first-run'] });
@@ -47,6 +43,8 @@ for (const theme of ['light', 'dark'] as const) {
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: theme }]);
   await page.goto(BASE, { waitUntil: 'networkidle2' });
+  // Thème « Système » : la capture suit le thème émulé (sinon « Soir » rendrait tout sombre la nuit)
+  await page.evaluate(() => localStorage.setItem('cw-theme', 'system'));
   for (const [name, hash] of SCREENS) {
     await page.goto(`${BASE}${hash}`, { waitUntil: 'domcontentloaded' });
     await page.reload({ waitUntil: 'networkidle2' }).catch(() => null);

@@ -1,4 +1,4 @@
-// Contrôle de la progression : profils, export/import JSON, synchronisation Gist.
+// Contrôle de la progression : profils, export/import JSON, synchro à deux (un gist par joueur, appairage, fusion).
 // L'API GitHub est simulée (interception des requêtes) : aucun appel réseau réel, jeton factice.
 // Usage : npm run build && npx vite preview --port 4174 & node scripts/qa/progress.ts
 import puppeteer, { type Browser, type Page } from 'puppeteer-core';
@@ -12,35 +12,47 @@ const ok = (c: boolean, m: string) => { console.log(`${c ? '✔' : '✘'} ${m}`)
 const wait = (p: Page, ms: number) => p.evaluate((t) => new Promise((r) => setTimeout(r, t)), ms);
 const FAKE_TOKEN = 'ghp_' + 'qa0123456789abcdefghijklmnopqrstuvwx'.slice(0, 36);
 
-// Faux serveur de Gists partagé par les deux « appareils »
+// Faux serveur de Gists : un compte par jeton, gists secrets lisibles par identifiant, ETag sur la lecture
+const TOKENS: Record<string, string> = { [FAKE_TOKEN]: 'joueur-a', [FAKE_TOKEN.replace('qa', 'qb')]: 'joueur-b' };
+const TOKEN_B = FAKE_TOKEN.replace('qa', 'qb');
 const gists = new Map<string, any>();
 let n = 0;
+let notModified = 0;
+const hexId = () => (0x1000 + ++n).toString(16).padStart(32, 'a');
 async function mockGitHub(page: Page) {
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const u = new URL(req.url());
     if (u.hostname !== 'api.github.com') return req.continue();
-    const auth = req.headers()['authorization'];
-    const send = (status: number, body: unknown) =>
-      req.respond({ status, contentType: 'application/json', headers: { 'x-oauth-scopes': 'gist', 'access-control-allow-origin': '*', 'access-control-expose-headers': 'x-oauth-scopes' }, body: JSON.stringify(body) });
-    if (req.method() === 'OPTIONS') return req.respond({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET,POST,PATCH', 'access-control-expose-headers': 'x-oauth-scopes' } });
-    if (auth !== `Bearer ${FAKE_TOKEN}`) return send(401, { message: 'Bad credentials' });
-    if (u.pathname === '/user') return send(200, { login: 'qa-user' });
-    if (u.pathname === '/gists' && req.method() === 'GET') return send(200, [...gists.values()]);
+    const auth = (req.headers()['authorization'] ?? '').replace('Bearer ', '');
+    const cors = { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'x-oauth-scopes, etag' };
+    const send = (status: number, body: unknown, etag?: string) =>
+      req.respond({ status, contentType: 'application/json', headers: { 'x-oauth-scopes': 'gist', ...cors, ...(etag ? { etag } : {}) }, body: JSON.stringify(body) });
+    if (req.method() === 'OPTIONS') return req.respond({ status: 204, headers: { ...cors, 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET,POST,PATCH' } });
+    const login = TOKENS[auth];
+    if (!login) return send(401, { message: 'Bad credentials' });
+    if (u.pathname === '/user') return send(200, { login });
+    if (u.pathname === '/gists' && req.method() === 'GET') return send(200, [...gists.values()].filter((g) => g.owner === login));
     if (u.pathname === '/gists' && req.method() === 'POST') {
-      const g = { id: `g${++n}`, ...JSON.parse(req.postData()!) };
+      const g = { id: hexId(), owner: login, rev: 1, ...JSON.parse(req.postData()!) };
       gists.set(g.id, g);
-      return send(201, g);
+      return send(201, g, `"${g.id}-${g.rev}"`);
     }
     const id = u.pathname.split('/')[2];
     const g = gists.get(id);
     if (!g) return send(404, { message: 'Not Found' });
     if (req.method() === 'PATCH') {
-      const body = JSON.parse(req.postData()!);
-      g.files = { ...g.files, ...body.files };
-      return send(200, g);
+      if (g.owner !== login) return send(404, { message: 'Not Found' });
+      g.files = { ...g.files, ...JSON.parse(req.postData()!).files };
+      g.rev++;
+      return send(200, g, `"${g.id}-${g.rev}"`);
     }
-    return send(200, g);
+    const etag = `"${g.id}-${g.rev}"`;
+    if (req.headers()['if-none-match'] === etag) {
+      notModified++;
+      return req.respond({ status: 304, headers: { ...cors, etag } });
+    }
+    return send(200, g, etag);
   });
 }
 
@@ -54,7 +66,7 @@ async function device(browser: Browser) {
 }
 const pressed = (p: Page) => p.$$eval('button.check[aria-pressed="true"], button.jtile-btn[aria-pressed="true"]', (e) => e.length);
 async function openTemple(p: Page) {
-  await p.goto(`${BASE}#/progression/poissons`, { waitUntil: 'domcontentloaded' });
+  await p.goto(`${BASE}#/collections/poissons`, { waitUntil: 'domcontentloaded' });
   await p.reload({ waitUntil: 'domcontentloaded' });
   await p.waitForSelector('button.check, button.jtile-btn', { timeout: 10000 });
   await wait(p, 400);
@@ -118,39 +130,94 @@ await A.waitForSelector('p[role=status]', { timeout: 5000 }).catch(() => null);
 await openTemple(A);
 ok((await pressed(A)) === 3, 'import (remplacement) : état de l’export restauré (3 coches)');
 
-// 3. Gist : connexion sur l'appareil A, puis récupération sur un appareil B vierge
-await A.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
-await A.waitForSelector('#tok');
-await A.type('#tok', FAKE_TOKEN);
-await A.keyboard.press('Enter');
-await A.waitForFunction(() => document.body.textContent?.includes('Synchronisé à'), { timeout: 10000 }).catch(() => null);
-const g = [...gists.values()][0];
-ok(!!g && g.public === false && JSON.parse(g.files['coral-wiki.json'].content).profiles.length === 2, 'Gist privé créé avec les 2 profils');
+// 3. Jouer à deux : chaque joueur relie son compte, échange son lien de gist, puis coches croisées
+async function connectAs(p: Page, prenom: string, token: string) {
+  await p.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#tok');
+  await p.click('#pname-me', { count: 3 });
+  await p.type('#pname-me', prenom);
+  await p.$eval('#pname-me', (e) => (e as HTMLInputElement).blur());
+  await p.type('#tok', token);
+  await p.keyboard.press('Enter');
+  await p.waitForFunction(() => document.body.textContent?.includes('Synchronisé à'), { timeout: 10000 }).catch(() => null);
+}
+async function syncBtn(p: Page) {
+  await p.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
+  await clickText(p, '.btn', 'Synchroniser');
+  await p.waitForFunction(() => document.body.textContent?.includes('Synchronisé à'), { timeout: 10000 }).catch(() => null);
+  await wait(p, 300);
+}
+const mine = (login: string) => [...gists.values()].find((g) => g.owner === login);
+
+await connectAs(A, 'Alex', FAKE_TOKEN);
+const ga = mine('joueur-a');
+const fa = ga && JSON.parse(ga.files['progress.json'].content);
+ok(!!ga && ga.public === false && fa?.version === 2 && fa.player.name === 'Alex' && Object.values(fa.progress).filter((m: any) => m.s).length === 3, 'A : gist secret créé (progress.json v2, 3 marques, auteur Alex)');
 
 const B = await device(browser);
-await B.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
-await B.waitForSelector('#tok');
-await B.type('#tok', FAKE_TOKEN);
-await B.keyboard.press('Enter');
-await B.waitForFunction(() => document.body.textContent?.includes('Synchronisé à'), { timeout: 10000 }).catch(() => null);
-const names = await B.$$eval('.radio .set-t', (e) => e.map((x) => x.firstChild?.textContent));
-ok(names.length === 2 && names.includes('Ma ferme') && names.includes('Deuxième ferme'), `appareil B : profils récupérés (${names.join(', ')})`);
-ok(gists.size === 1, 'appareil B réutilise le même Gist');
+await connectAs(B, 'Bea', TOKEN_B);
+const gb = mine('joueur-b');
+ok(!!gb && gb.id !== ga.id, 'B : son propre gist, distinct de celui de A');
 
-// Modification sur B, synchro, puis A récupère
-await clickText(B, '.radio', 'Ma ferme');
+// Appairage dans les deux sens, par lien
+async function pairWith(p: Page, id: string, who: string) {
+  await p.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#partner');
+  await p.type('#partner', `https://gist.github.com/x/${id}`);
+  await clickText(p, 'button', 'Appairer');
+  await p.waitForFunction((w) => document.body.textContent?.includes(`Partenaire : ${w}`), { timeout: 8000 }, who).then(
+    () => ok(true, `appairage avec ${who}`),
+    () => ok(false, `appairage avec ${who}`),
+  );
+}
+await pairWith(A, gb.id, 'Bea');
+await pairWith(B, ga.id, 'Alex');
+
+// B coche 2 poissons (communs) et 1 succès (personnel), puis synchronise
 await openTemple(B);
-await B.$$eval('button.check, button.jtile-btn', (b, i) => (b[i] as HTMLElement).click(), 10);
-await wait(B, 500);
-await B.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
-await clickText(B, '.btn', 'Synchroniser');
-await wait(B, 1500);
-await A.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
-await A.waitForSelector('.btn');
-await clickText(A, '.btn', 'Synchroniser');
-await wait(A, 1500);
+const bBefore = await pressed(B);
+ok(bBefore === 3, `B voit déjà les 3 prises de Alex (${bBefore})`);
+await B.$$eval('button.jtile-btn', (b) => [10, 11].forEach((i) => (b[i] as HTMLElement).click()));
+await B.goto(`${BASE}#/collections/succes`, { waitUntil: 'domcontentloaded' });
+await B.reload({ waitUntil: 'domcontentloaded' });
+await B.waitForSelector('button.check', { timeout: 10000 });
+await B.$eval('button.check', (e) => (e as HTMLElement).click());
+await wait(B, 400);
+await syncBtn(B);
+if (process.env.DBG) {
+  const fb = JSON.parse(mine('joueur-b').files['progress.json'].content);
+  console.log('DBG gist B', Object.entries(fb.progress).map(([k, m]: any) => `${k}=${m.s}`).join(' '));
+}
+await syncBtn(A);
+if (process.env.DBG) console.log('DBG A partner', await A.evaluate(() => new Promise((ok) => { const r = indexedDB.open('coral-wiki'); r.onsuccess = () => { const t = r.result.transaction('profiles').objectStore('profiles').getAll(); t.onsuccess = () => ok(JSON.stringify(t.result.map((p: any) => [p.name, Object.keys(p.prog).length, p.partner?.name, Object.keys(p.partner?.prog ?? {}).length]))); }; })));
 await openTemple(A);
-ok((await pressed(A)) === 4, 'modification de B visible sur A après synchro (4 coches)');
+ok((await pressed(A)) === 5, `A voit les 2 prises de Bea (${await pressed(A)} au total)`);
+const dots = await A.$$eval('.jtile .player-dot', (e) => e.map((x) => x.textContent));
+ok(dots.length === 2 && dots.every((d) => d === 'B'), `pastille « B » sur les coches de Bea (${dots.length})`);
+await A.goto(`${BASE}#/collections/succes`, { waitUntil: 'domcontentloaded' });
+await A.reload({ waitUntil: 'domcontentloaded' });
+await A.waitForSelector('button.check', { timeout: 10000 });
+ok((await pressed(A)) === 0, 'le succès de Bea reste personnel (0 chez Alex)');
+await A.goto(`${BASE}#/`, { waitUntil: 'domcontentloaded' });
+await A.waitForFunction(() => document.querySelector('#m-recent')?.closest('section')?.textContent?.includes('Bea'), { timeout: 8000 }).then(
+  () => ok(true, '« Récemment » montre les coches de Bea'),
+  () => ok(false, '« Récemment » ne montre pas Bea'),
+);
+
+// Conflit : Alex décoche une prise de Bea (plus récent) → Bea la voit décochée après synchro
+await openTemple(A);
+await A.$$eval('button.jtile-btn[aria-pressed="true"]', (b) => {
+  const t = b.find((x) => x.querySelector('.player-dot'));
+  (t as HTMLElement).click();
+});
+await wait(A, 400);
+await syncBtn(A);
+await syncBtn(B);
+await openTemple(B);
+ok((await pressed(B)) === 4, `décoché par Alex, décoché chez Bea (${await pressed(B)})`);
+const before304 = notModified;
+await syncBtn(B);
+ok(notModified > before304, `relecture sans changement : réponse 304 (ETag), ${notModified - before304} fois`);
 
 // Mauvais jeton refusé
 const C = await device(browser);

@@ -1,5 +1,6 @@
 // Extrait de la carte du wiki centré sur des repères : image de l'île (ou de la plongée) chargée depuis le CDN
 // du wiki, cadrée sur la zone utile, épingles colorées par groupe. Aucune image n'est copiée dans le dépôt.
+import { useState } from 'preact/hooks';
 import carte from '../data/carte.json';
 
 export type Pin = [number, number, number, number]; // carte, x ‰, y ‰ (depuis le haut), groupe
@@ -30,6 +31,8 @@ function frame(pins: Pin[], mapAspect: number, boxAspect: number) {
 }
 
 export function MapView({ pins, labels, aspect = 16 / 10 }: { pins: Pin[]; labels?: string[]; aspect?: number }) {
+  // Chargée en CORS anonyme : le CDN ne peut pas déposer de cookie tiers ; repli simple s'il refuse
+  const [cors, setCors] = useState(true);
   if (!pins?.length || !CARTES.length) return null;
   const maps = [...new Set(pins.map((p) => p[0]))].filter((m) => CARTES[m]);
   return (
@@ -44,6 +47,9 @@ export function MapView({ pins, labels, aspect = 16 / 10 }: { pins: Pin[]; label
             <div class="mapview-box" style={{ aspectRatio: String(aspect) }} role="img" aria-label={`${c.nom}${where ? ` : ${where}` : ''}`}>
               <img
                 src={c.img}
+                crossOrigin={cors ? "anonymous" : undefined}
+                referrerpolicy="no-referrer"
+                onError={() => cors && setCors(false)}
                 alt=""
                 loading="lazy"
                 fetchpriority="low"

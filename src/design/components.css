@@ -2404,3 +2404,8 @@ body:has(.sheet-layer.open) .search-dock.in-page {
 .card > .usage {
   padding: 0 var(--s-4);
 }
+/* 350 vignettes en saisie rapide : celles hors écran ne sont ni mises en page ni peintes */
+.quick-grid .jtile {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 124px;
+}

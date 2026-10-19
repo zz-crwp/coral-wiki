@@ -3,9 +3,41 @@
 Wiki compagnon hors ligne de **Coral Island** (Stairway Games), pensé pour smartphone (PWA).
 Contenu repris du [Coral Island Wiki (Fandom)](https://coralisland.fandom.com) sous licence CC BY-SA, complété et recoupé avec d'autres sources. Images © Stairway Games, chargées depuis le CDN Fandom (non copiées dans le dépôt).
 
+**Version 2.0.0** — en ligne sur https://zz-crwp.github.io/coral-wiki/ · [Journal des versions](CHANGELOG.md) · [Audit](AUDIT.md) · [Conception v2](DESIGN-V2.md) · [Décisions](DECISIONS.md)
+
+## Installation
+
+```bash
+git clone https://github.com/zz-crwp/coral-wiki.git && cd coral-wiki
+npm install
+npm run dev        # http://localhost:5173/coral-wiki/
+npm run build      # typecheck + build de production dans dist/
+```
+
+Node 22 ou plus récent (les scripts sont en TypeScript exécuté directement par Node). Les données sont versionnées dans `src/data` : pas besoin de relancer le pipeline pour développer.
+
+Sur téléphone : ouvrir le site dans Safari (ou Chrome), puis « Ajouter à l'écran d'accueil ». L'app fonctionne ensuite hors ligne.
+
+## Jouer à deux
+
+La progression commune passe par GitHub, sans serveur : chaque joueur range ses coches dans **son** gist secret et lit celui de l'autre.
+
+1. Chacun crée un jeton GitHub **classic** avec le seul scope `gist` : [créer un jeton](https://github.com/settings/tokens/new?scopes=gist&description=Coral%20Wiki). Les jetons « fine-grained » ne donnent pas accès aux gists et sont refusés.
+2. Dans l'app : Réglages › Jouer à deux, saisir son prénom puis coller le jeton, « Connecter ». L'app crée le gist au premier envoi.
+3. Copier « Mon lien à envoyer » et l'envoyer à l'autre joueur ; coller le sien dans « Lien du gist de votre partenaire », « Appairer ».
+
+Ensuite : musée, temple, journal des prises et recettes sont communs ; cadeaux de la semaine, cœurs, succès et paliers d'outils restent propres à chacun. Chaque coche garde son auteur et son heure ; en cas de désaccord, la plus récente gagne, clé par clé. Les coches partent 5 s après la dernière et quand l'app passe en arrière-plan ; l'app relit les deux gists au retour au premier plan. Le jeton reste sur l'appareil (IndexedDB) et n'est envoyé qu'à `api.github.com`. Sans jeton, l'app est complète en solo.
+
+## Sauvegarde, export, import
+
+- Réglages › Sauvegarde › **Exporter** : fichier JSON avec tous les profils (format v2).
+- **Importer** : fusion par défaut (coches fusionnées une à une, rien n'est perdu) ou remplacement complet. Les fichiers exportés par la v1 sont acceptés.
+- Lors du passage à la v2, une **copie de sécurité** de la progression v1 est gardée dans l'app : Réglages › Sauvegarde › « Sauvegarde automatique du … ».
+
 ## Application
 
-- **Navigation** : 4 onglets (Aujourd'hui, Explorer, Progression, Session) et un bouton de recherche au pouce. Réglages derrière l'engrenage d'Aujourd'hui (`#/reglages`).
+- **Navigation** : 4 onglets — Aujourd'hui (`#/`), Chercher (`#/chercher`, listes `#/chercher/<domaine>`), Collections (`#/collections`, saisie rapide `#/collections/<id>/saisie`), Habitants (`#/habitants`). Réglages derrière l'engrenage d'Aujourd'hui (`#/reglages`). Les adresses de la v1 redirigent.
+- **Verdict et usages** (`src/app/usage.ts`, `Usage` dans `Fiche.tsx`) : À GARDER si l'objet manque au musée ou au temple ou sert à une quête, sinon VENDABLE ; résumé d'usage dans l'index de recherche.
 - **Horloge de jeu** : puce persistante en haut des écrans, réglage en sheet (+1 h, +1 jour, météo) ; tous les indicateurs « maintenant » suivent.
 - **Fiches en sheet** (`?f=<id>` sur n'importe quelle page) : crans moyen / plein, glisser pour fermer, panneau latéral à partir de 960 px. Les anciens liens `#/fiche/<id>` ouvrent la liste du domaine avec la fiche par-dessus.
 - **Lignes repliables par domaine** (`src/app/rows.tsx`, composant `src/ui/XRow.tsx`) : repliée, la ligne répond à la question du joueur ; glisser pour cocher (toast « Annuler »), appui long pour le menu (épingler, fiche, source).
@@ -68,25 +100,28 @@ Relance incrémentale : `fetch.ts` rafraîchit l'inventaire (`lastrevid`) et ne 
 
 ### Progression du joueur (`src/app/store.ts`)
 
-- IndexedDB `coral-wiki` : un document par profil `{ date, weather, hour, checks, session, paliers, coeurs }`, écriture différée 300 ms (forcée quand l'onglet passe en arrière-plan).
+- IndexedDB `coral-wiki` (version 2) : un document par profil `{ date, weather, hour, prog, partner, session, paliers, coeurs }` ; `prog` = une marque `{ s: 0|1, t, par }` par clé (`src/app/progress.ts` : fusion, migration). Les coches sont écrites immédiatement. Magasin `sauvegardes` : copie v1 faite avant la migration.
 - Clés de suivi : `pris:<id>`, `musee:<id>`, `temple:<offrande>:<objet>`, `cuisine:<id>`, `coeur:<pnj>:<cœurs>-<n>`, `succes:<id>`. Les mêmes clés servent aux trackers, aux fiches et à l'écran Aujourd'hui.
 - Semaine en jeu : chaque saison de 28 jours commence un lundi.
 
 ### Sauvegarde et synchronisation (`src/app/sync.ts`)
 
-- Export / import d'un fichier JSON (`{ app: "coral-wiki", version: 1, profiles }`). L'import fusionne par défaut (la version la plus récente de chaque profil gagne) ou remplace tout.
-- Synchronisation optionnelle via un **Gist privé** (`coral-wiki.json`) : jeton GitHub **classic** avec le seul scope `gist` (les jetons fine-grained n'ont pas accès aux Gists et sont refusés avec un message explicite). Le jeton reste dans IndexedDB sur l'appareil et n'est envoyé qu'à `api.github.com`.
+- Export / import d'un fichier JSON (`{ app: "coral-wiki", version: 2, player, profiles }`, v1 accepté).
+- Synchro à deux : un gist secret par joueur (`progress.json` : `{ version: 2, player, partie, progress }`), lecture du gist du partenaire, fusion clé par clé ; voir « Jouer à deux ».
 
 ### Contrôles qualité
 
 ```bash
-npm run build && npx vite preview --port 4174   # dans un autre terminal
-npm run qa:offline    # SW, précache, mode avion : navigation + recherche
-node scripts/qa/fiches.ts   # 4 fiches par domaine + pages spéciales : erreurs JS, rendu
-npm run qa:progress   # profils, export/import, synchro Gist (API GitHub simulée)
-node scripts/qa/compare.ts  # échantillon de 30 fiches : infobox source ↔ app
+npm test              # fusion de la synchro (ordre d'arrivée indifférent) et migration v1 → v2, en Node
+npm run build && npx vite preview --port 4174   # dans un autre terminal, puis :
+npm run qa:questions  # les 10 questions du joueur en 390 px : taps comptés (≤ 3) et temps (≤ 10 s)
+npm run qa:progress   # profils, export/import, jouer à deux (API GitHub simulée : 2 gists, appairage, conflit, ETag)
+npm run qa:migration  # base IndexedDB v1 réelle → v2 : aucune coche perdue, copie de sécurité
+npm run qa:offline    # SW, précache, mode avion : onglets, recherche, fiche, coche
+node scripts/qa/fiches.ts   # 4 fiches par domaine + pages : erreurs JS, rendu
 node scripts/qa/scroll.ts   # fluidité du défilement, CPU ralenti ×4
-node scripts/qa/screens.ts  # captures 390 px clair/sombre → reports/audit/apres/
+node scripts/qa/screens.ts  # captures 390 px clair/sombre → reports/audit/v2/
+node scripts/qa/compare.ts  # échantillon de 30 fiches : infobox source ↔ app
 TEXT=26 node scripts/qa/shot.ts light aujourdhui=#/   # texte agrandi : signale tout débordement horizontal
 ```
 
@@ -94,6 +129,18 @@ Comparaison manuelle de 30 fiches : [`reports/comparaison-30.md`](reports/compar
 
 ## Déploiement (GitHub Pages)
 
-Le workflow `.github/workflows/deploy.yml` construit et publie le site à chaque push sur `main`, avec `BASE_PATH=/<nom-du-repo>/` (sinon écran blanc). Dans le dépôt : *Settings → Pages → Source : GitHub Actions*. Les données (`src/data`) sont versionnées : le pipeline (`npm run data`) tourne en local, pas en CI.
+Le workflow `.github/workflows/deploy.yml` construit et publie le site à chaque push sur `main`, avec `BASE_PATH=/<nom-du-repo>/` (sinon écran blanc ; valeur par défaut `/coral-wiki/` dans `vite.config.ts`). Dans le dépôt : *Settings → Pages → Source : GitHub Actions*. Les données (`src/data`) sont versionnées : le pipeline (`npm run data`) tourne en local, pas en CI.
 
 Rapport de couverture : [`reports/coverage.md`](reports/coverage.md).
+
+## Retour arrière vers la v1
+
+La v1 reste disponible sous le tag `v1.0.0`. Pour la remettre en ligne :
+
+```bash
+git switch main
+git revert --no-edit v1.0.0..v2.0.0   # crée des commits qui annulent la v2, sans réécrire l'historique
+git push                              # GitHub Pages redéploie la v1
+```
+
+Côté joueurs : après la v2, la base IndexedDB est en version 2 et la v1 ne peut plus l'ouvrir. Avant le retour arrière, exporter la progression depuis la v2 (Réglages › Exporter : le fichier contient aussi les coches au format v1) ; une fois la v1 en ligne, effacer les données du site dans le navigateur, puis Réglages › Importer ce fichier. Pour seulement consulter la v1 en local : `git switch --detach v1.0.0 && npm ci && npm run dev`.

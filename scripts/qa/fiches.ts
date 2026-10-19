@@ -28,7 +28,7 @@ for (const id of [...ids, 'scott', 'sams-general-store', 'mason-jar', 'maitrise-
   if (t && secs > 0) ok++;
   else errors.push(`fiche ${id} : rendu incomplet (titre ${t}, sections ${secs})`);
 }
-for (const p of ['progression', 'progression/temple', 'progression/musee', 'progression/poissons', 'explorer', 'explorer/rang', 'explorer/mines', 'explorer/ameliorations', 'explorer/ameliorations?magasin=laboratory', 'explorer/outils', 'explorer/pnj', 'explorer/cultures', 'explorer/lieux', 'explorer/cuisine', 'session', 'reglages', 'design', 'outils/cultures', 'outils/cadeaux/scott', 'calendrier']) {
+for (const p of ['collections', 'collections/temple', 'collections/musee', 'collections/poissons', 'collections/musee/saisie', 'chercher', 'chercher?q=thon', 'chercher/rang', 'chercher/mines', 'chercher/outils', 'chercher/cultures', 'chercher/lieux', 'chercher/cuisine', 'habitants', 'reglages', 'design', 'calendrier', 'explorer/ameliorations?magasin=laboratory', 'outils/cadeaux/scott', 'progression/temple']) {
   await page.goto(`${BASE}#/${p}`, { waitUntil: 'domcontentloaded' });
   await new Promise((r) => setTimeout(r, 800));
   const txt = await page.$eval('main', (m) => m.textContent?.slice(0, 120) ?? '').catch(() => '');

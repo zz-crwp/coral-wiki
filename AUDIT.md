@@ -116,6 +116,68 @@ Taps comptés depuis l'ouverture de l'app (onglet Aujourd'hui), sans compter la 
 - **Erreurs console** : aucune en usage normal. Dans un navigateur sans interface, le CDN du wiki refuse parfois les images en mode CORS (protection anti-robots) : l'app retombe sur le chargement simple.
 - **Images** : vignettes du CDN à 2× la taille d'affichage ; carte de l'île en 2 000 px (une seule image, mise en cache).
 
-## 7. Après (v2)
+## 7. Résultats v2
 
-Voir la section « Résultats v2 » ajoutée à la fin de ce fichier après la phase de vérification.
+Mesures du 20/10/2026 sur la build de production (`v2.0.0`), Chrome sans interface, 390 px.
+
+### Les 10 questions (`npm run qa:questions`)
+
+| # | Question | Taps v1 | Taps v2 | Temps v2 | Où |
+|---|---|---:|---:|---:|---|
+| 1 | Attraper ou récolter maintenant, ce qui me manque | 6+ | **0** | 0,0 s | Aujourd'hui › Manquant et disponible maintenant |
+| 2 | Ce qui manque au musée, par catégorie | 3 | 3 | 0,2 s | Collections › Musée › Manquants |
+| 3 | Ce qui manque au temple, autel par autel | 2 | 2 | 0,2 s | Collections › Temple |
+| 4 | Garder ou vendre | 2 + lecture | **2** (verdict visible dès le résultat) | 0,4 s | Chercher › résultat |
+| 5 | Où et quand trouver un objet | 2 | 2 | 0,4 s | Chercher › fiche › Où et quand |
+| 6 | Ce qu'aime un villageois, où il est | 3 + défilement | **2** | 0,1 s | Habitants › ligne |
+| 7 | Anniversaires et festivals | 0 | 0 | 0,0 s | Aujourd'hui › Cette semaine |
+| 8 | Magasins ouverts | 0–1 | 0 | 0,1 s | Aujourd'hui › Boutiques |
+| 9 | Que planter | 0 | 0 | 0,1 s | Aujourd'hui › À planter |
+| 10 | Ce que le partenaire a coché | impossible | **0** | 0,1 s | Aujourd'hui › Récemment |
+
+### Constats traités
+
+| # | Statut v2 |
+|---|---|
+| B1 Synchro destructive | corrigé : un gist par joueur, fusion clé par clé ; 18/18 au test à deux joueurs (`npm run qa:progress`), conflit et ETag compris |
+| B2 Question 10 | corrigé : auteur et heure sur chaque coche, fil « Récemment », pastille du partenaire |
+| B3 Migration | corrigé : sauvegarde v1 intégrale puis conversion ; 401/401 coches conservées en navigateur réel (`npm run qa:migration`), 9/9 tests unitaires (`npm test`) |
+| M1 Garder ou vendre | fait : verdict et badges d'usage (fiche et résultats) |
+| M2 Manquant maintenant | fait : liste unique sur Aujourd'hui |
+| M3 Explorer / Recherche | fusionnés dans Chercher |
+| M4 Habitants, Cadeaux | onglet Habitants, pages Cadeaux supprimées |
+| M5 Rentabilité | page supprimée (liste des cultures et Aujourd'hui) |
+| M6 Améliorations | page supprimée (fiches magasin et outil) |
+| M7 Session | module d'Aujourd'hui |
+| M8 Saisie rapide | fait (`#/collections/<id>/saisie`) |
+| M9 Performance | onglets 95–97 ; fiches 93–95 (voir ci-dessous) |
+| m1 Mention de traduction | remplacée par « Texte original », discret |
+| m2 Toast | 5 s |
+| m3 Sombre le soir | thème « Soir » par défaut |
+| m4 Puces hors écran | gardé (défilement horizontal) |
+| m5 Rang, Mines | catalogue de Chercher |
+| m6 Page /design | lien discret dans les réglages |
+| m7 Version, Nouveautés | faits |
+
+### Lighthouse (mobile, 4G lente simulée)
+
+| Écran | Performance | Accessibilité | Bonnes pratiques |
+|---|---:|---:|---:|
+| Aujourd'hui | 96 | 100 | 100 |
+| Chercher | 97 | 100 | 100 |
+| Collections | 96 | 100 | 100 |
+| Habitants | 96 | 100 | 100 |
+| Saisie rapide | 96 | 100 | 100 |
+| Fiche poisson (lien direct) | 94 | 100 | 100 |
+| Fiche lieu (lien direct) | 93–95 | 100 | 73–100 |
+| Fiche habitant (lien direct) | 88–94 | 100 | 73–100 |
+
+- **Performance des fiches ouvertes par lien direct** : 93–95 hors habitants, 88–94 pour un habitant (la liste de 137 habitants se calcule derrière la fiche). Gain par rapport à la v1 (84–90) : un fichier par fiche préchargé dès le HTML, en-tête rendu d'abord, liste par tranches, carte en 1 600 px et en priorité basse. Objectif de 95 atteint sur tous les onglets, pas encore sur toutes les fiches ouvertes par lien.
+- **Bonnes pratiques à 73 sur certaines fiches** : uniquement quand le CDN du wiki (Cloudflare) applique sa protection anti-robots au navigateur de test (cookie `__cf_bm`, CORS refusé) ; la même fiche mesure 100 quand le CDN répond normalement. Ce n'est pas lié au code de l'app (décision D24).
+- **Hors ligne** : 13/13 (`npm run qa:offline`) ; Lighthouse 12 n'a plus de catégorie PWA.
+- **Défilement** (CPU ×4) : 60 i/s sur 9 écrans, 58 i/s sur la saisie rapide du musée (350 vignettes décodées en défilant).
+- **Fiches** : 108/108 rendues sans erreur (`scripts/qa/fiches.ts`).
+
+### Captures avant / après
+
+`reports/audit/v1/<thème>/<nom>.jpg` (avant) et `reports/audit/v2/<thème>/<nom>.jpg` (après), mêmes noms de fichiers. Nouveaux écrans v2 : `29-saisie-rapide`, `30-chercher-bois`. Écrans supprimés (pas d'équivalent v2) : `16-ameliorations`, `20-outil-cultures`, `21-cadeaux`, `22-cadeaux-scott`, `25-session`. Comparaison illustrée dans la page d'audit privée.
