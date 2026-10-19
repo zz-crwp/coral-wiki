@@ -73,6 +73,18 @@ function dayWindows(v: string | undefined): DayWindow[] {
   return [...clean(v).matchAll(/(spring|summer|fall|autumn|winter)\s+(\d+)\s*-\s*(\d+)/gi)].map((m) => ({ saison: SEAS(m[1]), de: +m[2], a: +m[3] }));
 }
 
+/** Sépare les lignes « valeur (X only) » d'un champ ; `main` = les lignes sans annotation. */
+function onlyLines(raw: string | undefined): { main?: string; only: { names: string; value: string }[] } {
+  const only: { names: string; value: string }[] = [];
+  const main: string[] = [];
+  for (const line of (raw ?? '').split(/<br\s*\/?>/i)) {
+    const m = /\(([^)]+?)\s+only\)/i.exec(clean(line));
+    if (m) only.push({ names: m[1], value: clean(line).replace(m[0], '').trim() });
+    else if (clean(line)) main.push(line);
+  }
+  return { main: main.length ? main.join('<br />') : undefined, only };
+}
+
 export function spawnConditions(P: Record<string, string>): ZoneCond[] {
   const L = scoped(P.location);
   const S = scoped(P.season);
@@ -101,7 +113,17 @@ export function spawnConditions(P: Record<string, string>): ZoneCond[] {
   }
 
   // 3. Une condition par zone
+  // Lignes annotées « … <small>(tilling only)</small> » dans les champs saison et heure : la ligne vaut pour
+  // les zones citées, les autres lignes pour les autres zones (carabe : « Fall, Winter<br />Any (tilling only) » ;
+  // bulot : « Spring • Summer (trash cans only) », la plongée restant ouverte toute l'année).
+  const onlyS = onlyLines(P.season);
+  const onlyT = onlyLines(P.time);
   const baseSeasons = (z: string) => {
+    if (onlyS.only.length) {
+      const o = onlyS.only.find((x) => scopeMatches(x.names, z));
+      const v = o ? o.value : onlyS.main;
+      return v && seasons(v).length ? seasons(v) : [...ALL];
+    }
     const v = forZone(S, z);
     return v === undefined ? [...ALL] : seasons(v).length ? seasons(v) : [...ALL];
   };
@@ -125,7 +147,8 @@ export function spawnConditions(P: Record<string, string>): ZoneCond[] {
           if (!match && saisons.includes(s)) saisons = saisons.filter((x) => x !== s);
         }
       const jours = g.saisons ? g.jours ?? [] : sv ? dayWindows(sv) : [];
-      const tv = forZone(T, z);
+      const ot = onlyT.only.find((x) => scopeMatches(x.names, z));
+      const tv = ot ? ot.value : onlyT.only.length ? onlyT.main : forZone(T, z);
       const ws = weatherByZone.get(norm(z));
       const wv = ws ? null : W.some((p) => p.scope && weatherScope(p.scope)) ? undefined : forZone(W, z);
       out.push({

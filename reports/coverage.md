@@ -1,21 +1,21 @@
 # Rapport de couverture — Coral Wiki
 
-Généré le 2026-10-18 09:35 UTC. Version du jeu ciblée : **1.3** (18/06/2026).
+Généré le 2026-10-19 18:45 UTC. Version du jeu ciblée : **1.3** (18/06/2026).
 
 ## Totaux
 
 | | |
 |---|---|
 | Pages de contenu Fandom (ns 0, hors redirections) | 3168 |
-| Entités importées | 2999 |
-| Pages exclues (justifiées ci-dessous) | 310 |
-| Entités sans image | 147 (5 %) |
+| Entités importées | 3002 |
+| Pages exclues (justifiées ci-dessous) | 307 |
+| Entités sans image | 150 (5 %) |
 | Entités sans méthode d'obtention (marquées « à vérifier ») | 26 |
 | Noms FR issus du wiki FR / Steam | 394 (13 %) |
 | Descriptions FR (texte du jeu) | 221 |
 | Descriptions FR traduites (non officielles) | 2739 |
-| Noms FR non officiels (alias de recherche) | 2457 |
-| Confiance haute / moyenne / basse | 295 / 2628 / 76 |
+| Noms FR non officiels (alias de recherche) | 2458 |
+| Confiance haute / moyenne / basse | 295 / 2627 / 80 |
 | Conflits consignés (conflits.json) | 208 |
 | Références d'id cassées | 0 |
 | Erreurs de schéma zod | 0 |
@@ -31,8 +31,8 @@ Généré le 2026-10-18 09:35 UTC. Version du jeu ciblée : **1.3** (18/06/2026)
 | Cultures & graines | 166 | 0 | 0 | 66 | 58 | 70/94/2 | 166 |
 | Personnages | 137 | 0 | 0 | 54 | 0 | 15/100/22 | 135 |
 | Cuisine | 132 | 0 | 0 | 102 | 80 | 86/43/3 | 132 |
-| Guides & mécaniques | 116 | 64 | 0 | 4 | 0 | 0/112/4 | 107 |
-| Lieux & magasins | 83 | 0 | 0 | 32 | 0 | 14/62/7 | 83 |
+| Guides & mécaniques | 112 | 61 | 0 | 4 | 0 | 0/108/4 | 103 |
+| Lieux & magasins | 90 | 6 | 0 | 32 | 0 | 14/65/11 | 90 |
 | Cueillette | 82 | 0 | 0 | 10 | 0 | 0/82/0 | 82 |
 | Quêtes | 81 | 81 | 0 | 0 | 0 | 0/81/0 | 0 |
 | Objets divers | 78 | 1 | 14 | 2 | 2 | 2/73/3 | 78 |
@@ -93,7 +93,7 @@ Pages membres de la catégorie vs pages importées comme entité. *Écart* = pag
 | Decor | 44 | 44 | 0 | 0 |  |
 | Scarecrows | 24 | 24 | 0 | 0 |  |
 | Fertilizer | 9 | 9 | 0 | 0 |  |
-| Locations | 93 | 89 | 4 | 0 | ébauche vide (moins de 400 caractères, sans données) (3) ; page d’accueil / méta du wiki (1) |
+| Locations | 93 | 92 | 1 | 0 | page d’accueil / méta du wiki (1) |
 | Buildings | 12 | 12 | 0 | 0 |  |
 | Shops and services | 31 | 31 | 0 | 0 |  |
 | Monsters | 24 | 23 | 1 | 0 | contenu retiré du jeu ou page à supprimer (1) |
@@ -109,7 +109,7 @@ Pages membres de la catégorie vs pages importées comme entité. *Écart* = pag
 - **sous-page fusionnée dans la fiche du personnage** — 275 page(s) : Mark/Letters, Millie/Letters, Olan/Dialogue, Zarah/Letters, Semeru/Events, Denali/Dialogue, Agung/Dialogue, Agung/Events, Denali/Events, Miranjani/Events, Cho Oyu/Events, Nanda Devi/Events, …
 - **contenu retiré du jeu ou page à supprimer** — 25 page(s) : Wakame weed, Ocean Seed MIxing, Artisan product., Land decor, Yuri's letters, Damaged book, Dye-making machine, Yogurt machine, Puree machine, Seed maker, Changelist, Cleanliness, …
 - **page de liste générée (DPL), remplacée par les listes de l’app** — 1 page(s) : Shop
-- **ébauche vide (moins de 400 caractères, sans données)** — 4 page(s) : Decoration, The Floating Boat, The Red Boat, Beach
+- **ébauche vide (moins de 400 caractères, sans données)** — 1 page(s) : Decoration
 - **pack DLC (page commerciale, objets importés séparément)** — 2 page(s) : Ocean Guardian Charity DLC Pack, Ocean Explorer Charity DLC Pack
 
 ## Noms français

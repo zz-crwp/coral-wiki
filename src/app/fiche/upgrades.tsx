@@ -77,7 +77,7 @@ export function UpgradeList({ rows, compact }: { rows: Row[]; compact?: boolean 
               {e ? <GameImg src={e.img} dom={e.dom} size={40} /> : bag ? <GIcon k={`bag${bag}`} size={40} /> : null}
               <h4>
                 {e ? <a href={`#/fiche/${e.id}`}>{e.fr}</a> : g.rows.length === 1 ? title(g.rows[0]) : g.rows[0].nom}
-                {e && !e.hasFr && e.frAlias && <small class="up-alias">≈ {e.frAlias}</small>}
+                {e && e.fr !== e.en && <small class="up-alias" lang="en">{e.en}</small>}
               </h4>
             </header>}
             <ol class="up-levels">

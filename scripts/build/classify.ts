@@ -126,6 +126,8 @@ export function classify(p: Page): Classified {
     }
   }
   if (ib) return r('objets', 'Objet');
+  // Lieux sans infobox (Lac, Plage, Coral Island…) : gardés même courts, ils servent de cible aux zones de pêche
+  if (cat(p, /^Locations$/) && !/^(Map|Waypoint)$/i.test(t)) return r('lieux', 'Lieu');
   // Sans infobox : article de mécanique / guide si assez de contenu, sinon page de liste.
   if (cat(p, /^(Article stubs)$/) && p.content.length < 400) return { excluded: 'ébauche vide (moins de 400 caractères, sans données)' };
   if (/^\{\{#dpl|<dpl>/i.test(p.content.trim()) && p.content.length < 1200) return { excluded: 'page de liste générée (DPL), remplacée par les listes de l’app' };

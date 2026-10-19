@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "data:fetch": "node scripts/fetch.ts && node scripts/fetch-fr.ts && node scripts/fetch-steam.ts && node scripts/fetch-all-images.ts",
+    "data:fetch": "node scripts/fetch.ts && node scripts/fetch-fr.ts && node scripts/fetch-steam.ts && node scripts/fetch-all-images.ts && node scripts/fetch-map.ts",
     "data:build": "node scripts/build-data.ts",
     "data": "npm run data:fetch && npm run data:build",
     "qa:offline": "node scripts/qa/offline.ts",

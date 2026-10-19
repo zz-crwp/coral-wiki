@@ -9,7 +9,8 @@ import { isUpgrade, QualityUpgrades, UpgradeList } from '../fiche/upgrades.tsx';
 import { NeededFor, NowCard, SpeciesHere, UpgradeSection, Vendors } from '../fiche/context.tsx';
 import { active, isChecked, pinned, toggle, togglePin } from '../store.ts';
 import { Icon } from '../icons.tsx';
-import { Chip, ChipList, Hearts, KV, Prices, Section, SectionOpen, SeasonChips, Timeline } from '../fiche/parts.tsx';
+import { Chip, ChipList, Hearts, KV, Prices, Section, SectionOpen, SeasonChips, Timeline, ZoneLinks } from '../fiche/parts.tsx';
+import { MapView, PIN_COLORS, type Pin } from '../../ui/MapView.tsx';
 import { EXTRA_FIELDS, GIFT_LEVELS, QUALITY_BY_INDEX, UNIVERSAL_CODE, WEATHER_FR, hours, ranges } from '../fiche/labels.ts';
 
 type X = Record<string, any>;
@@ -34,13 +35,21 @@ export function WeatherRow({ meteo }: { meteo: string[] }) {
 function Spawn({ e }: { e: Entity }) {
   const x = e.extra as X;
   const conds: X[] = Array.isArray(x.conditions) && x.conditions.length ? x.conditions : [{ zone: null, saisons: e.saisons, horaires: e.horaires, meteo: e.meteo, jours: x.jours_saison }];
+  // Repères sur la carte : un groupe (couleur) par condition, légende = pastille devant le nom de la zone
+  const zonesOf = (c: X): [string[], (string | null)[] | undefined] => (c.zones?.length ? [c.zones, c.lieux_id] : c.zone ? [[c.zone], c.lieux_id] : [e.lieux, x.lieux_id]);
+  const pins: Pin[] = conds.flatMap((c, i) => ((c.carte ?? (conds.length === 1 ? x.carte : null) ?? []) as Pin[]).map((p) => [p[0], p[1], p[2], i] as Pin));
+  const labels = conds.map((c) => zonesOf(c)[0].join(', '));
   return (
     <Section title="Où et quand" count={conds.length > 1 ? conds.length : undefined}>
       {x.profondeur && <p class="note" style={{ margin: '0 0 8px' }}>Profondeur : {x.profondeur}</p>}
+      <MapView pins={pins} labels={labels} />
       <div class="spawn">
         {conds.map((c, i) => (
           <div key={i} class="spawn-card">
-            <h4>{c.zone ?? (e.lieux.length ? e.lieux.join(', ') : 'Lieu à vérifier')}</h4>
+            <h4>
+              {pins.some((p) => p[3] === i) && <span class="pin-dot" style={{ background: PIN_COLORS[i % PIN_COLORS.length] }} aria-hidden="true" />}
+              {zonesOf(c)[0].length ? <ZoneLinks names={zonesOf(c)[0]} ids={zonesOf(c)[1]} /> : 'Lieu à vérifier'}
+            </h4>
             <div class="spawn-row">
               <span class="spawn-k">Saisons</span>
               <SeasonChips seasons={c.saisons} />
@@ -91,6 +100,11 @@ export function FicheView({ id }: { id: string }) {
     <SectionOpen.Provider value={(t) => primary.includes(t)}>
     <article class="fiche" data-id={id}>
       <Hero e={e} dom={dom} />
+      {dom === 'lieux' && (e.extra as X).carte && (
+        <section class="card place-map" aria-label="Sur la carte">
+          <MapView pins={(e.extra as X).carte} labels={[entry(id)?.fr ?? e.nom_fr]} aspect={4 / 3} />
+        </section>
+      )}
       <NowCard e={e} dom={dom} />
       <TrackCard e={e} dom={dom} />
       <UpgradeSection e={e} />
@@ -155,16 +169,19 @@ export function FichePage({ id }: { id: string }) {
 
 function Hero({ e, dom }: { e: Entity; dom: string }) {
   const [showEn, setShowEn] = useState(false);
+  // Titre en français : nom officiel, sinon traduction (signalée comme non officielle)
+  const unofficial = (!e.nom_fr_source || e.nom_fr_source === 'en') && !!e.nom_fr_alias;
+  const name = unofficial ? e.nom_fr_alias! : e.nom_fr;
   return (
     <div class="card">
       <div class="hero">
-        <GameImg src={e.image?.url ?? ''} dom={dom} size={96} alt={e.nom_fr} eager />
+        <GameImg src={e.image?.url ?? ''} dom={dom} size={96} alt={name} eager />
         <div style={{ minWidth: 0 }}>
-          <h2>{e.nom_fr}</h2>
-          {e.nom_en !== e.nom_fr && <div class="en" lang="en">{e.nom_en}</div>}
-          {e.nom_fr_alias && (
+          <h2>{name}</h2>
+          {e.nom_en !== name && (
             <div class="en">
-              ≈ {e.nom_fr_alias} <span class="note">(nom FR non officiel)</span>
+              <span lang="en">{e.nom_en}</span>
+              {unofficial && <span class="note"> · nom FR non officiel</span>}
             </div>
           )}
           <div class="badges" style={{ marginTop: 8 }}>
@@ -214,7 +231,7 @@ function TrackCard({ e, dom }: { e: Entity; dom: string }) {
 function KeyFacts({ e, dom }: { e: Entity; dom: string }) {
   const x = e.extra as X;
   const rows: [string, ComponentChildren][] = [];
-  const catchDom = CATCH_SEC.includes(dom);
+  const catchDom = CATCH.includes(dom);
   if (e.saisons.length && !catchDom) rows.push(['Saisons', <SeasonChips seasons={e.saisons} />]);
   if (e.meteo.length && !catchDom) rows.push(['Météo', e.meteo.length >= 6 ? 'Toutes' : e.meteo.map((w) => WEATHER_FR[w] ?? w).join(', ')]);
   if (e.horaires.length && dom !== 'lieux' && !catchDom)
@@ -225,7 +242,7 @@ function KeyFacts({ e, dom }: { e: Entity; dom: string }) {
         <Timeline ranges={e.horaires} />
       </>,
     ]);
-  if (e.lieux.length && !catchDom) rows.push(['Lieux', e.lieux.join(' · ')]);
+  if (e.lieux.length && !catchDom) rows.push(['Lieux', <ZoneLinks names={e.lieux} ids={x.lieux_id} sep=" · " />]);
   if (x.anniversaire) rows.push(['Anniversaire', `${x.anniversaire.jour} ${SEASON_FR[x.anniversaire.saison as Season]?.toLowerCase()}`]);
   if (x.mariable) rows.push(['Mariable', 'Oui']);
   if (x.date) rows.push(['Date', `${x.date.jour}${x.date.fin ? `–${x.date.fin}` : ''} ${SEASON_FR[x.date.saison as Season]?.toLowerCase()}`]);
@@ -251,6 +268,7 @@ function KeyFacts({ e, dom }: { e: Entity; dom: string }) {
         </>
       )}
       <KV rows={rows} />
+      {!catchDom && dom !== 'lieux' && x.carte && <MapView pins={x.carte} labels={[e.lieux.join(', ')]} />}
     </Section>
   );
 }
@@ -260,7 +278,7 @@ function DomainSections({ e, dom, all }: { e: Entity; dom: string; all: Entry[] 
   const out: ComponentChildren[] = [];
 
   // Poissons, insectes, créatures : où et quand (une carte par zone)
-  if (CATCH_SEC.includes(dom)) out.push(<Spawn e={e} />);
+  if (CATCH.includes(dom)) out.push(<Spawn e={e} />);
 
   // Lieux : horaires d'ouverture + stock
   if (Array.isArray(x.ouverture) && x.ouverture.length)

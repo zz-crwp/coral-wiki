@@ -17,6 +17,7 @@ import { coverage } from './coverage.ts';
 import { crossCheckGuide } from './build/steam-guide.ts';
 import { crossCheckWiki2 } from './build/wiki2.ts';
 import { speciesByPlace, upgradeLinks } from './build/context.ts';
+import { mapData } from './build/map.ts';
 import { localize, writeTodo } from './build/localize.ts';
 import { TM } from './i18n/tm.ts';
 
@@ -161,6 +162,7 @@ for (const d of ctx.drafts.values()) {
 
 // ---------- 6c. Espèces trouvables par lieu ----------
 speciesByPlace(ctx);
+const carte = mapData(ctx); // repères sur la carte de l'île / de la plongée
 
 // ---------- 7. Obtention dérivée + contrôles ----------
 const lbl = (id: string) => { const x = ctx.drafts.get(id); return x ? `[[${id}|${x.nom_fr ?? x.nom_en}]]` : id; };
@@ -392,6 +394,7 @@ write('mines.json', minesData);
   };
   void dom;
   write('aujourdhui.json', today);
+  if (carte) write('carte.json', carte);
 
   // Données compactes des trackers : événements de cœur et lieux des objets à cocher (filtre « par lieu »).
   const tracked = new Set<string>();

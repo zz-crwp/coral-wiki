@@ -34,7 +34,8 @@ export function loadEntries(): Promise<Entry[]> {
     const raw = (m.default ?? m) as unknown as RawSearch;
     const list = raw.e.map(([id, fr, en, cat, dom, img, s, alias, frAlias, universal]) => ({
       id: id as string,
-      fr: (fr as string) || (en as string),
+      // Nom affiché : FR officiel, sinon traduction FR (non officielle), sinon anglais
+      fr: (fr as string) || (frAlias as string) || (en as string),
       en: en as string,
       hasFr: !!fr,
       cat: cat as string,
@@ -55,7 +56,7 @@ export function entry(id: string): Entry | undefined {
 }
 
 // Un chunk JSON par domaine, généré par Vite (import dynamique).
-const domainFiles = import.meta.glob<{ default: Entity[] }>(['../data/*.json', '!../data/{search,meta,domaines,conflits,temple,musee,rang,mines,aujourdhui,suivi,cadeaux,icones}.json']);
+const domainFiles = import.meta.glob<{ default: Entity[] }>(['../data/*.json', '!../data/{search,meta,domaines,conflits,temple,musee,rang,mines,aujourdhui,suivi,cadeaux,icones,carte}.json']);
 const articleFiles = import.meta.glob<{ default: Record<string, Block[]> }>('../data/articles/*.json');
 const cache = new Map<string, Promise<Map<string, Entity>>>();
 

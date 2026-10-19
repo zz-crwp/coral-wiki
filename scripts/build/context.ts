@@ -31,7 +31,9 @@ export function upgradeLinks(ctx: Ctx) {
   }
 }
 
-const ZONE_ALIAS: Record<string, string> = { town: 'starlet-town', 'starlet town': 'starlet-town', 'deep forest': 'deep-forest', 'mid forest': 'mid-forest' };
+const ZONE_ALIAS: Record<string, string> = { town: 'starlet-town', 'starlet town': 'starlet-town', 'deep forest': 'deep-forest', 'mid forest': 'mid-forest', vineyard: 'hillside-brewery-and-vineyard', fishensips: 'fishensips', 'trash cans': 'trash-can', 'royaume des ondins': 'merfolk-kingdom', "mayor's house": 'mayors-house' };
+/** Zones dont le nom complet (avec parenthèses) désigne un lieu précis. */
+const ZONE_FULL: Record<string, string> = { 'river (farm)': 'farm', 'river (forest)': 'forest', 'river (town)': 'starlet-town', 'ocean (beach)': 'ocean', 'ocean (dock)': 'ocean', 'ocean (lookout)': 'ocean' };
 const CATCH = ['poissons', 'insectes', 'creatures-marines', 'cueillette'];
 
 /** Avant traduction (noms anglais) : espèces trouvables dans chaque lieu, avec la sous-zone et les saisons. */
@@ -39,9 +41,29 @@ export function speciesByPlace(ctx: Ctx) {
   const places = new Map<string, string>();
   for (const d of ctx.drafts.values()) if (d.domain === 'lieux') places.set(d.nom_en.toLowerCase(), d.id);
   const placeOf = (zone: string) => {
-    const base = zone.replace(/\s*\(.*\)\s*$/, '').trim().toLowerCase();
-    return ZONE_ALIAS[base] ?? places.get(base) ?? null;
+    const full = zone.trim().toLowerCase().replace(/’/g, "'");
+    const base = full.replace(/\s*\(.*\)\s*$/, '').trim();
+    const pick = (id: string) => (ctx.drafts.has(id) ? id : null);
+    if (ZONE_FULL[full]) return pick(ZONE_FULL[full]);
+    if (/^(wind|water|earth|fire) mine\b|^cavern\b|^mines?$/.test(full)) return pick('cavern'); // les 4 mines : fiche « La mine »
+    if (/^zone \d$|\barea$/.test(full)) return pick('diving-pier'); // zones de plongée, depuis le ponton
+    if (/^giant .*house$/.test(full)) return pick('giant-village');
+    return ZONE_ALIAS[base] ?? places.get(base) ?? places.get(base.replace(/'/g, '’')) ?? null;
   };
+  // Lien vers la fiche du lieu, aligné sur chaque liste de zones (les noms sont traduits plus tard, un pour un)
+  const unmatched = new Map<string, number>();
+  const ids = (zones: string[]) =>
+    zones.map((z) => {
+      const pid = placeOf(z);
+      if (!pid) unmatched.set(z, (unmatched.get(z) ?? 0) + 1);
+      return pid;
+    });
+  for (const d of ctx.drafts.values()) {
+    if (d.domain === 'lieux') continue;
+    if (d.lieux.length) d.extra.lieux_id = ids(d.lieux);
+    for (const c of (d.extra.conditions ?? []) as any[]) if (c.zones?.length) c.lieux_id = ids(c.zones);
+  }
+  if (unmatched.size) console.log('zones sans fiche lieu :', [...unmatched].sort((a, b) => b[1] - a[1]).map(([z, n]) => `${z} (${n})`).join(', '));
   for (const d of ctx.drafts.values()) {
     if (!CATCH.includes(String(d.domain))) continue;
     const conds: { zones: string[]; saisons: string[] }[] = Array.isArray(d.extra.conditions) && d.extra.conditions.length

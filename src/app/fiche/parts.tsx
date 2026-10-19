@@ -138,3 +138,23 @@ export function Hearts({ n }: { n: number | null | undefined }) {
     </span>
   );
 }
+
+/** Noms de zones, chacun lié à la fiche de son lieu quand elle existe (listes alignées). */
+export function ZoneLinks({ names, ids, sep = ', ' }: { names: string[]; ids?: (string | null)[]; sep?: string }) {
+  return (
+    <>
+      {names.map((n, i) => (
+        <>
+          {i > 0 && sep}
+          {ids?.[i] && entry(ids[i]!) ? (
+            <a key={i} class="zone-link" href={`#/fiche/${ids[i]}`}>
+              {n}
+            </a>
+          ) : (
+            <span key={i}>{n}</span>
+          )}
+        </>
+      ))}
+    </>
+  );
+}

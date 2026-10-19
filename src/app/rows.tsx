@@ -8,7 +8,7 @@ import { Icon } from './icons.tsx';
 import { coeurs, isChecked, palier, setCoeurs, setPalier, setCheck, weekday, WEEKDAYS, type Profile } from './store.ts';
 import { catchState, cropCalc, daysUntil, dayWindows, inDays, SBIT, shopState, whereNow, type Capture, type Crop, type Shop, type TodayData } from './game.ts';
 import { hours, ranges, WEATHER_FR } from './fiche/labels.ts';
-import { Chip, ChipList, Prices } from './fiche/parts.tsx';
+import { Chip, ChipList, Prices, ZoneLinks } from './fiche/parts.tsx';
 import { UpgradeList } from './fiche/upgrades.tsx';
 import { Pill, SeasonPills } from '../ui/controls.tsx';
 import { toast } from '../ui/feedback.tsx';
@@ -95,6 +95,35 @@ const kv = (rows: [string, ComponentChildren][]) => (
   </dl>
 );
 
+/** Où et quand, zone par zone : chaque lieu (lié à sa fiche) avec ses saisons, ses jours, ses heures et sa météo. */
+function WhereWhen({ e }: { e: Entity | undefined }) {
+  if (!e) return null;
+  const x = e.extra as X;
+  const conds: X[] = x.conditions?.length ? x.conditions : [{ zones: e.lieux, lieux_id: x.lieux_id, saisons: e.saisons, horaires: e.horaires, meteo: e.meteo, jours: x.jours_saison }];
+  return (
+    <ul class="where-list">
+      {conds.map((c, i) => {
+        const names: string[] = c.zones?.length ? c.zones : c.zone ? [c.zone] : e.lieux;
+        const ids = c.zones?.length || c.zone ? c.lieux_id : x.lieux_id;
+        const days = [...new Set(((c.jours ?? []) as X[]).map((j) => `${j.de}–${j.a} ${SEASON_FR[j.saison as Season].toLowerCase()}`))];
+        const multi = conds.length > 1;
+        return (
+          <li key={i}>
+            <strong>
+              <ZoneLinks names={names} ids={ids} />
+            </strong>
+            <span class="where-when">
+              {days.length ? <span>{days.join(', ')}</span> : <SeasonPills seasons={c.saisons ?? []} short />}
+              {c.horaires?.length > 0 && <span class="tabular">{ranges(c.horaires)}</span>}
+              {multi && c.meteo?.length > 0 && c.meteo.length < 6 && <span>{c.meteo.map((w: string) => WEATHER_FR[w]).join(', ')}</span>}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 // ---------- Poissons, insectes, créatures ----------
 function catchRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
   const cap = c.cap.get(en.id);
@@ -127,10 +156,9 @@ function catchRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
       return (
         <>
           {e?.prix && <Prices prix={e.prix as any} />}
+          <WhereWhen e={e} />
           {kv([
-            ['Où', (st?.zones.length ? st.zones : e?.lieux ?? []).join(' · ')],
-            ['Quand', [cap && ranges(cap.h), dj.length ? `jours ${dj.join(', ')}` : ''].filter(Boolean).join(' · ')],
-            ['Météo', e && (e.meteo.length >= 6 ? 'Tous les temps' : e.meteo.map((w) => WEATHER_FR[w]).join(', '))],
+            ['Météo', e && !(x.conditions?.length > 1) && (e.meteo.length >= 6 ? 'Tous les temps' : e.meteo.map((w) => WEATHER_FR[w]).join(', '))],
             ['Difficulté', x.difficulte],
             ['Rareté', x.rarete],
             ['Profondeur', x.profondeur],
@@ -548,7 +576,7 @@ function forageRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
 // ---------- Générique (catalogues : on identifie un objet plus qu'on ne planifie) ----------
 function genericRow(en: Entry, e: Entity | undefined, _c: RowCtx): RowSpec {
   return {
-    sub: <span class="c-2">{en.hasFr ? en.en : en.frAlias ? `≈ ${en.frAlias}` : en.cat}</span>,
+    sub: <span class="c-2">{en.fr !== en.en ? en.en : en.cat}</span>,
     end: e?.prix?.base != null ? <Gold n={e.prix.base} /> : null,
     detail: () => (
       <>

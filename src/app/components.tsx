@@ -141,7 +141,7 @@ export function EntryRow({ e, sub, highlight }: { e: Entry; sub?: ComponentChild
       <GameImg src={e.img} dom={e.dom} size={44} />
       <span class="txt">
         <span class="name">{highlight ? <Highlight text={e.fr} q={highlight} /> : e.fr}</span>
-        <span class="sub">{sub ?? (e.hasFr ? `${e.en} · ${e.cat}` : e.frAlias ? `≈ ${e.frAlias} · ${e.cat}` : e.cat)}</span>
+        <span class="sub">{sub ?? (e.fr !== e.en ? `${e.en} · ${e.cat}` : e.cat)}</span>
       </span>
       <Icon name="chevron" class="chev" />
     </a>
@@ -221,7 +221,7 @@ export function RichText({ text }: { text: string }) {
   for (const m of text.matchAll(/\[\[([a-z0-9-]+)\|([^\]]*)\]\]/g)) {
     parts.push(text.slice(last, m.index));
     const e = entry(m[1]);
-    const label = e && e.hasFr && m[2].trim().toLowerCase() === e.en.toLowerCase() ? e.fr : m[2];
+    const label = e && m[2].trim().toLowerCase() === e.en.toLowerCase() ? e.fr : m[2];
     parts.push(
       <a key={m.index} href={`#/fiche/${m[1]}`}>
         {label}

@@ -153,7 +153,7 @@ function EntryRowInner({ e, q }: { e: NonNullable<ReturnType<typeof entry>>; q: 
         <span class="name">
           <Highlight text={e.fr} q={q} />
         </span>
-        <span class="sub">{e.hasFr ? `${e.en} · ${e.cat}` : e.frAlias ? `≈ ${e.frAlias} · ${e.cat}` : e.cat}</span>
+        <span class="sub">{e.fr !== e.en ? `${e.en} · ${e.cat}` : e.cat}</span>
       </span>
       <Icon name="chevron" class="chev" />
     </>

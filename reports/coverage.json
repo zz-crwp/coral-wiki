@@ -1,21 +1,21 @@
 {
- "genere": "2026-10-18T09:35:38.918Z",
+ "genere": "2026-10-19T18:45:55.361Z",
  "totaux": {
   "pages_fandom": 3168,
-  "entites": 2999,
-  "exclues": 310
+  "entites": 3002,
+  "exclues": 307
  },
  "qualite": {
-  "sans_image": 147,
+  "sans_image": 150,
   "sans_obtention": 26,
   "sans_description": 39,
   "nom_fr": 394,
   "desc_fr": 221,
   "desc_trad": 2739,
-  "alias_fr": 2457,
+  "alias_fr": 2458,
   "haute": 295,
-  "moyenne": 2628,
-  "basse": 76
+  "moyenne": 2627,
+  "basse": 80
  },
  "domaines": [
   {
@@ -112,28 +112,28 @@
   {
    "domaine": "guides",
    "libelle": "Guides & mécaniques",
-   "entites": 116,
-   "sans_image": 64,
+   "entites": 112,
+   "sans_image": 61,
    "sans_obtention": 0,
    "nom_fr": 4,
    "desc_fr": 0,
    "haute": 0,
-   "moyenne": 112,
+   "moyenne": 108,
    "basse": 4,
-   "article": 107
+   "article": 103
   },
   {
    "domaine": "lieux",
    "libelle": "Lieux & magasins",
-   "entites": 83,
-   "sans_image": 0,
+   "entites": 90,
+   "sans_image": 6,
    "sans_obtention": 0,
    "nom_fr": 32,
    "desc_fr": 0,
    "haute": 14,
-   "moyenne": 62,
-   "basse": 7,
-   "article": 83
+   "moyenne": 65,
+   "basse": 11,
+   "article": 90
   },
   {
    "domaine": "cueillette",
@@ -804,16 +804,15 @@
   {
    "categorie": "Locations",
    "pages": 93,
-   "importees": 89,
-   "exclues": 4,
+   "importees": 92,
+   "exclues": 1,
    "ecart": 0,
    "raisons": {
-    "ébauche vide (moins de 400 caractères, sans données)": 3,
     "page d’accueil / méta du wiki": 1
    },
    "domaines": {
-    "lieux": 83,
-    "guides": 6
+    "lieux": 90,
+    "guides": 2
    }
   },
   {
@@ -885,8 +884,9 @@
     "contenu retiré du jeu ou page à supprimer": 1
    },
    "domaines": {
-    "guides": 17,
+    "guides": 16,
     "maitrises": 8,
+    "lieux": 1,
     "quetes": 1
    }
   },
@@ -1239,12 +1239,9 @@
    ]
   },
   "ébauche vide (moins de 400 caractères, sans données)": {
-   "n": 4,
+   "n": 1,
    "pages": [
-    "Decoration",
-    "The Floating Boat",
-    "The Red Boat",
-    "Beach"
+    "Decoration"
    ]
   },
   "pack DLC (page commerciale, objets importés séparément)": {

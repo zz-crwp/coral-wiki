@@ -37,10 +37,11 @@ Relance incrémentale : `fetch.ts` rafraîchit l'inventaire (`lastrevid`) et ne 
 - `search.json` (recherche/listes), `aujourdhui.json` (écran Aujourd'hui : anniversaires, festivals, conditions de capture, cultures, horaires des boutiques), `suivi.json` (événements de cœur, lieux des objets suivis), `temple.json`, `musee.json`, `rang.json`, `mines.json`, `meta.json` (version du jeu), `conflits.json` (divergences entre sources, valeur retenue, raison).
 - Liens inverses générés : `utilise_dans`, `aime_par`, `extra.vendu_par`, `extra.obtenu_de`, `extra.produit_par`, `extra.offrandes`, `extra.don_musee`, `extra.requis_pour`, `extra.debloque_par`.
 
-### Apparitions, améliorations, icônes
+### Apparitions, cartes, améliorations, icônes
 
-- **Apparitions** (`scripts/build/spawn.ts`) : une condition par zone (saisons, fenêtres de jours, heures, météo), lue dans les différentes écritures de l'infobox (portées par saison dans « location », par zone dans « season/time/weather », colonnes « ✓ (Mine only) »).
-- **Améliorations** (`relations.ts` → `extra.stock[].materiaux`, `extra.ameliorations_qualite`) : or, matériaux, durée, rang, limite ; page `#/ameliorations`.
+- **Apparitions** (`scripts/build/spawn.ts`) : une condition par zone (saisons, fenêtres de jours, heures, météo), lue dans les différentes écritures de l'infobox (portées par saison dans « location », par zone dans « season/time/weather », colonnes « ✓ (Mine only) », lignes « … (tilling only) »).
+- **Cartes** (`scripts/fetch-map.ts`, `scripts/build/map.ts`) : cartes interactives du wiki (île et plongée). Chaque lieu (via `mapid` ou le lien de la bulle) et chaque zone d'apparition (« River (Farm) » → repère « Farm River »…) reçoit ses repères `extra.carte` ; l'app affiche l'extrait de carte cadré (`src/ui/MapView.tsx`), image chargée depuis le CDN du wiki. Chaque zone est aussi liée à sa fiche lieu (`lieux_id`).
+- **Améliorations** (`relations.ts` → `extra.stock[].materiaux`, `extra.ameliorations_qualite`) : or, matériaux, durée, rang, limite ; page `#/explorer/ameliorations`.
 - **Icônes officielles** (`scripts/build/icons.ts`) : icônes de carte du jeu pour les lieux sans photo, icônes d'interface (météo, qualité, or, cœurs, sac) via `src/data/icones.json`, chargées depuis le CDN du wiki avec repli SVG.
 
 ### Fiches autosuffisantes (`scripts/build/context.ts`, `src/app/fiche/context.tsx`)
@@ -62,7 +63,7 @@ Relance incrémentale : `fetch.ts` rafraîchit l'inventaire (`lastrevid`) et ne 
 
 - Mémoire de traduction `scripts/i18n/fr/*.json` : clé = empreinte du texte EN (`scripts/i18n/tm.ts`). Une valeur `"="` signifie « identique en FR » (nom propre).
 - Un texte modifié sur le wiki change d'empreinte : il réapparaît dans `scripts/i18n/todo/<lot>.tsv` au build suivant.
-- Les noms traduits ne remplacent jamais le nom affiché : ils deviennent un alias de recherche (`nom_fr_alias`). Les descriptions traduites sont marquées `description_lang: "fr-trad"` et l'app propose le texte original.
+- Les noms traduits (`nom_fr_alias`) sont affichés en titre quand il n'existe pas de nom FR officiel, avec le nom anglais en sous-titre et la mention « nom FR non officiel » sur la fiche ; les deux noms restent cherchables. Les descriptions traduites sont marquées `description_lang: "fr-trad"` et l'app propose le texte original.
 - Les articles complets du wiki restent en anglais (affichés repliés sur chaque fiche).
 
 ### Progression du joueur (`src/app/store.ts`)
