@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { entry, loadEntries, SEASON_FR, seasonsOf, type Season } from '../data.ts';
 import { GameImg, RichText, TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
-import { active, isChecked, setCheck, setChecks } from '../store.ts';
+import { active, checks, isChecked, setCheck, setChecks } from '../store.ts';
 import { loadTemple, loadTracker, type TItem } from '../trackers.ts';
 import { catchState, loadToday, SBIT, type TodayData } from '../game.ts';
 import { QUALITY_BY_INDEX } from '../fiche/labels.ts';
@@ -70,7 +70,7 @@ export function TemplePage() {
         if (n === o.objets.length) offrDone++;
       }
     return { items, done, offr, offrDone };
-  }, [d, p.checks]);
+  }, [d, checks.value]);
 
   return (
     <>

@@ -6,7 +6,7 @@ import { DOMAINS, loadDomain, loadEntries, SEASON_FR, type Entry } from '../data
 import { Empty, EntryRow, TopBar, VirtualList } from '../components.tsx';
 import { Icon } from '../icons.tsx';
 import { go, openFiche, route } from '../router.ts';
-import { active, isChecked, pinned, setCheck, togglePin } from '../store.ts';
+import { active, checks, isChecked, pinned, setCheck, togglePin } from '../store.ts';
 import { loadToday, SBIT, type TodayData } from '../game.ts';
 import { kindOf, rowCtx, rowFor, type Kind } from '../rows.tsx';
 import { XRow } from '../../ui/XRow.tsx';
@@ -102,7 +102,7 @@ export function DomainPage({ dom }: { dom: string }) {
     return r
       .filter((x) => (!cat || x.e.cat === cat) && (!f || f.test(x.e, x.ent, x.spec)))
       .sort((a, b) => (LIVE.includes(kind) ? (a.spec.sortKey ?? 0) - (b.spec.sortKey ?? 0) : 0) || a.e.fr.localeCompare(b.e.fr, 'fr'));
-  }, [list, ents, ctx, filter, cat, p.checks, p.coeurs, p.paliers]);
+  }, [list, ents, ctx, filter, cat, checks.value, p.coeurs, p.paliers]);
 
   const cats = useMemo(() => {
     const m = new Map<string, number>();

@@ -1,11 +1,12 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { meta, SEASON_FR } from '../data.ts';
 import { TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
-import { active, createProfile, deleteProfile, profiles, renameProfile, switchProfile } from '../store.ts';
+import { active, createProfile, deleteProfile, listBackups, me, profiles, renameProfile, setPlayerName, switchProfile } from '../store.ts';
+import { toast } from '../../ui/feedback.tsx';
 import { setTheme, setWake, theme, wakeOn, wakeSupported, type Theme } from '../prefs.ts';
 import { Segmented } from '../../ui/controls.tsx';
-import { connect, disconnect, exportFile, gist, importFile, setAuto, syncNow, syncState } from '../sync.ts';
+import { connect, disconnect, download, exportFile, gist, importFile, pair, setAuto, shareLink, syncNow, syncState, unpair } from '../sync.ts';
 
 const Link = ({ href, icon, label, sub }: { href: string; icon: string; label: string; sub?: string }) => (
   <a class="setting link" href={href}>
@@ -113,7 +114,7 @@ function Profiles() {
                 <span class="set-t">
                   {p.name}
                   <small>
-                    {Object.keys(p.checks).length} coche{Object.keys(p.checks).length > 1 ? 's' : ''} · {SEASON_FR[p.date.season]} {p.date.day}, an {p.date.year}
+                    {Object.values(p.prog).filter((m) => m.s).length} coche{Object.values(p.prog).filter((m) => m.s).length > 1 ? 's' : ''} · {SEASON_FR[p.date.season]} {p.date.day}, an {p.date.year}
                   </small>
                 </span>
               </button>
@@ -141,6 +142,10 @@ function Profiles() {
 
 function Backup() {
   const [msg, setMsg] = useState<{ t: string; err?: boolean } | null>(null);
+  const [backups, setBackups] = useState<Awaited<ReturnType<typeof listBackups>>>([]);
+  useEffect(() => {
+    listBackups().then(setBackups);
+  }, []);
   const [replace, setReplace] = useState(false);
   const onFile = async (e: Event) => {
     const input = e.target as HTMLInputElement;
@@ -178,6 +183,15 @@ function Backup() {
           <span id="imp-l">Mode d'import</span>
           <Segmented label="Mode d'import" value={replace ? 'r' : 'f'} onChange={(v) => setReplace(v === 'r')} options={[['f', 'Fusion'], ['r', 'Remplacer']]} />
         </div>
+        {backups.map((b) => (
+          <button key={b.id} class="setting link" onClick={() => download(`coral-wiki-sauvegarde-${new Date(b.at).toISOString().slice(0, 10)}.json`, { app: 'coral-wiki', version: 1, exported_at: new Date(b.at).toISOString(), profiles: b.profiles })}>
+            <Icon name="download" class="set-ic" />
+            <span class="set-t">
+              Sauvegarde automatique du {new Date(b.at).toLocaleDateString('fr-FR')}
+              <small>{b.raison} · {b.profiles.length} profil{b.profiles.length > 1 ? 's' : ''}</small>
+            </span>
+          </button>
+        ))}
         {msg && <p class={`note pad${msg.err ? ' err' : ''}`} role="status">{msg.t}</p>}
       </div>
     </>
@@ -187,72 +201,115 @@ function Backup() {
 function GistSync() {
   const c = gist.value;
   const st = syncState.value;
+  const p = active.value;
   const [token, setToken] = useState('');
-  const [auto, setAutoLocal] = useState(true);
+  const [partner, setPartnerIn] = useState('');
+  const [name, setName] = useState(me.value.name === 'Moi' ? '' : me.value.name);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
-  const submit = async (e: Event) => {
-    e.preventDefault();
+  const run = (fn: () => Promise<unknown>) => async (e?: Event) => {
+    e?.preventDefault();
     setErr('');
     setBusy(true);
     try {
-      await connect(token, auto);
-      setToken('');
+      await fn();
     } catch (x) {
       setErr((x as Error).message);
     }
     setBusy(false);
   };
+  const link = shareLink();
   return (
     <>
-      <h2 class="group-label">Synchronisation (GitHub Gist)</h2>
+      <h2 class="group-label">Jouer à deux</h2>
       <div class="group">
-        {c ? (
+        <form class="setting" onSubmit={run(() => setPlayerName(name))}>
+          <label class="set-t" for="pname-me">
+            Votre prénom
+            <small>Affiché à côté de vos coches chez votre partenaire</small>
+          </label>
+          <input id="pname-me" class="text-in short" value={name} maxLength={20} placeholder="Moi" onInput={(e) => setName((e.target as HTMLInputElement).value)} onBlur={() => setPlayerName(name)} />
+        </form>
+        {!c ? (
+          <form class="gist-form" onSubmit={run(() => connect(token, true).then(() => setToken('')))}>
+            <p class="note">
+              Chaque joueur relie son compte GitHub : l'app y crée un <strong>gist secret</strong> où elle range vos coches. Vous échangez ensuite vos liens de gist ; le musée, le temple, le journal et les recettes deviennent communs. Créez un jeton <strong>classic</strong> avec le seul scope <code>gist</code> (les jetons « fine-grained » ne fonctionnent pas) :{' '}
+              <a href="https://github.com/settings/tokens/new?scopes=gist&description=Coral%20Wiki" target="_blank" rel="noopener">
+                créer un jeton
+              </a>
+              . Il reste sur cet appareil et n'est envoyé qu'à api.github.com. Sans jeton, l'app fonctionne entièrement en solo.
+            </p>
+            <label class="form-label" for="tok">Jeton GitHub (classic)</label>
+            <input id="tok" class="text-in" type="password" autoComplete="off" spellcheck={false} value={token} onInput={(e) => setToken((e.target as HTMLInputElement).value)} placeholder="ghp_…" required />
+            <button class="btn" type="submit" disabled={busy || !token.trim()}>
+              {busy ? 'Connexion…' : 'Connecter'}
+            </button>
+          </form>
+        ) : (
           <>
             <div class="setting">
               <span class="set-t">
                 Connecté{c.login ? ` : ${c.login}` : ''}
-                <small>{c.lastSync ? `Dernière synchro : ${new Date(c.lastSync).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}` : 'Jamais synchronisé'}</small>
+                <small>
+                  {p && c.profileId && c.profileId !== p.id ? `Partie synchronisée : ${profiles.value.find((x) => x.id === c.profileId)?.name ?? '?'}` : `Partie « ${p?.name} »`}
+                  {c.lastPush ? ` · envoi ${new Date(c.lastPush).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}
+                </small>
               </span>
-              <button class="btn" disabled={st.busy} onClick={() => syncNow().catch(() => {})}>
+              <button class="btn" disabled={st.busy} onClick={run(syncNow)}>
                 {st.busy ? '…' : 'Synchroniser'}
               </button>
             </div>
+            {link && (
+              <div class="setting">
+                <span class="set-t">
+                  Mon lien à envoyer
+                  <small class="mono">{link.replace('https://', '')}</small>
+                </span>
+                <button class="icon-btn" aria-label="Copier mon lien de gist" onClick={() => navigator.clipboard?.writeText(link).then(() => toast('Lien copié'))}>
+                  <Icon name="copy" />
+                </button>
+              </div>
+            )}
+            {p?.partner ? (
+              <div class="setting">
+                <span class="set-t">
+                  Partenaire : {p.partner.name}
+                  <small>
+                    {Object.values(p.partner.prog).filter((m) => m.s).length} coches · lu {p.partner.fetched ? new Date(p.partner.fetched).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                  </small>
+                </span>
+                <button class="btn ghost" onClick={run(unpair)}>
+                  Retirer
+                </button>
+              </div>
+            ) : (
+              <form class="gist-form" onSubmit={run(() => pair(partner).then(() => setPartnerIn('')))}>
+                <label class="form-label" for="partner">Lien du gist de votre partenaire</label>
+                <input id="partner" class="text-in" value={partner} spellcheck={false} autoComplete="off" placeholder="https://gist.github.com/…" onInput={(e) => setPartnerIn((e.target as HTMLInputElement).value)} />
+                <button class="btn" type="submit" disabled={busy || !partner.trim()}>
+                  Appairer
+                </button>
+              </form>
+            )}
             <label class="setting">
               <span class="set-t">
                 Automatique
-                <small>À l'ouverture et quand l'app passe en arrière-plan</small>
+                <small>Envoi 5 s après une coche, lecture au retour dans l'app</small>
               </span>
               <input type="checkbox" role="switch" class="switch" checked={!!c.auto} onChange={(e) => setAuto((e.target as HTMLInputElement).checked)} />
             </label>
-            {st.msg && <p class={`note pad${st.error ? ' err' : ''}`} role="status">{st.msg}</p>}
-            <button class="setting link danger" onClick={() => confirm('Désactiver la synchronisation et oublier le jeton sur cet appareil ?') && disconnect()}>
+            <button class="setting link danger" onClick={() => confirm('Oublier le jeton et arrêter la synchro sur cet appareil ?') && disconnect()}>
               <span class="set-t">Se déconnecter</span>
             </button>
           </>
-        ) : (
-          <form class="gist-form" onSubmit={submit}>
-            <p class="note">
-              Synchronise vos profils entre appareils via un Gist <strong>privé</strong> de votre compte GitHub. Créez un jeton <strong>classic</strong> avec uniquement le scope <code>gist</code> (les jetons « fine-grained » ne fonctionnent pas) :{' '}
-              <a href="https://github.com/settings/tokens/new?scopes=gist&description=Coral%20Wiki" target="_blank" rel="noopener">
-                créer un jeton
-              </a>
-              . Le jeton reste sur cet appareil et n'est envoyé qu'à api.github.com.
-            </p>
-            <label class="form-label" for="tok">Jeton GitHub (classic)</label>
-            <input id="tok" class="text-in" type="password" autoComplete="off" spellcheck={false} value={token} onInput={(e) => setToken((e.target as HTMLInputElement).value)} placeholder="ghp_…" required />
-            <label class="check-line">
-              <input type="checkbox" checked={auto} onChange={(e) => setAutoLocal((e.target as HTMLInputElement).checked)} /> Synchroniser automatiquement
-            </label>
-            {err && <p class="note err" role="alert">{err}</p>}
-            {st.msg && st.error && !err && <p class="note err" role="alert">{st.msg}</p>}
-            <button class="btn" type="submit" disabled={busy || !token.trim()}>
-              {busy ? 'Connexion…' : 'Connecter et synchroniser'}
-            </button>
-          </form>
+        )}
+        {(err || st.msg) && (
+          <p class={`note pad${err || st.error ? ' err' : ''}`} role="status">
+            {err || st.msg}
+          </p>
         )}
       </div>
-      <p class="note fine">Conflits : pour chaque profil, la version modifiée le plus récemment l'emporte. Faites un export avant la première synchronisation.</p>
+      <p class="note fine">Chaque coche garde son auteur et son heure : en cas de désaccord, la plus récente l'emporte, clé par clé. Cadeaux, cœurs, succès et paliers d'outils restent propres à chaque joueur.</p>
     </>
   );
 }

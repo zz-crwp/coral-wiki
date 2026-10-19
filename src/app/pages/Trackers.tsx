@@ -6,7 +6,7 @@ import { toast } from '../../ui/feedback.tsx';
 import { loadDomain } from '../data.ts';
 import { FChip, Filters, Ring } from '../../ui/controls.tsx';
 import { Icon } from '../icons.tsx';
-import { active, isChecked, palier, setChecks, toggleWithUndo } from '../store.ts';
+import { active, checks as checksSig, isChecked, palier, setChecks, toggleWithUndo } from '../store.ts';
 import { inSeason, loadMusee, loadTracker, name, progress, seasonBit, TRACKERS, type Tracker, type TItem } from '../trackers.ts';
 import { go, route } from '../router.ts';
 
@@ -23,7 +23,7 @@ export function TrackersPage() {
     );
   }, []);
   const p = active.value;
-  const checks = p?.checks ?? {};
+  const checks = checksSig.value;
   const bit = seasonBit(p?.date.season ?? 'spring');
   const byId = new Map((all ?? []).map((t) => [t.id, t]));
   const pr = (id: string) => progress(byId.get(id)?.items ?? [], checks);
@@ -128,7 +128,7 @@ export function TrackerPage({ id }: { id: string }) {
     if (id === 'musee') loadMusee().then(setMusee);
   }, [id]);
   const p = active.value;
-  const checks = p?.checks ?? {};
+  const checks = checksSig.value;
   const q = route.value.query;
   const missing = q.get('manquants') === '1';
   const season = q.get('saison') === '1';

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { entry, loadEntries, SEASON_FR } from '../data.ts';
 import { GameImg, GIcon, TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
-import { active, isChecked, setDate, setHour, weekday, WEEKDAYS } from '../store.ts';
+import { active, checks, isChecked, setDate, setHour, weekday, WEEKDAYS } from '../store.ts';
 import { hours } from '../fiche/labels.ts';
 import { catchState, cropPlan, daysUntil, inDays, loadToday, shopState, type TodayData } from '../game.ts';
 import { addHours, ClockChip, clockOpen, shiftDate } from '../../ui/Clock.tsx';
@@ -83,7 +83,7 @@ function Modules({ t }: { t: TodayData }) {
         .map((c) => ({ c, st: catchState(c, d, p.weather, p.hour), done: isChecked(`pris:${c.id}`) }))
         .filter((x) => x.st.now)
         .sort((a, b) => +a.done - +b.done || (entry(a.c.id)?.fr ?? '').localeCompare(entry(b.c.id)?.fr ?? '', 'fr')),
-    [t, d.season, d.day, p.weather, p.hour, p.checks],
+    [t, d.season, d.day, p.weather, p.hour, checks.value],
   );
   const missing = catches.filter((x) => !x.done).length;
   const events = [
