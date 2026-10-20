@@ -23,8 +23,8 @@ Choix faits pendant la v2 sans demander, en prenant l'option la plus simple pour
 | D10 | Clés **communes** : musée, temple, journal des prises, recettes. **Personnelles** : cadeaux de la semaine, événements de cœur, succès, paliers d'outils, cœurs, horloge de jeu. | Le brief cite musée et temple ; le journal et les recettes suivent la même logique de collection. Cadeaux et cœurs dépendent de chaque joueur. |
 | D11 | Décocher écrit une marque datée `{ s: 0 }` au lieu d'effacer la clé. | Sinon une coche plus ancienne de l'autre joueur réapparaîtrait à la fusion. |
 | D12 | Égalité d'horodatage : on départage par auteur, puis par état. Une nouvelle marque locale a toujours un horodatage strictement supérieur à celle qu'elle remplace. | Résultat identique quel que soit l'ordre d'arrivée ; « Annuler » gagne toujours. |
-| D13 | Un gist par joueur pour **une** partie : celle qui est active au moment de la connexion. | Le cas d'usage est une partie en coop ; plusieurs parties synchronisées compliqueraient l'appairage. |
-| D14 | Appairage : on colle le lien **ou** l'identifiant du gist du partenaire ; l'app vérifie qu'il contient une progression Coral Wiki. | Le plus simple à échanger par message. |
+| D13 | *(2.0, remplacé par D27)* Un gist par joueur pour **une** partie : celle qui est active au moment de la connexion. | Le cas d'usage est une partie en coop. |
+| D14 | *(2.0, supprimé en 2.1)* Appairage par échange des liens de gist. | Remplacé par le compte commun (D27). |
 | D15 | Les coches sont écrites immédiatement dans IndexedDB (plus d'écriture différée de 300 ms), ainsi que les relectures du partenaire. | Les tests ont montré qu'une coche suivie d'une fermeture immédiate pouvait être perdue. |
 | D16 | Export automatique avant migration : copie intégrale des profils v1 dans le magasin IndexedDB `sauvegardes`, téléchargeable depuis Réglages › Sauvegarde. | Un navigateur bloque un téléchargement sans geste de l'utilisateur ; la copie locale est garantie. |
 | D17 | Les confirmations restent pour les actes destructifs : supprimer un profil, importer en remplacement, se déconnecter de la synchro. Aucune pour les coches. | « Aucune boîte de confirmation » vise les coches ; ces trois actes ne s'annulent pas par un toast. |
@@ -42,3 +42,11 @@ Choix faits pendant la v2 sans demander, en prenant l'option la plus simple pour
 | D24 | « Bonnes pratiques » Lighthouse : mesuré à 100 sur les onglets ; sur les fiches, il dépend du CDN du wiki, qui applique parfois sa protection anti-robots au navigateur de test (cookie `__cf_bm`, CORS refusé). Les images de carte sont chargées en CORS anonyme (pas de cookie tiers) avec repli. | Ne dépend pas du code de l'app ; détaillé dans AUDIT.md. |
 | D25 | Tag `v1.0.0` posé sur `3007a4b`, dernier déploiement de la v1. La v2 est développée sur la branche `v2`, fusionnée dans `main` pour le déploiement. | GitHub Pages déploie depuis `main`. |
 | D26 | Des copies « … 2.json » créées par la synchronisation iCloud du Bureau dans `src/data` ont été déplacées hors du projet (copies identiques ou plus anciennes). | Elles cassaient le build. |
+
+## 2.1.0
+
+| # | Décision | Pourquoi |
+|---|---|---|
+| D27 | **Un seul compte GitHub pour la maison** : le même jeton sur chaque téléphone, un prénom par joueur. Un gist secret commun (« Coral Wiki — progression commune »), un fichier par joueur ; chaque téléphone n'écrit que le sien. À la connexion, l'app retrouve le plus ancien gist commun du compte : tous les téléphones tombent sur le même. | Demande de l'utilisateur : pas un compte GitHub par joueur, pas de lien à échanger. Écrire un fichier par joueur évite que deux téléphones s'écrasent. |
+| D28 | **Plus d'heure de jeu à régler** : seuls le jour et la météo se règlent. Tout est calculé pour la journée et affiche sa plage horaire : captures (« 6h – 19h », par zone sur la fiche), boutiques (horaires du jour, sinon jour de réouverture), habitants (leur journée heure par heure). Les plages qui se chevauchent sont fusionnées. Le champ `hour` des profils est conservé, inutilisé, pour la compatibilité des sauvegardes. | Demande de l'utilisateur : on ne change pas l'heure à la main en jouant ; voir toute la journée d'un coup d'œil. |
+| D29 | Les filtres « Maintenant » deviennent « Aujourd'hui » ; les anciens liens (`?filtre=maintenant`, `?maintenant=1`) restent acceptés. | Pas de lien cassé. |

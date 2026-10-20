@@ -62,6 +62,14 @@ test('effective : seules les clés communes du partenaire comptent', () => {
   assert.deepEqual(Object.keys(on).sort(), ['cadeau:scott:w1:1', 'musee:tuna', 'pris:tuna', 'temple:o:x']);
 });
 
+test('effective : plusieurs autres joueurs (compte commun), commun seulement', () => {
+  const mine: Progress = {};
+  const b: Progress = { 'musee:tuna': { s: 1, t: 2, par: B }, 'succes:x': { s: 1, t: 2, par: B } };
+  const c: Progress = { 'musee:tuna': { s: 0, t: 3, par: 'jC' }, 'temple:o:y': { s: 1, t: 1, par: 'jC' } };
+  assert.deepEqual(Object.keys(onKeys(effective(mine, [b, c]))), ['temple:o:y']);
+  assert.deepEqual(effective(mine, [b, c]), effective(mine, [c, b]));
+});
+
 test('mark : une annulation gagne toujours contre la marque qu’elle annule', () => {
   const m1 = mark(undefined, true, A, 1000);
   const m2 = mark(m1, false, A, 1000); // même milliseconde

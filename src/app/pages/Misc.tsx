@@ -3,11 +3,10 @@ import { meta, SEASON_FR } from '../data.ts';
 import { TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
 import { active, createProfile, deleteProfile, listBackups, me, profiles, renameProfile, setPlayerName, switchProfile } from '../store.ts';
-import { toast } from '../../ui/feedback.tsx';
 import { VERSION } from '../../ui/WhatsNew.tsx';
 import { setTheme, setWake, theme, wakeOn, wakeSupported, type Theme } from '../prefs.ts';
 import { Segmented } from '../../ui/controls.tsx';
-import { connect, disconnect, download, exportFile, gist, importFile, pair, setAuto, shareLink, syncNow, syncState, unpair } from '../sync.ts';
+import { connect, disconnect, download, exportFile, gist, importFile, others, setAuto, syncNow, syncState } from '../sync.ts';
 
 const Link = ({ href, icon, label, sub }: { href: string; icon: string; label: string; sub?: string }) => (
   <a class="setting link" href={href}>
@@ -207,7 +206,6 @@ function GistSync() {
   const st = syncState.value;
   const p = active.value;
   const [token, setToken] = useState('');
-  const [partner, setPartnerIn] = useState('');
   const [name, setName] = useState(me.value.name === 'Moi' ? '' : me.value.name);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -222,26 +220,30 @@ function GistSync() {
     }
     setBusy(false);
   };
-  const link = shareLink();
+  const players = others();
   return (
     <>
-      <h2 class="group-label">Jouer à deux</h2>
+      <h2 class="group-label">Jouer à plusieurs</h2>
       <div class="group">
         <form class="setting" onSubmit={run(() => setPlayerName(name))}>
           <label class="set-t" for="pname-me">
-            Votre prénom
-            <small>Affiché à côté de vos coches chez votre partenaire</small>
+            Joueur sur ce téléphone
+            <small>Un simple prénom, affiché à côté de vos coches</small>
           </label>
-          <input id="pname-me" class="text-in short" value={name} maxLength={20} placeholder="Moi" onInput={(e) => setName((e.target as HTMLInputElement).value)} onBlur={() => setPlayerName(name)} />
+          <input id="pname-me" class="text-in short" value={name} maxLength={20} placeholder="Prénom" onInput={(e) => setName((e.target as HTMLInputElement).value)} onBlur={() => setPlayerName(name)} />
         </form>
         {!c ? (
-          <form class="gist-form" onSubmit={run(() => connect(token, true).then(() => setToken('')))}>
+          <form class="gist-form" onSubmit={run(async () => {
+            if (name.trim()) await setPlayerName(name);
+            await connect(token, true);
+            setToken('');
+          })}>
             <p class="note">
-              Chaque joueur relie son compte GitHub : l'app y crée un <strong>gist secret</strong> où elle range vos coches. Vous échangez ensuite vos liens de gist ; le musée, le temple, le journal et les recettes deviennent communs. Créez un jeton <strong>classic</strong> avec le seul scope <code>gist</code> (les jetons « fine-grained » ne fonctionnent pas) :{' '}
+              Un seul compte GitHub pour toute la maison : collez <strong>le même jeton</strong> sur chaque téléphone, chacun avec son prénom. Le musée, le temple, le journal et les recettes deviennent communs, sans rien échanger d'autre. Jeton <strong>classic</strong> avec le seul scope <code>gist</code> (les jetons « fine-grained » ne fonctionnent pas) :{' '}
               <a href="https://github.com/settings/tokens/new?scopes=gist&description=Coral%20Wiki" target="_blank" rel="noopener">
                 créer un jeton
               </a>
-              . Il reste sur cet appareil et n'est envoyé qu'à api.github.com. Sans jeton, l'app fonctionne entièrement en solo.
+              . Il reste sur le téléphone et n'est envoyé qu'à api.github.com. Sans jeton, l'app fonctionne entièrement en solo.
             </p>
             <label class="form-label" for="tok">Jeton GitHub (classic)</label>
             <input id="tok" class="text-in" type="password" autoComplete="off" spellcheck={false} value={token} onInput={(e) => setToken((e.target as HTMLInputElement).value)} placeholder="ghp_…" required />
@@ -253,48 +255,22 @@ function GistSync() {
           <>
             <div class="setting">
               <span class="set-t">
-                Connecté{c.login ? ` : ${c.login}` : ''}
-                <small>
-                  {p && c.profileId && c.profileId !== p.id ? `Partie synchronisée : ${profiles.value.find((x) => x.id === c.profileId)?.name ?? '?'}` : `Partie « ${p?.name} »`}
-                  {c.lastPush ? ` · envoi ${new Date(c.lastPush).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}
-                </small>
+                Compte {c.login ?? 'GitHub'} · partie « {p && c.profileId && c.profileId !== p.id ? profiles.value.find((x) => x.id === c.profileId)?.name ?? '?' : p?.name} »
+                <small>{c.lastPush ? `Dernier envoi ${new Date(c.lastPush).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : 'Rien envoyé pour l’instant'}</small>
               </span>
               <button class="btn" disabled={st.busy} onClick={run(syncNow)}>
                 {st.busy ? '…' : 'Synchroniser'}
               </button>
             </div>
-            {link && (
-              <div class="setting">
-                <span class="set-t">
-                  Mon lien à envoyer
-                  <small class="mono">{link.replace('https://', '')}</small>
-                </span>
-                <button class="icon-btn" aria-label="Copier mon lien de gist" onClick={() => navigator.clipboard?.writeText(link).then(() => toast('Lien copié'))}>
-                  <Icon name="copy" />
-                </button>
-              </div>
-            )}
-            {p?.partner ? (
-              <div class="setting">
-                <span class="set-t">
-                  Partenaire : {p.partner.name}
-                  <small>
-                    {Object.values(p.partner.prog).filter((m) => m.s).length} coches · lu {p.partner.fetched ? new Date(p.partner.fetched).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
-                  </small>
-                </span>
-                <button class="btn ghost" onClick={run(unpair)}>
-                  Retirer
-                </button>
-              </div>
-            ) : (
-              <form class="gist-form" onSubmit={run(() => pair(partner).then(() => setPartnerIn('')))}>
-                <label class="form-label" for="partner">Lien du gist de votre partenaire</label>
-                <input id="partner" class="text-in" value={partner} spellcheck={false} autoComplete="off" placeholder="https://gist.github.com/…" onInput={(e) => setPartnerIn((e.target as HTMLInputElement).value)} />
-                <button class="btn" type="submit" disabled={busy || !partner.trim()}>
-                  Appairer
-                </button>
-              </form>
-            )}
+            <div class="setting">
+              <span class="set-t">
+                Joueurs
+                <small>
+                  {[`${me.value.name} (ce téléphone)`, ...players.map((x) => `${x.name} · ${Object.values(x.prog).filter((m) => m.s).length} coches`)].join(' · ')}
+                </small>
+                {!players.length && <small>Les autres joueurs apparaissent ici dès qu'ils se connectent avec le même jeton.</small>}
+              </span>
+            </div>
             <label class="setting">
               <span class="set-t">
                 Automatique
@@ -302,7 +278,7 @@ function GistSync() {
               </span>
               <input type="checkbox" role="switch" class="switch" checked={!!c.auto} onChange={(e) => setAuto((e.target as HTMLInputElement).checked)} />
             </label>
-            <button class="setting link danger" onClick={() => confirm('Oublier le jeton et arrêter la synchro sur cet appareil ?') && disconnect()}>
+            <button class="setting link danger" onClick={() => confirm('Oublier le jeton et arrêter la synchro sur ce téléphone ?') && disconnect()}>
               <span class="set-t">Se déconnecter</span>
             </button>
           </>

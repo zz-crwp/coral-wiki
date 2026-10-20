@@ -134,12 +134,13 @@ export function TrackerPage({ id }: { id: string }) {
   const checks = checksSig.value;
   const q = route.value.query;
   const missing = q.get('manquants') === '1';
-  const now = q.get('maintenant') === '1';
+  // « Disponible aujourd'hui » (ancien lien ?maintenant=1 accepté)
+  const now = q.get('aujourdhui') === '1' || q.get('maintenant') === '1';
   const season = q.get('saison') === '1';
   const group = q.get('groupe') ?? '';
   const lieu = q.get('lieu') ?? '';
   const set = (k: string, v: string | undefined) => {
-    const cur: Record<string, string | undefined> = { manquants: missing ? '1' : undefined, maintenant: now ? '1' : undefined, saison: season ? '1' : undefined, groupe: group || undefined, lieu: lieu || undefined };
+    const cur: Record<string, string | undefined> = { manquants: missing ? '1' : undefined, aujourdhui: now ? '1' : undefined, saison: season ? '1' : undefined, groupe: group || undefined, lieu: lieu || undefined };
     cur[k] = v || undefined;
     go(`/collections/${id}`, cur, true);
   };
@@ -150,11 +151,11 @@ export function TrackerPage({ id }: { id: string }) {
     return [...m].sort((a, b) => a[0].localeCompare(b[0], 'fr'));
   }, [t]);
   const hasSeasons = t?.items.some((i) => i.seasons) ?? false;
-  // « Disponible maintenant » : captures qu'on peut attraper à l'heure, la météo et le jour du profil
+  // « Disponible aujourd'hui » : captures qu'on peut attraper le jour et par la météo du profil
   const nowIds = useMemo(() => {
     if (!today || !p) return new Set<string>();
-    return new Set(today.captures.filter((c) => catchState(c, p.date, p.weather, p.hour).now).map((c) => c.id));
-  }, [today, p?.date.season, p?.date.day, p?.weather, p?.hour]);
+    return new Set(today.captures.filter((c) => catchState(c, p.date, p.weather).today).map((c) => c.id));
+  }, [today, p?.date.season, p?.date.day, p?.weather]);
   const canNow = (t?.items ?? []).some((i) => nowIds.has(i.id)) || (today?.captures.length ?? 0) > 0 && ['poissons', 'insectes', 'creatures', 'musee'].includes(id);
   const items = (t?.items ?? []).filter((i) => (!missing || !checks[i.key]) && (!now || nowIds.has(i.id)) && (!season || inSeason(i, bit)) && (!group || i.group === group) && (!lieu || i.lieux.includes(lieu)));
   const pr = progress(t?.items ?? [], checks);
@@ -228,8 +229,8 @@ export function TrackerPage({ id }: { id: string }) {
                 Manquants
               </FChip>
               {canNow && (
-                <FChip on={now} onClick={() => set('maintenant', now ? '' : '1')}>
-                  Disponible maintenant
+                <FChip on={now} onClick={() => set('aujourdhui', now ? '' : '1')}>
+                  Disponible aujourd'hui
                 </FChip>
               )}
               {hasSeasons && (

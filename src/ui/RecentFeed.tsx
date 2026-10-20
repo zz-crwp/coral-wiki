@@ -33,18 +33,18 @@ function ago(t: number) {
 export function RecentFeed() {
   const list = recent(marks.value, 8).filter(({ key }) => ACTION.some(([p]) => key.startsWith(p)));
   if (!list.length) return null;
-  const partner = active.value?.partner;
+  const players = active.value?.partners ?? [];
   return (
     <section class="module" aria-labelledby="m-recent">
       <div class="module-head" id="m-recent">
-        <Icon name="clock" /> Récemment{partner ? ` · vous et ${partner.name}` : ''}
+        <Icon name="clock" /> Récemment{players.length ? ` · vous et ${players.map((x) => x.name).join(', ')}` : ''}
       </div>
       <ul class="mod-list">
         {list.map(({ key, m }) => {
           const id = idOf(key);
           const e = entry(id);
           const [, on, off] = ACTION.find(([p]) => key.startsWith(p))!;
-          const who = m.par === me.value.id ? 'Vous' : partner && m.par === partner.player ? partner.name : 'Autre appareil';
+          const who = m.par === me.value.id ? 'Vous' : players.find((x) => x.player === m.par)?.name ?? 'Autre téléphone';
           return (
             <li key={key}>
               <button onClick={() => e && openFiche(e.id)} disabled={!e}>

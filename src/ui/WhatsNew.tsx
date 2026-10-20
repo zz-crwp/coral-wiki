@@ -6,11 +6,11 @@ import { Icon } from '../app/icons.tsx';
 export const VERSION = __APP_VERSION__;
 const KEY = 'cw-version';
 const NEWS: { icon: string; title: string; text: string }[] = [
-  { icon: 'today', title: 'Ce qui vous manque, maintenant', text: "Aujourd'hui liste les poissons, insectes et créatures disponibles à l'heure de jeu que vous n'avez pas encore, et ce que le temple attend de saison." },
+  { icon: 'today', title: 'Toute la journée', text: "Plus d'heure à régler : changez seulement le jour et la météo. Aujourd'hui liste ce qui vous manque dans la journée, chaque élément avec sa plage horaire." },
   { icon: 'search', title: 'Chercher, au pouce', text: 'Un onglet dédié, résultats dès la première lettre, et un verdict « À garder » ou « Vendable » sur chaque objet.' },
-  { icon: 'habitants', title: 'Habitants', text: 'Où ils sont maintenant, leurs cadeaux adorés et les deux cadeaux de la semaine, dans un onglet.' },
+  { icon: 'habitants', title: 'Habitants', text: 'Leur journée heure par heure, leurs cadeaux adorés et les deux cadeaux de la semaine, dans un onglet.' },
   { icon: 'progress', title: 'Saisie rapide', text: 'Dans Collections, une grille comme le journal du jeu : un tap par objet pour rattraper votre progression.' },
-  { icon: 'habitants', title: 'Jouer à deux', text: 'Chaque coche garde son auteur ; avec la synchro GitHub, le musée et le temple sont communs et « Récemment » montre ce que l’autre a fait.' },
+  { icon: 'habitants', title: 'Jouer à plusieurs', text: 'Un seul compte GitHub pour la maison, le même jeton sur chaque téléphone et un prénom par joueur : le musée et le temple deviennent communs et « Récemment » montre ce que l’autre a fait.' },
 ];
 
 function shouldShow() {

@@ -31,6 +31,16 @@ export const inDays = (n: number) => (n === 0 ? "aujourd'hui" : n === 1 ? 'demai
 
 const inRanges = (h: Range[], hr: number) => !h.length || h.some((r) => r.from <= hr && hr < r.to);
 export const uniqRanges = (h: Range[]) => [...new Map(h.map((r) => [`${r.from}-${r.to}`, r])).values()].sort((a, b) => a.from - b.from);
+/** Plages fusionnées quand elles se chevauchent ou se touchent : « 6h – 2h, 12h – 2h » → « 6h – 2h ». */
+export function mergeRanges(h: Range[]): Range[] {
+  const out: Range[] = [];
+  for (const r of uniqRanges(h)) {
+    const last = out[out.length - 1];
+    if (last && r.from <= last.to) last.to = Math.max(last.to, r.to);
+    else out.push({ ...r });
+  }
+  return out;
+}
 
 /** Zones où la capture est possible (vide = indisponible). `hr` null = n'importe quand dans la journée. */
 export function catchZones(c: Capture, bit: number, w: number, hr: number | null, day?: number): { zones: string[]; h: Range[] } {
@@ -43,14 +53,21 @@ export function catchZones(c: Capture, bit: number, w: number, hr: number | null
   return ok(c) ? { zones: [c.l], h: uniqRanges(c.h) } : { zones: [], h: [] };
 }
 
-/** État d'une capture pour la date, la météo et l'heure du profil. */
-export function catchState(c: Capture, d: GameDate, weather: string, hr: number) {
+/**
+ * État d'une capture pour le jour et la météo du profil (l'heure n'est plus réglée : on raisonne à la journée).
+ * `today` : attrapable aujourd'hui ; `h` : plages horaires du jour (toutes zones) ; `byZone` : plages par zone.
+ */
+export function catchState(c: Capture, d: GameDate, weather: string) {
   const bit = SBIT[d.season];
   const w = Math.max(0, WEATHERS.indexOf(weather));
-  const now = catchZones(c, bit, w, hr, d.day);
-  const today = now.zones.length ? now : catchZones(c, bit, w, null, d.day);
+  const today = catchZones(c, bit, w, null, d.day);
   const season = !!(c.s & bit);
-  return { now: now.zones.length > 0, today: today.zones.length > 0, season, zones: today.zones, h: today.h, next: today.h.find((r) => r.from > hr)?.from };
+  const byZone = c.c
+    ? c.c.filter((x) => !!(x.s & bit) && !!(x.w & (1 << w)) && (!x.dj || x.dj.some(([b, a, z]) => b & bit && a <= d.day && d.day <= z))).map((x) => ({ z: x.z, h: uniqRanges(x.h) }))
+    : today.zones.length
+      ? [{ z: c.l, h: uniqRanges(c.h) }]
+      : [];
+  return { today: today.zones.length > 0, season, zones: today.zones, h: mergeRanges(today.h), byZone: byZone.map((z) => ({ ...z, h: mergeRanges(z.h) })) };
 }
 
 /** Rentabilité d'une culture plantée aujourd'hui (prix de base, 1 récolte par plant). */
@@ -59,19 +76,15 @@ export function cropPlan(c: Crop, d: GameDate) {
   return r && r.harvests > 0 ? { harvests: r.harvests, seeds: r.seeds, profit: r.profit, rem: r.rem } : null;
 }
 
-export function openNow(b: Shop, wd: number, hr: number) {
-  if (b.f.includes(wd)) return { open: false, today: [] as Range[], known: true };
-  const today = b.o.filter((o) => o.j.includes(wd)).flatMap((o) => o.p);
-  const known = b.o.some((o) => o.j.length);
-  return { open: today.some((r) => r.from <= hr && hr < r.to), today, known };
-}
 
-/** État d'une boutique : ouverte jusqu'à quand, sinon prochaine ouverture. */
-export function shopState(b: Shop, d: GameDate, hr: number) {
-  const st = openNow(b, weekday(d.day), hr);
-  const close = st.today.find((r) => r.from <= hr && hr < r.to)?.to;
-  const next = st.open ? null : nextOpening(b, d, hr);
-  return { ...st, close, next };
+/** État d'une boutique pour le jour du profil : ouverte aujourd'hui (et à quelles heures), sinon prochain jour d'ouverture. */
+export function shopState(b: Shop, d: GameDate) {
+  const wd = weekday(d.day);
+  const closed = b.f.includes(wd);
+  const today = closed ? [] : uniqRanges(b.o.filter((o) => o.j.includes(wd)).flatMap((o) => o.p));
+  const known = b.o.some((o) => o.j.length);
+  const open = today.length > 0;
+  return { open, today, known, next: open ? null : nextOpening(b, d, 99) };
 }
 
 export function nextOpening(b: Shop, d: GameDate, hr: number) {
@@ -131,7 +144,8 @@ function parseScope(txt: string): Scope {
   return { days, seasons: seasons.length ? seasons : null, dates, wet };
 }
 
-export function whereNow(schedule: X[], d: GameDate, weather: string, hour: number) {
+/** Emploi du temps d'un habitant pour le jour et la météo du profil : étapes { heure, texte } dans l'ordre. */
+export function daySchedule(schedule: X[], d: GameDate, weather: string): { heure: number; texte: string }[] {
   const wd = weekday(d.day);
   const wet = ['rain', 'storm', 'snow', 'blizzard'].includes(weather);
   let best: { score: number; etapes: X[] } | null = null;
@@ -152,9 +166,15 @@ export function whereNow(schedule: X[], d: GameDate, weather: string, hour: numb
       if (!best || score > best.score) best = { score, etapes: g.etapes ?? [] };
     }
   }
-  if (!best?.etapes.length) return null;
-  const steps = best.etapes.filter((s) => s.texte && !/à compléter|to be added|^\(?\?\)?$/i.test(s.texte)).sort((a, b) => a.heure - b.heure);
-  if (!steps.length) return null;
-  const cur = [...steps].reverse().find((s) => s.heure <= hour);
-  return cur ? { texte: cur.texte as string, depuis: cur.heure as number } : { texte: `Chez soi (sort vers ${hours(steps[0].heure)})`, depuis: null };
+  if (!best?.etapes.length) return [];
+  return best.etapes
+    .filter((s) => s.texte && !/à compléter|to be added|^\(?\?\)?$/i.test(s.texte))
+    .sort((a, b) => a.heure - b.heure)
+    .map((s) => ({ heure: s.heure as number, texte: String(s.texte).replace(/\.$/, '') }));
 }
+/** Résumé d'une journée : « 9h Labo · 17h Chez soi » (étapes courtes, pour une ligne). */
+export const dayLine = (steps: { heure: number; texte: string }[], max = 3) =>
+  steps
+    .slice(0, max)
+    .map((s) => `${hours(s.heure)} ${s.texte}`)
+    .join(' · ') + (steps.length > max ? ' …' : '');

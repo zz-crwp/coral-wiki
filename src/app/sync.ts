@@ -1,23 +1,25 @@
 // Sauvegarde et progression commune.
 // - Export / import d'un fichier JSON (v2 ; les fichiers v1 sont migrés à la lecture).
-// - Synchro à deux par GitHub Gist, sans serveur : chaque joueur écrit dans SON gist secret (progress.json),
-//   lit celui du partenaire et fusionne clé par clé (la marque la plus récente gagne, voir progress.ts).
-//   Envoi groupé 5 s après la dernière coche et au passage en arrière-plan ; lecture au démarrage et au retour
-//   au premier plan, avec ETag (réponse 304 sans quota). Le jeton (classic, scope gist) reste sur l'appareil.
+// - Progression commune par GitHub Gist, sans serveur : UN compte GitHub pour le foyer, le même jeton sur chaque
+//   téléphone ; chaque joueur n'a qu'un prénom. Le gist secret commun contient un fichier par joueur
+//   (joueur-<id>.json) : chacun n'écrit que le sien, lit tous les autres et fusionne clé par clé (la marque
+//   la plus récente gagne, voir progress.ts). Envoi groupé 5 s après la dernière coche et au passage en
+//   arrière-plan ; lecture au démarrage et au retour au premier plan, avec ETag (réponse 304 sans quota).
 import { effect, signal } from '@preact/signals';
-import { absorb, active, flush, getMeta, importProfiles, localChange, me, profiles, setMeta, setPartner, type Profile } from './store.ts';
+import { absorb, active, flush, getMeta, importProfiles, localChange, me, profiles, setMeta, setPartners, type Partner, type Profile } from './store.ts';
 import { effective, onKeys, type Progress } from './progress.ts';
 
-const FILE = 'progress.json';
+const fileOfPlayer = (id: string) => `joueur-${id}.json`;
+const PLAYER_FILE = /^joueur-(.+)\.json$/;
 const API = 'https://api.github.com';
-const DESC = 'Coral Wiki — progression (synchro à deux)';
+const DESC = 'Coral Wiki — progression commune';
 
 export type Backup = { app: 'coral-wiki'; version: 2; exported_at: string; player: { id: string; name: string }; profiles: Profile[] };
 export type GistFile = { app: 'coral-wiki'; version: 2; player: { id: string; name: string }; partie: { id: string; name: string }; updated: number; progress: Progress };
 
 export function backup(): Backup {
   // `checks` (clé → horodatage) en plus des marques : un fichier v2 reste importable par la v1 (retour arrière)
-  const list = profiles.value.map((p) => ({ ...p, checks: onKeys(effective(p.prog, p.partner?.prog)) }));
+  const list = profiles.value.map((p) => ({ ...p, checks: onKeys(effective(p.prog, (p.partners ?? []).map((x) => x.prog))) }));
   return { app: 'coral-wiki', version: 2, exported_at: new Date().toISOString(), player: me.value, profiles: list };
 }
 
@@ -55,14 +57,13 @@ export async function importFile(file: File, replace: boolean) {
   return list.length;
 }
 
-// ---------- Gist ----------
+// ---------- Gist commun ----------
 
 export type GistConf = {
   token: string;
   login?: string;
-  gistId?: string; // mon gist
-  etag?: string; // dernier ETag de mon gist
-  partnerGistId?: string;
+  gistId?: string; // gist commun du foyer
+  etag?: string; // dernier ETag lu
   profileId?: string; // partie synchronisée
   lastPush?: number;
   lastPull?: number;
@@ -72,13 +73,13 @@ export const gist = signal<GistConf | null>(null);
 export const syncState = signal<{ busy: boolean; msg: string; error: boolean }>({ busy: false, msg: '', error: false });
 
 export async function loadGistConf() {
-  gist.value = (await getMeta<GistConf>('gist2')) ?? null;
+  gist.value = (await getMeta<GistConf>('gist3')) ?? null;
   if (gist.value && navigator.onLine) pullNow().catch(() => {});
 }
 
 async function saveConf(c: GistConf | null) {
   gist.value = c;
-  await setMeta('gist2', c ?? undefined);
+  await setMeta('gist3', c ?? undefined);
 }
 
 class GhError extends Error {
@@ -115,28 +116,27 @@ async function gh(token: string, path: string, init: RequestInit & { etag?: stri
   return { json: await r.json(), etag: r.headers.get('etag') ?? undefined, scopes: r.headers.get('x-oauth-scopes'), notModified: false };
 }
 
-/** « https://gist.github.com/login/abc123 », « abc123 » → identifiant du gist. */
-export function gistIdFrom(input: string): string | null {
-  const m = /([0-9a-f]{20,40})\/?(?:#.*)?$/i.exec(input.trim());
-  return m ? m[1].toLowerCase() : null;
-}
-
-/** Lien à envoyer au partenaire. */
-export const shareLink = () => (gist.value?.gistId ? `https://gist.github.com/${gist.value.login ?? ''}${gist.value.login ? '/' : ''}${gist.value.gistId}` : '');
-
-async function fileOf(json: any): Promise<GistFile | null> {
-  const f = json?.files?.[FILE];
-  if (!f) return null;
-  const text = f.truncated ? await (await fetch(f.raw_url, { cache: 'no-store' })).text() : f.content;
-  try {
-    const j = JSON.parse(text);
-    return j?.app === 'coral-wiki' && j.version === 2 && j.progress ? (j as GistFile) : null;
-  } catch {
-    return null;
+/** Fichiers des joueurs dans le gist commun (contenu tronqué relu via raw_url). */
+async function playersOf(json: any): Promise<GistFile[]> {
+  const out: GistFile[] = [];
+  for (const [name, f] of Object.entries<any>(json?.files ?? {})) {
+    if (!PLAYER_FILE.test(name)) continue;
+    const text = f.truncated ? await (await fetch(f.raw_url, { cache: 'no-store' })).text() : f.content;
+    try {
+      const j = JSON.parse(text);
+      if (j?.app === 'coral-wiki' && j.version === 2 && j.progress && j.player?.id) out.push(j as GistFile);
+    } catch {}
   }
+  return out;
 }
 
-/** Vérifie le jeton (classic + scope gist), retrouve ou crée mon gist. */
+/** Joueurs vus dans le gist commun (hors moi), pour l'écran des réglages. */
+export const others = () => active.value?.partners ?? [];
+
+/**
+ * Connexion : vérifie le jeton (classic + scope gist) et retrouve le gist commun du compte s'il existe déjà
+ * (deuxième téléphone) ; sinon il sera créé au premier envoi. Aucun appairage : même jeton = même gist.
+ */
 export async function connect(token: string, auto = true) {
   token = token.trim();
   if (token.startsWith('github_pat_')) throw new Error(FINE);
@@ -145,43 +145,26 @@ export async function connect(token: string, auto = true) {
   if (scopes === null) throw new Error(FINE);
   if (!scopes.split(/,\s*/).includes('gist')) throw new Error('Ce jeton n’a pas le scope « gist ».');
   const c: GistConf = { token, login: json.login, auto, profileId: active.value?.id };
-  // Mon gist existe peut-être déjà (autre appareil, réinstallation) : on le retrouve par son fichier
-  for (let page = 1; page <= 5 && !c.gistId; page++) {
+  // Le plus ancien gist « Coral Wiki — progression commune » du compte : tous les téléphones tombent sur le même
+  const found: any[] = [];
+  for (let page = 1; page <= 5; page++) {
     const list = (await gh(token, `/gists?per_page=100&page=${page}`)).json as any[];
-    c.gistId = list.find((g) => g.files?.[FILE] && String(g.description ?? '').startsWith('Coral Wiki'))?.id;
+    found.push(...list.filter((g) => String(g.description ?? '') === DESC));
     if (list.length < 100) break;
   }
+  c.gistId = found.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))[0]?.id;
   await saveConf(c);
   await syncNow();
 }
 
 export async function disconnect() {
   await saveConf(null);
-  syncState.value = { busy: false, msg: 'Synchronisation désactivée. Votre gist reste sur votre compte GitHub.', error: false };
+  setPartners([]);
+  syncState.value = { busy: false, msg: 'Synchronisation désactivée sur ce téléphone. Le gist reste sur le compte GitHub.', error: false };
 }
 
 export async function setAuto(auto: boolean) {
   if (gist.value) await saveConf({ ...gist.value, auto });
-}
-
-/** Appairage : identifiant ou lien du gist du partenaire. Vérifie qu'il s'agit bien d'une progression Coral Wiki. */
-export async function pair(input: string) {
-  const c = gist.value;
-  if (!c) throw new Error('Connectez d’abord votre compte GitHub.');
-  const id = gistIdFrom(input);
-  if (!id) throw new Error('Collez l’identifiant ou le lien du gist de votre partenaire.');
-  if (id === c.gistId) throw new Error('C’est votre propre gist : collez celui de votre partenaire.');
-  const { json, etag } = await gh(c.token, `/gists/${id}`);
-  const f = await fileOf(json);
-  if (!f) throw new Error('Ce gist ne contient pas de progression Coral Wiki.');
-  await saveConf({ ...c, partnerGistId: id });
-  setPartner({ name: f.player.name, player: f.player.id, gistId: id, prog: f.progress, etag, fetched: Date.now() });
-  syncState.value = { busy: false, msg: `Appairé avec ${f.player.name}.`, error: false };
-}
-
-export async function unpair() {
-  if (gist.value) await saveConf({ ...gist.value, partnerGistId: undefined });
-  setPartner(undefined);
 }
 
 const synced = () => {
@@ -190,32 +173,23 @@ const synced = () => {
 };
 
 let pulling: Promise<void> | null = null;
-/** Lit mon gist (autres appareils) et celui du partenaire, avec ETag. */
+/** Lit le gist commun (ETag) : mes marques venues d'ailleurs sont fusionnées, celles des autres joueurs gardées à part. */
 export function pullNow(): Promise<void> {
   return (pulling ??= doPull().finally(() => (pulling = null)));
 }
 async function doPull() {
   const c = gist.value;
-  if (!c || !synced() || !navigator.onLine) return;
+  if (!c?.gistId || !synced() || !navigator.onLine) return;
   try {
-    let etag = c.etag;
-    if (c.gistId) {
-      const r = await gh(c.token, `/gists/${c.gistId}`, { etag: c.etag });
-      if (!r.notModified) {
-        const f = await fileOf(r.json);
-        if (f) absorb(f.progress);
-        etag = r.etag;
-      }
+    const r = await gh(c.token, `/gists/${c.gistId}`, { etag: c.etag });
+    if (!r.notModified) {
+      const players = await playersOf(r.json);
+      const mine = players.find((f) => f.player.id === me.value.id);
+      if (mine) absorb(mine.progress);
+      const list: Partner[] = players.filter((f) => f.player.id !== me.value.id).map((f) => ({ name: f.player.name, player: f.player.id, prog: f.progress, fetched: Date.now() }));
+      setPartners(list);
     }
-    const p = active.value;
-    if (c.partnerGistId && p) {
-      const r = await gh(c.token, `/gists/${c.partnerGistId}`, { etag: p.partner?.gistId === c.partnerGistId ? p.partner?.etag : undefined });
-      if (!r.notModified) {
-        const f = await fileOf(r.json);
-        if (f) setPartner({ name: f.player.name, player: f.player.id, gistId: c.partnerGistId, prog: f.progress, etag: r.etag, fetched: Date.now() });
-      }
-    }
-    await saveConf({ ...gist.value!, etag, lastPull: Date.now() });
+    await saveConf({ ...gist.value!, etag: r.etag, lastPull: Date.now() });
     syncState.value = { busy: false, msg: `À jour (${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}).`, error: false };
   } catch (e) {
     syncState.value = { busy: false, msg: e instanceof Error ? e.message : 'Erreur de lecture.', error: true };
@@ -223,7 +197,7 @@ async function doPull() {
 }
 
 let pushing: Promise<void> | null = null;
-/** Écrit mes marques dans mon gist (création au premier envoi). */
+/** Écrit MON fichier dans le gist commun (création du gist au tout premier envoi du foyer). */
 export function pushNow(keepalive = false): Promise<void> {
   return (pushing ??= doPush(keepalive).finally(() => (pushing = null)));
 }
@@ -233,14 +207,15 @@ async function doPush(keepalive: boolean) {
   if (!c || !p || !synced() || !navigator.onLine) return;
   pending = false;
   const body: GistFile = { app: 'coral-wiki', version: 2, player: me.value, partie: { id: p.id, name: p.name }, updated: Date.now(), progress: p.prog };
-  const files = { [FILE]: { content: JSON.stringify(body) } };
+  // Seul mon fichier est envoyé : celui des autres joueurs n'est jamais réécrit
+  const files = { [fileOfPlayer(me.value.id)]: { content: JSON.stringify(body) } };
   try {
     if (c.gistId) {
-      const r = await gh(c.token, `/gists/${c.gistId}`, { method: 'PATCH', body: JSON.stringify({ files }), keepalive });
-      await saveConf({ ...gist.value!, etag: r.etag, lastPush: Date.now(), profileId: c.profileId ?? p.id });
+      await gh(c.token, `/gists/${c.gistId}`, { method: 'PATCH', body: JSON.stringify({ files }), keepalive });
+      await saveConf({ ...gist.value!, lastPush: Date.now(), profileId: c.profileId ?? p.id });
     } else {
       const r = await gh(c.token, '/gists', { method: 'POST', body: JSON.stringify({ description: DESC, public: false, files }) });
-      await saveConf({ ...gist.value!, gistId: r.json.id, etag: r.etag, lastPush: Date.now(), profileId: p.id });
+      await saveConf({ ...gist.value!, gistId: r.json.id, lastPush: Date.now(), profileId: p.id });
     }
   } catch (e) {
     pending = true;

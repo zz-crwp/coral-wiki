@@ -2,6 +2,16 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions selon [SemVer](https://semver.org/lang/fr/).
 
+## [2.1.0] — 2026-10-20
+
+### Modifié
+- **Jouer à plusieurs avec un seul compte GitHub** : le même jeton sur chaque téléphone, juste un prénom par joueur. Plus de gist par joueur ni de lien à échanger : l'app retrouve toute seule le gist commun, qui contient un fichier par joueur.
+- **Plus d'heure à régler** : seuls le jour et la météo se changent (jour précédent / suivant sur Aujourd'hui). Tout est calculé pour la journée, avec la plage horaire de chaque chose : captures (« 6h – 19h »), boutiques (horaires du jour), habitants (leur journée heure par heure).
+- Les filtres « Maintenant » deviennent « Aujourd'hui » (anciens liens acceptés).
+
+### Supprimé
+- Réglage de l'heure (+1 h, curseur) et appairage par lien de gist.
+
 ## [2.0.0] — 2026-10-20
 
 Version pensée pour jouer à deux sur console, téléphone en main : chacune des 10 questions de joueur se règle en 3 taps et 10 secondes au plus (scénarios automatisés). Détails dans `AUDIT.md`, `DESIGN-V2.md` et `DECISIONS.md`.

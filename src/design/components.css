@@ -2409,3 +2409,13 @@ body:has(.sheet-layer.open) .search-dock.in-page {
   content-visibility: auto;
   contain-intrinsic-size: auto 124px;
 }
+.stepper.two {
+  grid-template-columns: 1fr 1fr;
+}
+.day-steps li {
+  padding: 3px 0;
+}
+.day-steps strong {
+  display: inline-block;
+  min-width: 3.2em;
+}

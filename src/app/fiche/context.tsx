@@ -9,14 +9,13 @@ import type { Entity } from '../../data/schema.ts';
 import { entry, SEASONS, SEASON_FR, type Season } from '../data.ts';
 import { CheckBtn, GameImg, GIcon, Gold } from '../components.tsx';
 import { active, isChecked, toggle, weekday, WEEKDAYS, type GameDate } from '../store.ts';
-import { catchZones, cropCalc, loadToday, nextOpening, openNow, whereNow, type TodayData } from '../game.ts';
+import { catchState, cropCalc, daySchedule, loadToday, shopState, type TodayData } from '../game.ts';
 import { hours, ranges } from './labels.ts';
 import { Chip, Section } from './parts.tsx';
 import { UpgradeList } from './upgrades.tsx';
 
 type X = Record<string, any>;
 const SBIT: Record<Season, number> = { spring: 1, summer: 2, fall: 4, winter: 8 };
-const W = ['sunny', 'rain', 'storm', 'snow', 'windy', 'blizzard'];
 const DAYS = 28;
 const dayIndex = (d: GameDate) => SEASONS.indexOf(d.season) * DAYS + d.day - 1;
 const until = (d: GameDate, s: Season, j: number) => (SEASONS.indexOf(s) * DAYS + j - 1 - dayIndex(d) + DAYS * 4) % (DAYS * 4);
@@ -30,45 +29,42 @@ function useToday() {
   return t;
 }
 
-function ShopNow({ b, d, hr, label }: { b: TodayData['boutiques'][number]; d: GameDate; hr: number; label?: ComponentChildren }) {
-  const st = openNow(b, weekday(d.day), hr);
-  const close = st.today.find((r) => r.from <= hr && hr < r.to)?.to;
-  const next = st.open ? null : nextOpening(b, d, hr);
+/** Boutique pour le jour du profil : horaires du jour, sinon prochain jour d'ouverture. */
+function ShopToday({ b, d, label }: { b: TodayData['boutiques'][number]; d: GameDate; label?: ComponentChildren }) {
+  const st = shopState(b, d);
   return (
     <li>
       {label}
       <span class={`state ${st.open ? 'ok' : 'ko'}`}>{st.open ? 'Ouvert' : 'Fermé'}</span>{' '}
-      {st.open ? `· jusqu'à ${hours(close)}` : next ? `· ouvre ${next.k === 0 ? "aujourd'hui" : next.k === 1 ? 'demain' : WEEKDAYS[next.wd].toLowerCase()} à ${hours(next.from)}` : 'horaires à vérifier'}
+      {st.open ? `· ${ranges(st.today)}` : st.next ? `· rouvre ${st.next.k === 1 ? 'demain' : WEEKDAYS[st.next.wd].toLowerCase()} à ${hours(st.next.from)}` : st.known ? '' : 'horaires à vérifier'}
     </li>
   );
 }
 
-/** Carte « En ce moment » selon la date, la météo et l'heure du profil (masquée si rien d'utile). */
+/** Carte « Aujourd'hui » selon le jour et la météo du profil : ce qui vaut pour la journée (masquée si rien d'utile). */
 export function NowCard({ e, dom }: { e: Entity; dom: string }) {
   const t = useToday();
   const p = active.value;
   if (!t || !p) return null;
   const d = p.date;
-  const hr = p.hour;
   const lines: ComponentChildren[] = [];
 
   // Boutique
   const shop = t.boutiques.find((b) => b.id === e.id);
-  if (shop) lines.push(<ShopNow key="shop" b={shop} d={d} hr={hr} />);
+  if (shop) lines.push(<ShopToday key="shop" b={shop} d={d} />);
 
-  // Habitant : où il est maintenant, sa boutique, son anniversaire
+  // Habitant : sa journée (étapes horaires), sa boutique, son anniversaire
   if (dom === 'pnj') {
     const sched = (e.extra as X).emploi_du_temps;
-    const w = Array.isArray(sched) ? whereNow(sched, d, p.weather, hr) : null;
-    if (w)
+    const steps = Array.isArray(sched) ? daySchedule(sched, d, p.weather) : [];
+    for (const [i, s] of steps.entries())
       lines.push(
-        <li key="where">
-          <strong>{w.texte.replace(/\.$/, '')}</strong>
-          {w.depuis != null && <span class="note"> · depuis {hours(w.depuis)}</span>}
+        <li key={`step${i}`}>
+          <strong class="tabular">{hours(s.heure)}</strong> {s.texte}
         </li>,
       );
     for (const b of t.boutiques.filter((b) => b.own?.includes(e.id)))
-      lines.push(<ShopNow key={b.id} b={b} d={d} hr={hr} label={<>{entry(b.id)?.fr ?? b.id} : </>} />);
+      lines.push(<ShopToday key={b.id} b={b} d={d} label={<>{entry(b.id)?.fr ?? b.id} : </>} />);
     const bd = t.anniversaires.find((a) => a.id === e.id);
     if (bd) {
       const n = until(d, bd.s, bd.j);
@@ -83,29 +79,27 @@ export function NowCard({ e, dom }: { e: Entity; dom: string }) {
     lines.push(<li key="fest">{now ? <strong>En cours aujourd'hui</strong> : `Dans ${until(d, fest.s, fest.j)} jours`}</li>);
   }
 
-  // Poisson, insecte, créature : disponible maintenant ?
+  // Poisson, insecte, créature : disponible aujourd'hui, où et à quelles heures ?
   const cap = t.captures.find((c) => c.id === e.id);
   if (cap) {
-    const w = Math.max(0, W.indexOf(p.weather));
-    const now = catchZones(cap, SBIT[d.season], w, hr, d.day);
-    const day = catchZones(cap, SBIT[d.season], w, null, d.day);
-    lines.push(
+    const st = catchState(cap, d, p.weather);
+    if (st.today)
+      for (const z of st.byZone)
+        lines.push(
+          <li key={`z${z.z}`}>
+            <span class="state ok">{ranges(z.h) || 'Toute la journée'}</span> · {z.z}
+          </li>,
+        );
+    else
+      lines.push(
       <li key="cap">
-        {now.zones.length ? (
-          <>
-            <span class="state ok">Disponible maintenant</span> · {now.zones.join(', ')}
-          </>
-        ) : day.zones.length ? (
-          <>
-            <span class="state ko">Pas à {hours(hr)}</span> · aujourd'hui {ranges(day.h)}
-          </>
-        ) : (
+        {(
           <>
             <span class="state ko">Pas aujourd'hui</span> · {cap.s & SBIT[d.season] ? 'météo ou jour défavorable' : `hors saison (${SEASON_FR[d.season].toLowerCase()})`}
           </>
         )}
       </li>,
-    );
+      );
   }
 
   // Culture : encore rentable si plantée aujourd'hui ?
@@ -133,9 +127,9 @@ export function NowCard({ e, dom }: { e: Entity; dom: string }) {
   }
   if (!lines.length) return null;
   return (
-    <div class="card now-card" aria-label="En ce moment">
+    <div class="card now-card" aria-label="Aujourd'hui">
       <div class="now-h">
-        {WEEKDAYS[weekday(d.day)]} {d.day} {SEASON_FR[d.season].toLowerCase()} · {hours(hr)}
+        Aujourd'hui · {WEEKDAYS[weekday(d.day)]} {d.day} {SEASON_FR[d.season].toLowerCase()}
       </div>
       <ul class="now-l">{lines}</ul>
     </div>
@@ -161,7 +155,7 @@ export function UpgradeSection({ e }: { e: Entity }) {
               {b && p && (
                 <span class="note">
                   <ul class="now-l inline">
-                    <ShopNow b={b} d={p.date} hr={p.hour} />
+                    <ShopToday b={b} d={p.date} />
                   </ul>
                 </span>
               )}
@@ -295,7 +289,7 @@ export function Vendors({ rows }: { rows: X[] }) {
       <ul class="vendors">
         {list.map((v, i) => {
           const b = t?.boutiques.find((x) => x.id === v.lieu);
-          const st = b && p ? openNow(b, weekday(p.date.day), p.hour) : null;
+          const st = b && p ? shopState(b, p.date) : null;
           const offSeason = p && v.saisons && v.saisons.length < 4 && !v.saisons.includes(p.date.season);
           return (
             <li key={i}>
@@ -304,7 +298,7 @@ export function Vendors({ rows }: { rows: X[] }) {
                 {v.prix != null && (v.devise === 'or' ? <Gold n={v.prix} /> : <span>{v.prix} {v.devise}</span>)}
                 {v.rang && <span class="badge">rang {v.rang}</span>}
                 {v.saisons && v.saisons.length < 4 && <span class={offSeason ? 'ko-txt' : ''}>{v.saisons.map((s: Season) => SEASON_FR[s]).join(', ')}</span>}
-                {st && <span class={`state ${st.open ? 'ok' : 'ko'}`}>{st.open ? 'ouvert' : 'fermé'}</span>}
+                {st && <span class={`state ${st.open ? 'ok' : 'ko'}`}>{st.open ? ranges(st.today) : "fermé aujourd'hui"}</span>}
               </span>
             </li>
           );

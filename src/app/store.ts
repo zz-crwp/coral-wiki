@@ -15,17 +15,17 @@ export type Profile = {
   updated: number;
   date: GameDate;
   weather: string; // sunny | rain | storm | snow | windy | blizzard
-  hour: number; // heure en jeu affichée sur « Aujourd'hui » (6–26)
+  hour: number; // ancien réglage de l'heure de jeu (≤ 2.0), conservé pour la compatibilité des sauvegardes, plus utilisé
   prog: Progress; // clé de suivi → marque { s, t, par }
   checks?: Record<string, number>; // v1 (clé → horodatage) : lu seulement pour migrer
-  partner?: Partner; // progression du partenaire, lue depuis son Gist
+  partners?: Partner[]; // progression des autres joueurs du compte commun (lue dans le gist)
   favs: string[]; // ancienne liste de favoris (migrée vers `session`)
   session?: string[]; // « Ma session » : fiches épinglées pour la journée de jeu
   paliers?: Record<string, number>; // palier possédé par outil : 0 = de base … 4 = osmium
   coeurs?: Record<string, number>; // niveau de cœurs avec chaque habitant (0–10, ou 15 marié)
 };
 
-export type Partner = { name: string; player: string; gistId: string; prog: Progress; etag?: string; fetched?: number };
+export type Partner = { name: string; player: string; prog: Progress; fetched?: number };
 export type Player = { id: string; name: string };
 
 const DB_NAME = 'coral-wiki';
@@ -42,12 +42,13 @@ export const me = signal<Player>({ id: 'moi', name: 'Moi' });
 /** Coches effectives du profil actif (les miennes + les communes du partenaire) : clé → horodatage. */
 export const checks = computed(() => onKeys(marks.value));
 /** Marques effectives (auteur compris) du profil actif. */
-export const marks = computed(() => effective(active.value?.prog ?? {}, active.value?.partner?.prog));
+const others = (p: Profile | undefined) => (p?.partners ?? []).map((x) => x.prog);
+export const marks = computed(() => effective(active.value?.prog ?? {}, others(active.value)));
 /** Auteur d'une coche quand ce n'est pas moi (prénom du partenaire), sinon rien. */
 export function byPartner(key: string): string | null {
   const m = marks.value[key];
-  const p = active.value?.partner;
-  return m && m.s === 1 && p && m.par === p.player ? p.name : null;
+  if (!m || m.s !== 1 || m.par === me.value.id) return null;
+  return active.value?.partners?.find((x) => x.player === m.par)?.name ?? null;
 }
 /** Appelé après chaque coche locale (la synchro programme l'envoi groupé). */
 export const localChange = signal(0);
@@ -146,7 +147,7 @@ export function setChecks(keys: string[], on: boolean) {
   if (!keys.length) return;
   update((p) => {
     const prog = { ...p.prog };
-    const eff = effective(p.prog, p.partner?.prog);
+    const eff = effective(p.prog, others(p));
     const now = Date.now();
     for (const k of keys) prog[k] = mark(eff[k] ?? prog[k], on, me.value.id, now);
     return { ...p, prog };
@@ -154,9 +155,9 @@ export function setChecks(keys: string[], on: boolean) {
   flush(); // une coche est écrite tout de suite : fermer l'app juste après ne la perd pas
   localChange.value++;
 }
-/** Remplace la progression du partenaire (lue depuis son Gist) sur le profil actif. */
-export function setPartner(partner: Partner | undefined) {
-  update((p) => ({ ...p, partner }));
+/** Remplace la progression des autres joueurs (lue dans le gist commun) sur le profil actif. */
+export function setPartners(partners: Partner[]) {
+  update((p) => ({ ...p, partners }));
   flush(); // écrit tout de suite : une relecture réseau ne doit pas être perdue si l'app se ferme
 }
 /** Intègre des marques reçues (mon propre Gist relu depuis un autre appareil). */
@@ -171,7 +172,6 @@ export async function setPlayerName(name: string) {
 
 export const setDate = (date: GameDate) => update((p) => ({ ...p, date }));
 export const setWeather = (weather: string) => update((p) => ({ ...p, weather }));
-export const setHour = (hour: number) => update((p) => ({ ...p, hour }));
 
 
 // --- Ma session : fiches épinglées ---

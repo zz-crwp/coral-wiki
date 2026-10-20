@@ -1,4 +1,4 @@
-// Contrôle de la progression : profils, export/import JSON, synchro à deux (un gist par joueur, appairage, fusion).
+// Contrôle de la progression : profils, export/import JSON, jeu à plusieurs (un compte GitHub commun, un fichier par joueur, fusion).
 // L'API GitHub est simulée (interception des requêtes) : aucun appel réseau réel, jeton factice.
 // Usage : npm run build && npx vite preview --port 4174 & node scripts/qa/progress.ts
 import puppeteer, { type Browser, type Page } from 'puppeteer-core';
@@ -14,7 +14,6 @@ const FAKE_TOKEN = 'ghp_' + 'qa0123456789abcdefghijklmnopqrstuvwx'.slice(0, 36);
 
 // Faux serveur de Gists : un compte par jeton, gists secrets lisibles par identifiant, ETag sur la lecture
 const TOKENS: Record<string, string> = { [FAKE_TOKEN]: 'joueur-a', [FAKE_TOKEN.replace('qa', 'qb')]: 'joueur-b' };
-const TOKEN_B = FAKE_TOKEN.replace('qa', 'qb');
 const gists = new Map<string, any>();
 let n = 0;
 let notModified = 0;
@@ -34,7 +33,7 @@ async function mockGitHub(page: Page) {
     if (u.pathname === '/user') return send(200, { login });
     if (u.pathname === '/gists' && req.method() === 'GET') return send(200, [...gists.values()].filter((g) => g.owner === login));
     if (u.pathname === '/gists' && req.method() === 'POST') {
-      const g = { id: hexId(), owner: login, rev: 1, ...JSON.parse(req.postData()!) };
+      const g = { id: hexId(), owner: login, rev: 1, created_at: new Date().toISOString(), ...JSON.parse(req.postData()!) };
       gists.set(g.id, g);
       return send(201, g, `"${g.id}-${g.rev}"`);
     }
@@ -130,7 +129,7 @@ await A.waitForSelector('p[role=status]', { timeout: 5000 }).catch(() => null);
 await openTemple(A);
 ok((await pressed(A)) === 3, 'import (remplacement) : état de l’export restauré (3 coches)');
 
-// 3. Jouer à deux : chaque joueur relie son compte, échange son lien de gist, puis coches croisées
+// 3. Jouer à plusieurs : UN compte GitHub, le même jeton sur les deux téléphones, chacun son prénom
 async function connectAs(p: Page, prenom: string, token: string) {
   await p.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
   await p.waitForSelector('#tok');
@@ -147,31 +146,22 @@ async function syncBtn(p: Page) {
   await p.waitForFunction(() => document.body.textContent?.includes('Synchronisé à'), { timeout: 10000 }).catch(() => null);
   await wait(p, 300);
 }
-const mine = (login: string) => [...gists.values()].find((g) => g.owner === login);
+const files = (g: any) => Object.keys(g?.files ?? {}).filter((f) => /^joueur-.+\.json$/.test(f));
 
 await connectAs(A, 'Alex', FAKE_TOKEN);
-const ga = mine('joueur-a');
-const fa = ga && JSON.parse(ga.files['progress.json'].content);
-ok(!!ga && ga.public === false && fa?.version === 2 && fa.player.name === 'Alex' && Object.values(fa.progress).filter((m: any) => m.s).length === 3, 'A : gist secret créé (progress.json v2, 3 marques, auteur Alex)');
+ok(gists.size === 1, 'A : gist commun créé au premier envoi');
+const g = [...gists.values()][0];
+const fa = g && JSON.parse(g.files[files(g)[0]].content);
+ok(!!g && g.public === false && files(g).length === 1 && fa?.player.name === 'Alex' && Object.values(fa.progress).filter((m: any) => m.s).length === 3, 'fichier « joueur-… » de Alex : 3 marques, gist secret');
 
 const B = await device(browser);
-await connectAs(B, 'Bea', TOKEN_B);
-const gb = mine('joueur-b');
-ok(!!gb && gb.id !== ga.id, 'B : son propre gist, distinct de celui de A');
-
-// Appairage dans les deux sens, par lien
-async function pairWith(p: Page, id: string, who: string) {
-  await p.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
-  await p.waitForSelector('#partner');
-  await p.type('#partner', `https://gist.github.com/x/${id}`);
-  await clickText(p, 'button', 'Appairer');
-  await p.waitForFunction((w) => document.body.textContent?.includes(`Partenaire : ${w}`), { timeout: 8000 }, who).then(
-    () => ok(true, `appairage avec ${who}`),
-    () => ok(false, `appairage avec ${who}`),
-  );
-}
-await pairWith(A, gb.id, 'Bea');
-await pairWith(B, ga.id, 'Alex');
+await connectAs(B, 'Bea', FAKE_TOKEN); // même jeton, aucun lien à échanger
+ok(gists.size === 1 && files(g).length === 2, `B rejoint le même gist (${gists.size} gist, ${files(g).length} joueurs)`);
+await B.goto(`${BASE}#/reglages`, { waitUntil: 'domcontentloaded' });
+await B.waitForFunction(() => document.body.textContent?.includes('Alex ·'), { timeout: 8000 }).then(
+  () => ok(true, 'B voit le joueur Alex dans les réglages'),
+  () => ok(false, 'B ne voit pas Alex'),
+);
 
 // B coche 2 poissons (communs) et 1 succès (personnel), puis synchronise
 await openTemple(B);
@@ -184,12 +174,8 @@ await B.waitForSelector('button.check', { timeout: 10000 });
 await B.$eval('button.check', (e) => (e as HTMLElement).click());
 await wait(B, 400);
 await syncBtn(B);
-if (process.env.DBG) {
-  const fb = JSON.parse(mine('joueur-b').files['progress.json'].content);
-  console.log('DBG gist B', Object.entries(fb.progress).map(([k, m]: any) => `${k}=${m.s}`).join(' '));
-}
 await syncBtn(A);
-if (process.env.DBG) console.log('DBG A partner', await A.evaluate(() => new Promise((ok) => { const r = indexedDB.open('coral-wiki'); r.onsuccess = () => { const t = r.result.transaction('profiles').objectStore('profiles').getAll(); t.onsuccess = () => ok(JSON.stringify(t.result.map((p: any) => [p.name, Object.keys(p.prog).length, p.partner?.name, Object.keys(p.partner?.prog ?? {}).length]))); }; })));
+ok(JSON.parse(g.files[files(g).find((f) => JSON.parse(g.files[f].content).player.name === 'Alex')!].content).player.name === 'Alex', 'le fichier de Alex n’a pas été réécrit par B');
 await openTemple(A);
 ok((await pressed(A)) === 5, `A voit les 2 prises de Bea (${await pressed(A)} au total)`);
 const dots = await A.$$eval('.jtile .player-dot', (e) => e.map((x) => x.textContent));

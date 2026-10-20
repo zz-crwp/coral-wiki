@@ -7,7 +7,7 @@ import { Icon } from '../icons.tsx';
 import { active, checks, isChecked, setCheck, setChecks } from '../store.ts';
 import { loadTemple, loadTracker, type TItem } from '../trackers.ts';
 import { catchState, loadToday, SBIT, type TodayData } from '../game.ts';
-import { QUALITY_BY_INDEX } from '../fiche/labels.ts';
+import { QUALITY_BY_INDEX, ranges } from '../fiche/labels.ts';
 import { XRow } from '../../ui/XRow.tsx';
 import { FChip, Filters, Pill, Ring, SeasonPills } from '../../ui/controls.tsx';
 import { toast } from '../../ui/feedback.tsx';
@@ -167,7 +167,7 @@ export function TemplePage() {
                             const k = key(o, it);
                             const on = isChecked(k);
                             const cap = t.captures.find((c) => c.id === it.id);
-                            const st = cap ? catchState(cap, p.date, p.weather, p.hour) : null;
+                            const st = cap ? catchState(cap, p.date, p.weather) : null;
                             return (
                               <li key={it.id}>
                                 <button
@@ -186,7 +186,7 @@ export function TemplePage() {
                                       {it.qualite ? <span class="c-2"> · {QUALITY_BY_INDEX[it.qualite]}+</span> : null}
                                     </span>
                                     <span class="sub">
-                                      {st?.now ? <Pill kind="live">Maintenant</Pill> : null}
+                                      {st?.today ? <Pill kind="live">{ranges(st.h) || "Aujourd'hui"}</Pill> : null}
                                       <SeasonPills seasons={seasonsOf(e?.seasons ?? 0) as Season[]} short />
                                       {lieux.get(k)?.lieux.length ? <span class="t-footnote c-2">{lieux.get(k)!.lieux.slice(0, 2).join(', ')}</span> : null}
                                     </span>

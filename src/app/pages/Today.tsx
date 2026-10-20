@@ -1,30 +1,22 @@
-// Onglet Aujourd'hui : ce qui compte maintenant, en modules empilés (façon Météo).
-// Tout se recalcule quand l'horloge de jeu change (puce en haut, sheet de réglage).
+// Onglet Aujourd'hui : tout ce qui compte dans la journée de jeu, en modules empilés (façon Météo).
+// Seuls le jour et la météo se règlent (puce en haut, sheet de réglage) ; chaque élément affiche sa plage horaire.
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { entry, loadEntries, SEASON_FR, type Entry } from '../data.ts';
 import { GameImg, GIcon, TopBar } from '../components.tsx';
 import { Icon } from '../icons.tsx';
-import { active, checks, setDate, setHour, toggleWithUndo, weekday, WEEKDAYS } from '../store.ts';
-import { hours } from '../fiche/labels.ts';
+import { active, checks, setDate, toggleWithUndo, weekday, WEEKDAYS } from '../store.ts';
+import { ranges } from '../fiche/labels.ts';
 import { catchState, cropPlan, daysUntil, inDays, loadToday, SBIT, shopState, type TodayData } from '../game.ts';
 import { loadTemple } from '../trackers.ts';
 import { toast } from '../../ui/feedback.tsx';
 import { RecentFeed } from '../../ui/RecentFeed.tsx';
-import { addHours, ClockChip, clockOpen, shiftDate } from '../../ui/Clock.tsx';
+import { ClockChip, clockOpen, shiftDate, WEATHERS } from '../../ui/Clock.tsx';
 import { Pill } from '../../ui/controls.tsx';
 import { openFiche } from '../router.ts';
 
 // Compatibilité : anciens imports depuis cette page
-export { loadToday, catchZones, openNow, type TodayData } from '../game.ts';
+export { loadToday, catchZones, type TodayData } from '../game.ts';
 export { shiftDate };
-
-/** Moment de la journée → teinte du module d'en-tête (matin, journée, soir, nuit). */
-function moment(h: number) {
-  if (h < 9) return { k: 'aube', label: 'Matin' };
-  if (h < 16) return { k: 'jour', label: 'Journée' };
-  if (h < 19) return { k: 'soir', label: 'Soir' };
-  return { k: 'nuit', label: 'Nuit' };
-}
 
 export function TodayPage() {
   const [t, setT] = useState<TodayData | null>(null);
@@ -34,7 +26,7 @@ export function TodayPage() {
   const p = active.value;
   if (!p) return null;
   const d = p.date;
-  const m = moment(p.hour);
+  const wname = WEATHERS.find((w) => w[0] === p.weather)?.[1] ?? '';
   return (
     <>
       <TopBar
@@ -49,26 +41,19 @@ export function TodayPage() {
         actions={<ClockChip />}
       />
       <main class="page today" id="main">
-        <section class={`now-hero ${m.k} ${d.season}`} aria-label="Heure de jeu">
-          <button class="now-hero-main" onClick={() => (clockOpen.value = true)} aria-label="Modifier l'heure de jeu">
+        <section class={`now-hero jour ${d.season}`} aria-label="Jour de jeu">
+          <button class="now-hero-main" onClick={() => (clockOpen.value = true)} aria-label={`${WEEKDAYS[weekday(d.day)]} ${d.day} ${SEASON_FR[d.season]}, ${wname} : changer le jour ou la météo`}>
             <span class="now-day">
-              {WEEKDAYS[weekday(d.day)]} {d.day} {SEASON_FR[d.season].toLowerCase()}
+              {WEEKDAYS[weekday(d.day)]} · {SEASON_FR[d.season]}
             </span>
-            <span class="now-time">{hours(p.hour)}</span>
+            <span class="now-time">{d.day}</span>
             <span class="now-meta">
-              {p.weather === 'blizzard' ? <Icon name="blizzard" /> : <GIcon k={p.weather} size={22} />} {m.label}
+              {p.weather === 'blizzard' ? <Icon name="blizzard" /> : <GIcon k={p.weather} size={22} />} {wname} · changer
             </span>
           </button>
           <div class="now-steps">
-            <button onClick={() => addHours(1)}>+1 h</button>
-            <button
-              onClick={() => {
-                setDate(shiftDate(d, 1));
-                setHour(6);
-              }}
-            >
-              Jour suivant
-            </button>
+            <button onClick={() => setDate(shiftDate(d, -1))}>Jour précédent</button>
+            <button onClick={() => setDate(shiftDate(d, 1))}>Jour suivant</button>
           </div>
         </section>
         {!t ? <div class="skeleton-list" aria-busy="true" /> : <Modules t={t} />}
@@ -83,10 +68,11 @@ function Modules({ t }: { t: TodayData }) {
   const catches = useMemo(
     () =>
       t.captures
-        .map((c) => ({ c, st: catchState(c, d, p.weather, p.hour), done: !!checks.value[`pris:${c.id}`] }))
-        .filter((x) => x.st.now)
-        .sort((a, b) => +a.done - +b.done || (entry(a.c.id)?.fr ?? '').localeCompare(entry(b.c.id)?.fr ?? '', 'fr')),
-    [t, d.season, d.day, p.weather, p.hour, checks.value],
+        .map((c) => ({ c, st: catchState(c, d, p.weather), done: !!checks.value[`pris:${c.id}`] }))
+        .filter((x) => x.st.today)
+        // Toute la journée : dans l'ordre où les créneaux commencent, puis par nom
+        .sort((a, b) => +a.done - +b.done || (a.st.h[0]?.from ?? 0) - (b.st.h[0]?.from ?? 0) || (entry(a.c.id)?.fr ?? '').localeCompare(entry(b.c.id)?.fr ?? '', 'fr')),
+    [t, d.season, d.day, p.weather, checks.value],
   );
   const missing = catches.filter((x) => !x.done);
   const [showAll, setShowAll] = useState(false);
@@ -116,9 +102,9 @@ function Modules({ t }: { t: TodayData }) {
     .sort((a, b) => a.n - b.n);
   const open = t.boutiques
     .filter((b) => b.m)
-    .map((b) => ({ b, st: shopState(b, d, p.hour) }))
+    .map((b) => ({ b, st: shopState(b, d) }))
     .filter((x) => x.st.open)
-    .sort((a, b) => (a.st.close ?? 0) - (b.st.close ?? 0));
+    .sort((a, b) => (a.st.today[0]?.from ?? 0) - (b.st.today[0]?.from ?? 0) || (entry(a.b.id)?.fr ?? '').localeCompare(entry(b.b.id)?.fr ?? '', 'fr'));
   const crops = t.cultures
     .filter((c) => entry(c.id)?.dom === 'cultures' && entry(c.id)?.cat !== 'Fruit (plante fruitière)' && !c.o)
     .map((c) => ({ c, plan: cropPlan(c, d) }))
@@ -147,12 +133,12 @@ function Modules({ t }: { t: TodayData }) {
 
       <section class="module" aria-labelledby="m-catch">
         <div class="module-head" id="m-catch">
-          <Icon name="poissons" /> Manquant et disponible maintenant
+          <Icon name="poissons" /> Manquant et disponible aujourd'hui
         </div>
         <div class="big-row">
           <span class="big-num">{missing.length}</span>
           <span class="t-subhead c-2">
-            à attraper à {hours(p.hour)} que vous n'avez pas encore{catches.length > missing.length ? ` (${catches.length - missing.length} déjà pris)` : ''}
+            à attraper aujourd'hui que vous n'avez pas encore{catches.length > missing.length ? ` (${catches.length - missing.length} déjà pris)` : ''}
           </span>
         </div>
         {missing.length > 0 ? (
@@ -167,7 +153,7 @@ function Modules({ t }: { t: TodayData }) {
                     <span class="txt">
                       <span class="name">{e?.fr ?? c.id}</span>
                       <span class="sub">
-                        {st.zones.slice(0, 2).join(', ')}
+                        <strong class="tabular hours">{ranges(st.h) || 'toute la journée'}</strong> · {st.zones.slice(0, 2).join(', ')}
                         {e?.use?.m && !checks.value[`musee:${c.id}`] ? ' · musée' : ''}
                         {e?.use?.t?.some((o) => !checks.value[`temple:${o}:${c.id}`]) ? ' · temple' : ''}
                       </span>
@@ -181,7 +167,7 @@ function Modules({ t }: { t: TodayData }) {
             })}
           </ul>
         ) : (
-          <p class="t-subhead c-2">Tout ce qui est disponible maintenant est déjà dans votre journal.</p>
+          <p class="t-subhead c-2">Tout ce qui est disponible aujourd'hui est déjà dans votre journal.</p>
         )}
         {missing.length > 6 && (
           <button class="more-btn" onClick={() => setShowAll(!showAll)}>
@@ -244,7 +230,7 @@ function Modules({ t }: { t: TodayData }) {
         </div>
         <div class="big-row">
           <span class="big-num">{open.length}</span>
-          <span class="t-subhead c-2">ouvertes à {hours(p.hour)}</span>
+          <span class="t-subhead c-2">ouvertes aujourd'hui</span>
         </div>
         <ul class="mod-list dense">
           {open.slice(0, 5).map(({ b, st }) => (
@@ -253,7 +239,7 @@ function Modules({ t }: { t: TodayData }) {
                 <span class="txt">
                   <span class="name">{entry(b.id)?.fr ?? b.id}</span>
                 </span>
-                <span class="c-2 tabular">jusqu'à {hours(st.close)}</span>
+                <span class="c-2 tabular">{ranges(st.today)}</span>
               </button>
             </li>
           ))}

@@ -6,7 +6,7 @@ import { entry, SEASONS, SEASON_FR, seasonsOf, type Entry, type Season } from '.
 import { GameImg, GIcon, Gold, RichText } from './components.tsx';
 import { Icon } from './icons.tsx';
 import { coeurs, isChecked, palier, setCoeurs, setPalier, setCheck, weekday, WEEKDAYS, type Profile } from './store.ts';
-import { catchState, cropCalc, daysUntil, inDays, SBIT, shopState, whereNow, type Capture, type Crop, type Shop, type TodayData } from './game.ts';
+import { catchState, cropCalc, dayLine, daySchedule, daysUntil, inDays, SBIT, shopState, type Capture, type Crop, type Shop, type TodayData } from './game.ts';
 import { hours, ranges, WEATHER_FR } from './fiche/labels.ts';
 import { Chip, ChipList, Prices, ZoneLinks } from './fiche/parts.tsx';
 import { UpgradeList } from './fiche/upgrades.tsx';
@@ -128,24 +128,24 @@ function WhereWhen({ e }: { e: Entity | undefined }) {
 function catchRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
   const cap = c.cap.get(en.id);
   const key = `pris:${en.id}`;
-  const st = cap ? catchState(cap, c.p.date, c.p.weather, c.p.hour) : null;
+  const st = cap ? catchState(cap, c.p.date, c.p.weather) : null;
   const zone = st?.zones[0] ?? e?.lieux[0] ?? '';
   return {
     done: isChecked(key),
     check: { key, label: 'Attrapé', off: 'Pas attrapé' },
-    sortKey: st?.now ? 0 : st?.today ? 1 : st?.season ? 2 : 3,
-    // L'état « maintenant » ouvre la ligne d'infos (statut d'abord, comme Flighty) : le nom garde toute la largeur.
+    sortKey: st?.today ? 0 : st?.season ? 1 : 2,
+    // Disponible aujourd'hui : la plage horaire du jour ouvre la ligne d'infos (statut d'abord) ; le nom garde toute la largeur.
     sub: (
       <>
-        {st?.now ? (
-          <Pill kind="live">Maintenant</Pill>
-        ) : st?.today ? (
-          <Pill kind="tint">{st.next != null ? `dès ${hours(st.next)}` : "aujourd'hui"}</Pill>
-        ) : st && !st.season ? (
+        {st?.today ? (
+          <Pill kind="live">{ranges(st.h) || "Aujourd'hui"}</Pill>
+        ) : st?.season ? (
+          <span class="c-3">Pas aujourd'hui ·</span>
+        ) : st ? (
           <span class="c-3">Hors saison ·</span>
         ) : null}
         {cap && <SeasonPills seasons={seasonList(cap.s)} short />}
-        {cap && <span class="tabular">{ranges(st?.today ? st.h : cap.h) || ''}</span>}
+        {cap && !st?.today && <span class="tabular">{ranges(cap.h) || ''}</span>}
         {e && weatherLine(e.meteo)}
         {zone && <span class="zone">{zone}</span>}
       </>
@@ -247,10 +247,10 @@ function SeedShops({ seed, c }: { seed: string; c: RowCtx }) {
       <ul class="plain-list">
         {vend.map((v, i) => {
           const b = c.shop.get(v.lieu);
-          const st = b ? shopState(b, c.p.date, c.p.hour) : null;
+          const st = b ? shopState(b, c.p.date) : null;
           return (
             <li key={i}>
-              <Chip id={v.lieu} size={24} /> <Gold n={v.prix} /> {v.rang && <Pill>rang {v.rang}</Pill>} {st && <Pill kind={st.open ? 'ok' : 'ko'}>{st.open ? 'ouvert' : 'fermé'}</Pill>}
+              <Chip id={v.lieu} size={24} /> <Gold n={v.prix} /> {v.rang && <Pill>rang {v.rang}</Pill>} {st && <Pill kind={st.open ? 'ok' : 'ko'}>{st.open ? ranges(st.today) : "fermé aujourd'hui"}</Pill>}
             </li>
           );
         })}
@@ -264,7 +264,7 @@ function npcRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
   const bd = c.bday.get(en.id);
   const n = bd ? daysUntil(c.p.date, bd.s, bd.j) : null;
   const x = (e?.extra ?? {}) as X;
-  const where = Array.isArray(x.emploi_du_temps) ? whereNow(x.emploi_du_temps, c.p.date, c.p.weather, c.p.hour) : null;
+  const steps = Array.isArray(x.emploi_du_temps) ? daySchedule(x.emploi_du_temps, c.p.date, c.p.weather) : [];
   const h = coeurs(en.id);
   const wk = `${c.p.date.year}-${c.p.date.season}-${Math.floor((c.p.date.day - 1) / 7)}`;
   const g1 = `cadeau:${en.id}:${wk}:1`;
@@ -285,7 +285,7 @@ function npcRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
             <Icon name="heart" /> {h}
           </span>
         )}
-        {where && <span class="zone">{where.texte.replace(/\.$/, '')}</span>}
+        {steps.length > 0 && <span class="zone">{dayLine(steps, 2)}</span>}
       </>
     ),
     end: x.cadeaux ? <span class="tabular" title="Cadeaux offerts cette semaine">{given}/2 <Icon name="gift" class="ic-s" /></span> : null,
@@ -312,11 +312,17 @@ function npcRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
               <ChipList ids={[...loves.filter(avail), ...loves.filter((i) => !avail(i))]} limit={10} />
             </div>
           )}
-          {where && (
-            <p class="t-subhead">
-              <strong>Maintenant :</strong> {where.texte}
-              {where.depuis != null && <span class="c-2"> (depuis {hours(where.depuis)})</span>}
-            </p>
+          {steps.length > 0 && (
+            <div>
+              <div class="mini-h">Sa journée</div>
+              <ul class="plain-list day-steps">
+                {steps.map((s, i) => (
+                  <li key={i}>
+                    <strong class="tabular">{hours(s.heure)}</strong> {s.texte}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {events.length > 0 && (
             <div>
@@ -409,13 +415,13 @@ function placeRow(en: Entry, e: Entity | undefined, c: RowCtx): RowSpec {
   const b = c.shop.get(en.id);
   const x = (e?.extra ?? {}) as X;
   if (b) {
-    const st = shopState(b, c.p.date, c.p.hour);
+    const st = shopState(b, c.p.date);
     const season = c.p.date.season;
     const stock = ((x.stock ?? []) as X[]).filter((r) => !r.materiaux && (!r.saisons || r.saisons.includes(season)));
     return {
       sortKey: st.open ? 0 : 1,
       sub: <span class="tabular">{!st.known ? 'horaires à vérifier' : st.today.length ? `Aujourd'hui ${ranges(st.today)}` : `Fermé le ${WEEKDAYS[weekday(c.p.date.day)].toLowerCase()}`}</span>,
-      end: <Pill kind={st.open ? 'ok' : 'ko'}>{st.open ? `Ouvert · ${hours(st.close)}` : st.next ? `${st.next.k === 0 ? '' : st.next.k === 1 ? 'Demain ' : WEEKDAYS[st.next.wd].slice(0, 3) + '. '}${hours(st.next.from)}` : 'Fermé'}</Pill>,
+      end: <Pill kind={st.open ? 'ok' : 'ko'}>{st.open ? 'Ouvert' : st.next ? `Rouvre ${st.next.k === 1 ? 'demain' : WEEKDAYS[st.next.wd].toLowerCase()}` : 'Fermé'}</Pill>,
       detail: () => (
         <>
           {stock.length > 0 && (

@@ -35,9 +35,8 @@ function filtersFor(kind: Kind): Filter[] {
   switch (kind) {
     case 'catch':
       return [
-        { id: 'maintenant', label: 'Maintenant', test: (_e, _x, s) => s.sortKey === 0 },
-        { id: 'aujourdhui', label: "Aujourd'hui", test: (_e, _x, s) => (s.sortKey ?? 9) <= 1 },
-        { id: 'saison', label: 'Cette saison', test: (_e, _x, s) => (s.sortKey ?? 9) <= 2 },
+        { id: 'aujourdhui', label: "Aujourd'hui", test: (_e, _x, s) => s.sortKey === 0 },
+        { id: 'saison', label: 'Cette saison', test: (_e, _x, s) => (s.sortKey ?? 9) <= 1 },
         { id: 'manquants', label: 'Pas attrapés', test: (_e, _x, s) => !s.done },
       ];
     case 'crop':
@@ -54,7 +53,7 @@ function filtersFor(kind: Kind): Filter[] {
       ];
     case 'place':
       return [
-        { id: 'ouverts', label: 'Ouverts maintenant', test: (_e, _x, s) => s.sortKey === 0 && !!s.end },
+        { id: 'ouverts', label: "Ouverts aujourd'hui", test: (_e, _x, s) => s.sortKey === 0 && !!s.end },
         { id: 'magasins', label: 'Magasins', test: (e) => e.cat === 'Magasin' },
         { id: 'especes', label: 'Où pêcher et chercher', test: (_e, x) => !!(x?.extra as any)?.especes_ici?.length },
       ];
@@ -74,7 +73,7 @@ export function DomainPage({ dom, root = false }: { dom: string; root?: boolean 
   const [t, setT] = useState<TodayData | null>(null);
   const [open, setOpen] = useState<Set<string>>(() => readOpen(dom));
   const q = route.value.query;
-  const filter = q.get('filtre') ?? '';
+  const filter = (q.get('filtre') ?? '').replace(/^maintenant$/, 'aujourdhui'); // ancien filtre « maintenant » → « aujourd'hui »
   const cat = q.get('cat') ?? '';
   const target = q.get('open');
   const p = active.value!;

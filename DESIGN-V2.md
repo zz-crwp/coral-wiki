@@ -8,7 +8,7 @@ Quatre onglets en bas d'écran, rien d'autre dans la barre :
 
 | Onglet | Route | Répond à | Contenu |
 |---|---|---|---|
-| **Aujourd'hui** | `#/` | Q1, Q7, Q8, Q9, Q10 | Horloge de jeu (puce persistante + carte de l'heure : +1 h, jour suivant, réglage en 2 taps) · **Manquant et disponible maintenant** (captures non prises + cueillettes demandées par le temple) · Ma session (si épingles) · Cette semaine (anniversaires, festivals) · Boutiques ouvertes · À planter · **Récemment** (coches des deux joueurs) |
+| **Aujourd'hui** | `#/` | Q1, Q7, Q8, Q9, Q10 | Jour de jeu (puce persistante + carte du jour : jour précédent / suivant, météo en 2 taps ; *2.1 : plus d'heure à régler*) · **Manquant et disponible aujourd'hui**, chaque élément avec sa plage horaire (captures non prises + cueillettes demandées par le temple) · Ma session (si épingles) · Cette semaine (anniversaires, festivals) · Boutiques ouvertes · À planter · **Récemment** (coches des deux joueurs) |
 | **Chercher** | `#/chercher` | Q4, Q5 | Champ en bas (au pouce), résultats dès la 1re lettre, FR et EN, accents et fautes tolérés, verdict « À garder » sur chaque résultat. Champ vide : consultés récemment puis le catalogue (domaines groupés par intention, rang, mines). Listes de domaine : `#/chercher/<domaine>` |
 | **Collections** | `#/collections` | Q2, Q3 | Anneaux Musée · Temple · Journal ; collections (musée, temple, poissons, insectes, créatures, recettes, cœurs, succès, paliers d'outils). Filtres « Manquant », « Disponible maintenant », « Cette saison », « Par lieu ». **Saisie rapide** en grille : `#/collections/<id>/saisie` |
 | **Habitants** | `#/habitants` | Q6, Q7 | Une ligne par habitant : où il est maintenant, anniversaire, cadeaux offerts cette semaine (2 cases), cœurs ; dépliée : cadeaux adorés et aimés, emploi du temps |
@@ -71,7 +71,7 @@ type Progress = Record<string, Mark>;
 - Une coche écrit `{ s: 1, t: now, par: moi }` ; décocher écrit `{ s: 0, … }` (la suppression est une marque, pour gagner contre une coche plus ancienne).
 - **Fusion** clé par clé : la marque la plus récente gagne ; à égalité, ordre stable sur `par` puis `s`. Fonction pure, commutative, associative et idempotente : même résultat quel que soit l'ordre d'arrivée (testé).
 - **Commun** : musée, temple, journal (`pris:`), recettes (`cuisine:`). **Personnel** : cadeaux de la semaine, événements de cœur, succès, paliers d'outils, cœurs, horloge de jeu. Le fil « Récemment » montre les deux.
-- **GitHub Gist** : chaque joueur écrit dans **son** gist secret (`progress.json` : joueur, partie, marques). Chaque client lit son gist et celui du partenaire, fusionne, n'écrit que le sien. Appairage : chacun colle l'identifiant (ou le lien) du gist de l'autre. Jeton **classic** à portée `gist` seule, gardé sur l'appareil.
+- **GitHub Gist** (*révisé en 2.1*) : **un seul compte GitHub pour la maison**, le même jeton sur chaque téléphone, un prénom par joueur. Un gist secret commun, un fichier par joueur (`joueur-<id>.json`) : chacun n'écrit que le sien et lit tous les autres. Aucun appairage. Jeton **classic** à portée `gist` seule, gardé sur l'appareil.
 - **Hors ligne d'abord** : les coches sont locales et immédiates ; envoi groupé 5 s après la dernière coche et quand l'app passe en arrière-plan ; lecture au démarrage et au retour au premier plan avec `If-None-Match` (ETag, réponse 304 sans quota). Sans jeton, l'app est complète en solo.
 - **Qui a coché quoi** : initiale colorée du joueur sur les coches du partenaire ; fil « Récemment » (15 dernières marques).
 

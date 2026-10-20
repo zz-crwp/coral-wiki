@@ -3,7 +3,7 @@
 Wiki compagnon hors ligne de **Coral Island** (Stairway Games), pensé pour smartphone (PWA).
 Contenu repris du [Coral Island Wiki (Fandom)](https://coralisland.fandom.com) sous licence CC BY-SA, complété et recoupé avec d'autres sources. Images © Stairway Games, chargées depuis le CDN Fandom (non copiées dans le dépôt).
 
-**Version 2.0.0** — en ligne sur https://zz-crwp.github.io/coral-wiki/ · [Journal des versions](CHANGELOG.md) · [Audit](AUDIT.md) · [Conception v2](DESIGN-V2.md) · [Décisions](DECISIONS.md)
+**Version 2.1.0** — en ligne sur https://zz-crwp.github.io/coral-wiki/ · [Journal des versions](CHANGELOG.md) · [Audit](AUDIT.md) · [Conception v2](DESIGN-V2.md) · [Décisions](DECISIONS.md)
 
 ## Installation
 
@@ -18,15 +18,15 @@ Node 22 ou plus récent (les scripts sont en TypeScript exécuté directement pa
 
 Sur téléphone : ouvrir le site dans Safari (ou Chrome), puis « Ajouter à l'écran d'accueil ». L'app fonctionne ensuite hors ligne.
 
-## Jouer à deux
+## Jouer à plusieurs
 
-La progression commune passe par GitHub, sans serveur : chaque joueur range ses coches dans **son** gist secret et lit celui de l'autre.
+La progression commune passe par **un seul compte GitHub pour la maison**, sans serveur et sans rien échanger entre joueurs : chaque téléphone utilise le même jeton, chaque joueur n'a qu'un prénom.
 
-1. Chacun crée un jeton GitHub **classic** avec le seul scope `gist` : [créer un jeton](https://github.com/settings/tokens/new?scopes=gist&description=Coral%20Wiki). Les jetons « fine-grained » ne donnent pas accès aux gists et sont refusés.
-2. Dans l'app : Réglages › Jouer à deux, saisir son prénom puis coller le jeton, « Connecter ». L'app crée le gist au premier envoi.
-3. Copier « Mon lien à envoyer » et l'envoyer à l'autre joueur ; coller le sien dans « Lien du gist de votre partenaire », « Appairer ».
+1. Une fois pour toutes, créer un jeton GitHub **classic** avec le seul scope `gist` sur le compte commun : [créer un jeton](https://github.com/settings/tokens/new?scopes=gist&description=Coral%20Wiki). Les jetons « fine-grained » ne donnent pas accès aux gists et sont refusés.
+2. Sur le premier téléphone : Réglages › Jouer à plusieurs, saisir son prénom, coller le jeton, « Connecter ». L'app crée un gist secret « Coral Wiki — progression commune » au premier envoi.
+3. Sur chaque autre téléphone : son prénom, le **même** jeton, « Connecter ». L'app retrouve le gist commun toute seule ; les autres joueurs apparaissent dans les réglages.
 
-Ensuite : musée, temple, journal des prises et recettes sont communs ; cadeaux de la semaine, cœurs, succès et paliers d'outils restent propres à chacun. Chaque coche garde son auteur et son heure ; en cas de désaccord, la plus récente gagne, clé par clé. Les coches partent 5 s après la dernière et quand l'app passe en arrière-plan ; l'app relit les deux gists au retour au premier plan. Le jeton reste sur l'appareil (IndexedDB) et n'est envoyé qu'à `api.github.com`. Sans jeton, l'app est complète en solo.
+Le gist contient un fichier par joueur (`joueur-<id>.json`) : chaque téléphone n'écrit que le sien et lit tous les autres. Musée, temple, journal des prises et recettes sont communs ; cadeaux de la semaine, cœurs, succès et paliers d'outils restent propres à chacun. Chaque coche garde son auteur et son heure ; en cas de désaccord, la plus récente gagne, clé par clé. Les coches partent 5 s après la dernière et quand l'app passe en arrière-plan ; l'app relit le gist au retour au premier plan. Le jeton reste sur chaque téléphone (IndexedDB) et n'est envoyé qu'à `api.github.com`. Sans jeton, l'app est complète en solo.
 
 ## Sauvegarde, export, import
 
@@ -38,7 +38,7 @@ Ensuite : musée, temple, journal des prises et recettes sont communs ; cadeaux 
 
 - **Navigation** : 4 onglets — Aujourd'hui (`#/`), Chercher (`#/chercher`, listes `#/chercher/<domaine>`), Collections (`#/collections`, saisie rapide `#/collections/<id>/saisie`), Habitants (`#/habitants`). Réglages derrière l'engrenage d'Aujourd'hui (`#/reglages`). Les adresses de la v1 redirigent.
 - **Verdict et usages** (`src/app/usage.ts`, `Usage` dans `Fiche.tsx`) : À GARDER si l'objet manque au musée ou au temple ou sert à une quête, sinon VENDABLE ; résumé d'usage dans l'index de recherche.
-- **Horloge de jeu** : puce persistante en haut des écrans, réglage en sheet (+1 h, +1 jour, météo) ; tous les indicateurs « maintenant » suivent.
+- **Jour de jeu** : puce persistante en haut des écrans (jour, saison, météo), réglage en sheet. Pas d'heure à régler : l'app raisonne à la journée et affiche la plage horaire de chaque chose (captures, boutiques, emploi du temps des habitants).
 - **Fiches en sheet** (`?f=<id>` sur n'importe quelle page) : crans moyen / plein, glisser pour fermer, panneau latéral à partir de 960 px. Les anciens liens `#/fiche/<id>` ouvrent la liste du domaine avec la fiche par-dessus.
 - **Lignes repliables par domaine** (`src/app/rows.tsx`, composant `src/ui/XRow.tsx`) : repliée, la ligne répond à la question du joueur ; glisser pour cocher (toast « Annuler »), appui long pour le menu (épingler, fiche, source).
 - **Système de design** : jetons dans `src/design/tokens.css` (gris système, palette extraite des visuels du jeu, saisons, rayons, ombres, durées), composants dans `src/design/components.css` et `src/ui/`. Thèmes clair, sombre et noir OLED ; Fredoka réservée aux grands titres ; icônes Lucide. Page interne `#/design` avec tous les composants et états.
@@ -107,7 +107,7 @@ Relance incrémentale : `fetch.ts` rafraîchit l'inventaire (`lastrevid`) et ne 
 ### Sauvegarde et synchronisation (`src/app/sync.ts`)
 
 - Export / import d'un fichier JSON (`{ app: "coral-wiki", version: 2, player, profiles }`, v1 accepté).
-- Synchro à deux : un gist secret par joueur (`progress.json` : `{ version: 2, player, partie, progress }`), lecture du gist du partenaire, fusion clé par clé ; voir « Jouer à deux ».
+- Jeu à plusieurs : un gist secret commun au compte, un fichier par joueur (`joueur-<id>.json` : `{ version: 2, player, partie, progress }`), fusion clé par clé ; voir « Jouer à plusieurs ».
 
 ### Contrôles qualité
 
@@ -115,7 +115,7 @@ Relance incrémentale : `fetch.ts` rafraîchit l'inventaire (`lastrevid`) et ne 
 npm test              # fusion de la synchro (ordre d'arrivée indifférent) et migration v1 → v2, en Node
 npm run build && npx vite preview --port 4174   # dans un autre terminal, puis :
 npm run qa:questions  # les 10 questions du joueur en 390 px : taps comptés (≤ 3) et temps (≤ 10 s)
-npm run qa:progress   # profils, export/import, jouer à deux (API GitHub simulée : 2 gists, appairage, conflit, ETag)
+npm run qa:progress   # profils, export/import, jeu à plusieurs (API GitHub simulée : compte commun, 2 joueurs, conflit, ETag)
 npm run qa:migration  # base IndexedDB v1 réelle → v2 : aucune coche perdue, copie de sécurité
 npm run qa:offline    # SW, précache, mode avion : onglets, recherche, fiche, coche
 node scripts/qa/fiches.ts   # 4 fiches par domaine + pages : erreurs JS, rendu

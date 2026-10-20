@@ -32,11 +32,12 @@ export function merge(...all: (Progress | undefined)[]): Progress {
   return out;
 }
 
-/** Vue effective d'un joueur : ses marques, plus celles du partenaire pour les clés communes. */
-export function effective(mine: Progress, partner?: Progress): Progress {
-  if (!partner) return mine;
+/** Vue effective d'un joueur : ses marques, plus celles des autres joueurs pour les clés communes. */
+export function effective(mine: Progress, others?: Progress | Progress[]): Progress {
+  const list = !others ? [] : Array.isArray(others) ? others : [others];
+  if (!list.length) return mine;
   const shared: Progress = {};
-  for (const k in partner) if (isShared(k)) shared[k] = partner[k];
+  for (const o of list) for (const k in o) if (isShared(k)) shared[k] = winner(shared[k], o[k])!;
   return merge(mine, shared);
 }
 
@@ -82,6 +83,8 @@ export function recent(p: Progress, n = 15): { key: string; m: Mark }[] {
 export function normalizeProfile(p: any, par: string): any {
   // Profil v2 : ses marques font foi (le champ `checks` d'un export v2 n'est qu'une copie pour la v1)
   const prog = p.prog && typeof p.prog === 'object' ? merge(p.prog) : migrateChecks(p.checks, par, p.updated || p.created || Date.now());
-  const { checks: _v1, ...rest } = p;
-  return { favs: [], session: [...(p.favs ?? [])], paliers: {}, coeurs: {}, weather: 'sunny', hour: 9, ...rest, prog };
+  // 2.0 : un seul partenaire (`partner`) ; 2.1 : tous les autres joueurs du compte commun (`partners`)
+  const { checks: _v1, partner, ...rest } = p;
+  const partners = p.partners ?? (partner ? [{ name: partner.name, player: partner.player, prog: partner.prog, fetched: partner.fetched }] : []);
+  return { favs: [], session: [...(p.favs ?? [])], paliers: {}, coeurs: {}, weather: 'sunny', hour: 9, ...rest, partners, prog };
 }

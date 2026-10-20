@@ -50,7 +50,7 @@ const ICONS = ['today', 'explore', 'progress', 'session', 'search', 'pin', 'undo
 
 /** Un exemple réel par modèle de ligne, et pourquoi la ligne repliée affiche ce qu'elle affiche. */
 const MODELS: { kind: Kind; dom: string; id: string; why: string }[] = [
-  { kind: 'catch', dom: 'poissons', id: 'arapaima', why: 'Pêche et chasse : « est-ce que je peux l’attraper là, maintenant ? » → saisons, heures, météo, lieu et pastille « Maintenant ».' },
+  { kind: 'catch', dom: 'poissons', id: 'arapaima', why: 'Pêche et chasse : « est-ce que je peux l’attraper aujourd’hui, et à quelle heure ? » → saisons, heures, météo, lieu et pastille « Maintenant ».' },
   { kind: 'crop', dom: 'cultures', id: 'strawberry', why: 'Cultures : « est-ce que ça vaut le coup de planter aujourd’hui ? » → jours de pousse, repousse, bénéfice par jour restant.' },
   { kind: 'npc', dom: 'pnj', id: 'scott', why: 'Habitants : « où est-il et qu’est-ce que je lui offre ? » → lieu actuel, anniversaire, cœurs.' },
   { kind: 'tool', dom: 'outils', id: 'pickaxe', why: 'Outils : « que me faut-il pour le prochain palier ? » → chaîne de paliers et coût du suivant en matériaux.' },
@@ -93,7 +93,7 @@ export function DesignPage() {
   const [ents, setEnts] = useState<Map<string, Entity>>(new Map());
   const [open, setOpen] = useState<Set<string>>(new Set(['arapaima']));
   const [seg, setSeg] = useState<'a' | 'b' | 'c'>('a');
-  const [chips, setChips] = useState<Set<string>>(new Set(['maintenant']));
+  const [chips, setChips] = useState<Set<string>>(new Set(['aujourdhui']));
   const [sheet, setSheet] = useState<'' | 'medium' | 'large' | 'fit'>('');
   const [mock, setMock] = useState<'light' | 'dark'>('light');
   const themeKey = document.documentElement.dataset.theme ?? 'system';
@@ -153,14 +153,14 @@ export function DesignPage() {
         <div class="group pad demo-stack">
           <Segmented label="Exemple" value={seg} onChange={setSeg} options={[['a', 'Liste'], ['b', 'Grille'], ['c', 'Carte']]} />
           <Filters label="Filtres d'exemple">
-            {['maintenant', 'aujourdhui', 'manquants'].map((k) => (
+            {['aujourdhui', 'saison', 'manquants'].map((k) => (
               <FChip key={k} on={chips.has(k)} n={k === 'manquants' ? 12 : undefined} onClick={() => setChips((s) => new Set(s.has(k) ? [...s].filter((x) => x !== k) : [...s, k]))}>
-                {{ maintenant: 'Maintenant', aujourdhui: "Aujourd'hui", manquants: 'Pas attrapés' }[k]}
+                {{ aujourdhui: "Aujourd'hui", saison: 'Cette saison', manquants: 'Pas attrapés' }[k]}
               </FChip>
             ))}
           </Filters>
           <div class="demo-row">
-            <Pill kind="live">Maintenant</Pill>
+            <Pill kind="live">6h – 19h</Pill>
             <Pill kind="ok" icon="check">Ouvert</Pill>
             <Pill kind="ko">Fermé</Pill>
             <Pill kind="warn">Ferme bientôt</Pill>
@@ -177,7 +177,7 @@ export function DesignPage() {
           </div>
           <div class="demo-row">
             <ClockChip />
-            <span class="t-footnote c-2">Puce horloge : toucher ouvre les réglages rapides (+1 h, +1 jour).</span>
+            <span class="t-footnote c-2">Puce du jour : toucher ouvre le réglage du jour et de la météo.</span>
           </div>
         </div>
 
