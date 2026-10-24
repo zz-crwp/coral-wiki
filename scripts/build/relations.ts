@@ -261,8 +261,7 @@ export function production(ctx: Ctx, d: Draft) {
       d.extra.graine = s;
       const sd = ctx.drafts.get(s);
       if (sd) {
-        sd.extra.donne = d.id;
-        sd.utilise_dans.add(d.id);
+        sd.extra.donne = d.id; // pas dans utilise_dans : la fiche affiche déjà « Donne »
         if (!sd.saisons.length) sd.saisons = [...d.saisons];
       }
     }

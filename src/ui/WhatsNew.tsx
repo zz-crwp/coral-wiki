@@ -6,6 +6,7 @@ import { Icon } from '../app/icons.tsx';
 export const VERSION = __APP_VERSION__;
 const KEY = 'cw-version';
 const NEWS: { icon: string; title: string; text: string }[] = [
+  { icon: 'search', title: 'Plus net, plus juste', text: "Écrans plus sobres et plus lisibles (chiffres alignés, catégories sur deux colonnes). Les graines n'annoncent plus « Utilisé dans » la culture qu'elles donnent : c'est la ligne « Donne »." },
   { icon: 'today', title: 'Toute la journée', text: "Plus d'heure à régler : changez seulement le jour et la météo. Aujourd'hui liste ce qui vous manque dans la journée, chaque élément avec sa plage horaire." },
   { icon: 'search', title: 'Chercher, au pouce', text: 'Un onglet dédié, résultats dès la première lettre, et un verdict « À garder » ou « Vendable » sur chaque objet.' },
   { icon: 'habitants', title: 'Habitants', text: 'Leur journée heure par heure, leurs cadeaux adorés et les deux cadeaux de la semaine, dans un onglet.' },

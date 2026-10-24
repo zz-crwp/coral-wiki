@@ -141,12 +141,23 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
 }
 
-// Nouvelle version déployée pendant la session : un ancien chunk a disparu → rechargement unique.
-window.addEventListener('vite:preloadError', (e) => {
+// Nouvelle version déployée pendant la session : un ancien chunk a disparu → rechargement.
+// Au plus un toutes les 10 s (évite une boucle si le chunk manque vraiment), mais pas une seule fois par session :
+// une app installée reste ouverte des jours et voit passer plusieurs déploiements.
+function reloadForNewVersion() {
   try {
-    if (sessionStorage.getItem('cw-reload')) return;
-    sessionStorage.setItem('cw-reload', '1');
-  } catch {}
-  e.preventDefault();
+    if (Date.now() - Number(sessionStorage.getItem('cw-reload') ?? 0) < 10_000) return false;
+    sessionStorage.setItem('cw-reload', String(Date.now()));
+  } catch {
+    return false; // stockage bloqué : impossible de limiter les rechargements, on n'en tente aucun
+  }
   location.reload();
+  return true;
+}
+window.addEventListener('vite:preloadError', (e) => {
+  if (reloadForNewVersion()) e.preventDefault();
+});
+// L'aide de préchargement de Vite ne signale que ses dépendances : l'échec du chunk de la page lui-même arrive ici
+window.addEventListener('unhandledrejection', (e) => {
+  if (/dynamically imported module|Importing a module script failed/.test(String(e.reason?.message ?? e.reason)) && reloadForNewVersion()) e.preventDefault();
 });

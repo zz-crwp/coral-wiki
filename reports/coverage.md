@@ -1,6 +1,6 @@
 # Rapport de couverture — Coral Wiki
 
-Généré le 2026-10-19 20:55 UTC. Version du jeu ciblée : **1.3** (18/06/2026).
+Généré le 2026-10-24 15:10 UTC. Version du jeu ciblée : **1.3** (18/06/2026).
 
 ## Totaux
 

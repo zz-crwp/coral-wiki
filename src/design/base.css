@@ -108,3 +108,8 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Chiffres alignés partout (compteurs, prix, heures) ; !important car chaque raccourci `font:` remet la variante à zéro */
+* {
+  font-variant-numeric: tabular-nums !important;
+}

@@ -135,7 +135,7 @@
   border-radius: var(--r-full);
   color: var(--label-2);
   text-decoration: none;
-  font: var(--t-caption2);
+  font: 500 0.6875rem/1.1 var(--font); /* 11 px : plancher de lisibilité */
   letter-spacing: 0;
   transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
@@ -704,12 +704,11 @@
   gap: 6px;
   min-height: 36px;
   padding: 0 14px;
-  border: 0;
+  border: 1px solid var(--separator);
   border-radius: var(--r-full);
   background: var(--surface);
   color: var(--label);
   font: 500 0.9375rem/1 var(--font);
-  box-shadow: inset 0 0 0 0.5px var(--separator);
   cursor: pointer;
   position: relative;
 }
@@ -721,8 +720,8 @@
 .fchip[aria-pressed='true'],
 .fchip[aria-selected='true'] {
   background: var(--label);
+  border-color: var(--label);
   color: var(--bg);
-  box-shadow: none;
 }
 .fchip .n {
   font-variant-numeric: tabular-nums;
@@ -1041,6 +1040,7 @@
   gap: var(--s-3);
 }
 .tile2 {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: var(--s-3);
@@ -1048,10 +1048,15 @@
   padding: var(--s-3);
   border-radius: var(--r-lg);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
   color: var(--label);
   text-decoration: none;
   transition: transform var(--dur-fast) var(--ease-out);
+}
+/* Téléphone (2 colonnes) : un nombre impair de tuiles finit par une tuile pleine largeur, pas une case orpheline */
+@media (max-width: 520px) {
+  .tile2:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 }
 .tile2:active {
   transform: scale(0.97);
@@ -1076,8 +1081,8 @@
   display: grid;
   place-items: center;
   border-radius: 28%;
-  background: var(--tint-soft);
-  color: var(--tint);
+  background: var(--surface-2);
+  color: var(--label-2);
 }
 .tile2-ic svg {
   width: 26px;
@@ -1424,18 +1429,8 @@
   padding: var(--s-4);
   border-radius: var(--r-xl);
   color: #fff;
-  /* Fonds contextuels : ciel du lagon selon le moment de la journée (palette du jeu) */
-  background: linear-gradient(160deg, var(--lagon) 0%, var(--lagon-deep) 55%, var(--abyss) 100%);
-  box-shadow: var(--shadow-md);
-}
-.now-hero.aube {
-  background: linear-gradient(160deg, var(--sand-light) 0%, var(--coral) 45%, var(--lagon-deep) 100%);
-}
-.now-hero.soir {
-  background: linear-gradient(160deg, var(--sunset) 0%, var(--hibiscus) 50%, var(--abyss) 100%);
-}
-.now-hero.nuit {
-  background: linear-gradient(160deg, #1d3550 0%, #12243a 60%, #0a1626 100%);
+  /* Aplat du lagon profond (palette du jeu) : pas de dégradé ni d'ombre, blanc lisible à 6,4:1 */
+  background: var(--abyss);
 }
 .now-hero::after {
   /* Motif discret inspiré des toits et frises indonésiens */
@@ -1460,14 +1455,12 @@
 }
 .now-day {
   font: 600 1.25rem/1.2 var(--font-display);
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
 }
 .now-time {
   grid-row: span 2;
-  font: 600 3.25rem/0.9 var(--font-rounded);
+  font: 600 2.5rem/0.9 var(--font-rounded);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
-  text-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+  letter-spacing: -0.02em;
 }
 .now-meta {
   display: inline-flex;
@@ -1492,11 +1485,9 @@
   min-height: 44px;
   border: 0;
   border-radius: var(--r-sm);
-  background: rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.16);
   color: #fff;
   font: 600 0.9375rem/1 var(--font);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   cursor: pointer;
 }
 .now-steps button:active {
@@ -2070,10 +2061,11 @@ input.switch:disabled {
    La barre d'onglets garde une taille fixe (comme iOS, qui ne l'agrandit pas) ; le reste se réorganise
    en colonnes plus larges ou passe à la ligne au lieu de déborder. */
 .tab-capsule a {
-  font: 500 10px/1.2 var(--font);
+  font: 500 11px/1.15 var(--font);
 }
 .tiles {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5em), 1fr));
+  /* 9em : deux colonnes dès 340 px de large, une seule quand le texte est agrandi */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9em), 1fr));
 }
 .tile2-t strong,
 .tile2-t small {

@@ -1,7 +1,7 @@
 {
   "name": "coral-wiki",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,7 +16,8 @@
     "qa:progress": "node scripts/qa/progress.ts",
     "test": "node --test scripts/qa/progress.test.ts",
     "qa:questions": "node scripts/qa/questions.ts",
-    "qa:migration": "node scripts/qa/migration.ts"
+    "qa:migration": "node scripts/qa/migration.ts",
+    "qa:relations": "node scripts/qa/relations.ts"
   },
   "dependencies": {
     "@preact/signals": "^2.11.3",

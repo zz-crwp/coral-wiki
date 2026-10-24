@@ -2,6 +2,18 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions selon [SemVer](https://semver.org/lang/fr/).
 
+## [2.2.0] — 2026-10-24
+
+### Modifié
+- **Design plus sobre (règles des écrans d'app)** : carte du jour en aplat lagon profond, sans dégradé ni ombres de texte ; titres d'écran à 28 px ; libellés des onglets à 11 px ; bordures plus discrètes en thème sombre ; chiffres alignés partout ; catégories de Chercher sur deux colonnes, plates.
+
+### Corrigé
+- Fiches des graines et plants : la culture qu'ils donnent n'apparaît plus dans « Utilisé dans » (elle reste dans « Donne »). 98 fiches concernées.
+- Page blanche possible après un déploiement quand l'app restait ouverte : rechargement automatique à chaque nouvelle version (au plus une fois toutes les 10 s), y compris quand c'est le morceau de la page elle-même qui a disparu.
+
+### Ajouté
+- `npm run qa:relations` : audit des liens entre fiches (3 002 fiches : 0 lien cassé, 0 relation à sens unique).
+
 ## [2.1.0] — 2026-10-20
 
 ### Modifié
